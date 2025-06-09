@@ -1,0 +1,319 @@
+Oct 17 10:09 : exception: Failed to open '/home/ronaldo/.config/mpd/state': No such file or directory
+Oct 17 10:18 : config: option 'options' on line 439 was not recognized
+Oct 17 10:21 : config: option 'options' on line 439 was not recognized
+Oct 17 10:46 : config: option 'options' on line 439 was not recognized
+Oct 17 10:49 : config: option 'options' on line 439 was not recognized
+Oct 17 20:48 : config: option 'options' on line 439 was not recognized
+Oct 18 01:01 : config: option 'options' on line 439 was not recognized
+Oct 18 02:05 : config: option 'options' on line 439 was not recognized
+Oct 18 02:29 : config: option 'options' on line 439 was not recognized
+Oct 18 14:11 : config: option 'options' on line 439 was not recognized
+Oct 19 13:41 : config: option 'options' on line 439 was not recognized
+Oct 19 19:21 : config: option 'options' on line 439 was not recognized
+Oct 19 19:21 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 20 11:58 : config: option 'options' on line 439 was not recognized
+Oct 21 11:07 : config: option 'options' on line 439 was not recognized
+Oct 21 11:10 : config: option 'options' on line 439 was not recognized
+Oct 22 10:31 : config: option 'options' on line 439 was not recognized
+Oct 22 11:40 : config: option 'options' on line 439 was not recognized
+Oct 22 11:40 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 22 11:46 : config: option 'options' on line 439 was not recognized
+Oct 22 11:46 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 22 14:30 : config: option 'options' on line 439 was not recognized
+Oct 23 09:23 : config: option 'options' on line 439 was not recognized
+Oct 23 09:45 : config: option 'options' on line 439 was not recognized
+Oct 23 09:45 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 23 12:28 : config: option 'options' on line 439 was not recognized
+Oct 23 14:20 : config: option 'options' on line 439 was not recognized
+Oct 23 18:45 : config: option 'options' on line 439 was not recognized
+Oct 23 20:19 : config: option 'options' on line 439 was not recognized
+Oct 24 09:41 : config: option 'options' on line 439 was not recognized
+Oct 24 09:41 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 25 08:19 : config: option 'options' on line 439 was not recognized
+Oct 25 13:16 : config: option 'options' on line 439 was not recognized
+Oct 25 13:16 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 25 20:35 : config: option 'options' on line 439 was not recognized
+Oct 25 20:35 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 26 08:59 : config: option 'options' on line 439 was not recognized
+Oct 26 08:59 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 26 13:22 : config: option 'options' on line 439 was not recognized
+Oct 26 22:03 : config: option 'options' on line 439 was not recognized
+Oct 27 09:07 : config: option 'options' on line 439 was not recognized
+Oct 28 09:03 : config: option 'options' on line 439 was not recognized
+Oct 29 18:21 : config: option 'options' on line 439 was not recognized
+Oct 30 09:06 : config: option 'options' on line 439 was not recognized
+Oct 30 09:44 : config: option 'options' on line 439 was not recognized
+Oct 30 11:52 : config: option 'options' on line 439 was not recognized
+Oct 30 11:52 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Oct 30 19:39 : config: option 'options' on line 439 was not recognized
+Oct 31 08:16 : config: option 'options' on line 439 was not recognized
+Nov 14 08:42 : config: option 'options' on line 439 was not recognized
+Nov 20 10:47 : config: option 'options' on line 439 was not recognized
+Nov 20 10:48 : config: option 'options' on line 439 was not recognized
+Nov 20 10:48 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Mar 18 10:56 : config: option 'options' on line 439 was not recognized
+Mar 18 10:57 : config: option 'options' on line 439 was not recognized
+Mar 18 11:15 : config: option 'options' on line 439 was not recognized
+Mar 18 13:36 : config: option 'options' on line 439 was not recognized
+Mar 18 19:56 : config: option 'options' on line 439 was not recognized
+Mar 19 02:44 : config: option 'options' on line 439 was not recognized
+Mar 19 09:33 : config: option 'options' on line 439 was not recognized
+Mar 19 12:52 : config: option 'options' on line 439 was not recognized
+Mar 19 13:22 : config: option 'options' on line 439 was not recognized
+Mar 20 12:37 : config: option 'options' on line 439 was not recognized
+Mar 21 13:25 : config: option 'options' on line 439 was not recognized
+Mar 22 09:30 : config: option 'options' on line 439 was not recognized
+Mar 24 10:43 : config: option 'options' on line 439 was not recognized
+Mar 24 14:53 : config: option 'options' on line 439 was not recognized
+Mar 25 09:45 : config: option 'options' on line 439 was not recognized
+Mar 25 15:29 : config: option 'options' on line 439 was not recognized
+Mar 26 09:46 : config: option 'options' on line 439 was not recognized
+Mar 26 09:46 : mixer: Failed to read mixer for 'My ALSA Device': no such mixer control: Master
+Mar 26 14:34 : config: option 'options' on line 439 was not recognized
+Mar 26 15:15:15 : config: option "options" on line 439 was not recognized
+Mar 27 09:16:47 : config: option "options" on line 439 was not recognized
+Mar 27 09:16:47 : mixer: Failed to read mixer for "My ALSA Device": no such mixer control: Master
+Mar 28 09:38:36 : config: option "options" on line 439 was not recognized
+Mar 29 09:30:58 : config: option "options" on line 439 was not recognized
+Mar 29 11:16:13 : config: option "options" on line 439 was not recognized
+Mar 29 18:38:52 : config: option "options" on line 439 was not recognized
+Mar 30 10:29:13 : config: option "options" on line 439 was not recognized
+Mar 31 09:08:37 : config: option "options" on line 439 was not recognized
+2025-03-31T14:44:38 config: option "options" on line 439 was not recognized
+2025-04-01T09:45:31 config: option "options" on line 439 was not recognized
+2025-04-01T14:36:51 config: option "options" on line 439 was not recognized
+2025-04-01T15:25:24 config: option "options" on line 439 was not recognized
+2025-04-01T15:25:24 mixer: Failed to read mixer for "My ALSA Device": no such mixer control: Master
+2025-04-02T14:57:52 config: option "options" on line 439 was not recognized
+2025-04-03T13:21:37 config: option "options" on line 439 was not recognized
+2025-04-04T09:35:23 config: option "options" on line 439 was not recognized
+2025-04-05T09:49:34 config: option "options" on line 439 was not recognized
+2025-04-07T14:05:12 config: option "options" on line 439 was not recognized
+2025-04-07T14:39:38 config: option "options" on line 439 was not recognized
+2025-04-08T09:50:42 config: option "options" on line 439 was not recognized
+2025-04-08T11:15:08 config: option "options" on line 439 was not recognized
+2025-04-08T11:35:34 config: option "options" on line 439 was not recognized
+2025-04-08T15:23:26 config: option "options" on line 439 was not recognized
+2025-04-09T09:35:08 config: option "options" on line 439 was not recognized
+2025-04-09T14:55:40 config: option "options" on line 439 was not recognized
+2025-04-09T15:12:36 config: option "options" on line 439 was not recognized
+2025-04-09T16:59:40 config: option "options" on line 439 was not recognized
+2025-04-10T09:13:36 config: option "options" on line 439 was not recognized
+2025-04-11T11:42:38 config: option "options" on line 439 was not recognized
+2025-04-12T08:34:07 config: option "options" on line 439 was not recognized
+2025-04-12T12:05:25 config: option "options" on line 439 was not recognized
+2025-04-12T12:05:26 mixer: Failed to read mixer for "My ALSA Device": no such mixer control: Master
+2025-04-12T12:35:58 config: option "options" on line 439 was not recognized
+2025-04-14T07:58:06 config: option "options" on line 439 was not recognized
+2025-04-14T08:27:58 config: option "options" on line 439 was not recognized
+2025-04-14T13:14:10 config: option "options" on line 439 was not recognized
+2025-04-14T13:43:09 config: option "options" on line 439 was not recognized
+2025-04-14T14:50:23 config: option "options" on line 439 was not recognized
+2025-04-15T09:44:02 config: option "options" on line 439 was not recognized
+2025-04-16T14:54:24 config: option "options" on line 439 was not recognized
+2025-04-16T19:44:26 config: option "options" on line 439 was not recognized
+2025-04-17T09:03:27 config: option "options" on line 439 was not recognized
+2025-04-17T09:19:53 config: option "options" on line 439 was not recognized
+2025-04-17T09:39:23 config: option "options" on line 439 was not recognized
+2025-04-17T14:43:29 config: option "options" on line 439 was not recognized
+2025-04-19T09:07:33 config: option "options" on line 439 was not recognized
+2025-04-19T09:07:33 mixer: Failed to read mixer for "My ALSA Device": no such mixer control: Master
+2025-04-19T09:53:56 config: option "options" on line 439 was not recognized
+2025-04-20T11:53:54 config: option "options" on line 439 was not recognized
+2025-04-21T08:37:41 config: option "options" on line 439 was not recognized
+2025-04-23T16:04:51 config: option "options" on line 439 was not recognized
+2025-04-23T16:58:12 config: option "options" on line 439 was not recognized
+2025-04-24T09:21:57 config: option "options" on line 439 was not recognized
+2025-04-24T10:04:25 config: option "options" on line 439 was not recognized
+2025-04-25T09:56:06 config: option "options" on line 439 was not recognized
+2025-04-26T09:52:24 config: option "options" on line 439 was not recognized
+2025-04-26T12:27:57 config: option "options" on line 439 was not recognized
+2025-04-27T21:21:02 config: option "options" on line 439 was not recognized
+2025-04-28T13:54:40 config: option "options" on line 439 was not recognized
+2025-05-06T12:42:36 config: option "options" on line 439 was not recognized
+2025-05-12T09:38:18 config: option "options" on line 439 was not recognized
+2025-05-12T15:31:44 config: option "options" on line 439 was not recognized
+2025-05-15T13:00:02 config: option "options" on line 439 was not recognized
+2025-05-15T14:04:58 config: option "options" on line 439 was not recognized
+2025-05-15T14:04:58 mixer: Failed to read mixer for "My ALSA Device": no such mixer control: Master
+2025-05-15T18:27:36 config: option "options" on line 439 was not recognized
+2025-05-15T18:27:36 mixer: Failed to read mixer for "My ALSA Device": no such mixer control: Master
+2025-05-15T18:30:22 config: option "options" on line 439 was not recognized
+2025-05-15T18:45:45 config: option "options" on line 439 was not recognized
+2025-05-15T18:53:12 config: option "options" on line 439 was not recognized
+2025-05-15T18:57:51 config: option "options" on line 439 was not recognized
+2025-05-15T15:08:11 config: option "options" on line 439 was not recognized
+2025-05-16T17:01:28 config: option "options" on line 439 was not recognized
+2025-05-23T17:06:17 config: option "options" on line 439 was not recognized
+2025-05-23T17:45:58 config: option "options" on line 439 was not recognized
+2025-05-24T13:57:28 config: option "options" on line 439 was not recognized
+2025-06-02T15:55:50 config: option "options" on line 439 was not recognized
+2025-06-04T16:37:28 config: option "options" on line 439 was not recognized
+2025-06-07T17:49:22 config: option "options" on line 439 was not recognized
+2025-06-07T17:59:09 config: option "options" on line 439 was not recognized
+2025-06-07T17:59:09 mixer: Failed to read mixer for "My ALSA Device": no such mixer control: Master
+2025-06-07T20:42:27 config: option "options" on line 439 was not recognized
+2025-06-07T20:46:21 config: option "options" on line 439 was not recognized
+2025-06-07T21:19:36 config: option "options" on line 439 was not recognized
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P64 064. 一千年以后 - 林俊杰.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P138 138. 她说 - 林俊杰.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P32 032. 他一定很爱你 - 阿杜.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P21 021. 十年 - 陈奕迅.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P17 017. 小薇 - 黄品源.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P101 101. 该死的温柔(live) - 马天宇.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P128 128. 偏爱 - 张芸京.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P112 112. 白狐 - 陈瑞.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P49 049. 我真的受伤了 - 张学友.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P100 100. 青花瓷 - 周杰伦.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P120 120. 画心 - 张靓颖.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P55 055. 笑忘书 - 王菲.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P29 029. 青春纪念册 - 可米小子.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P115 115. 猜不透 - 丁当.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P47 047. 情非得已 - 庾澄庆.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P26 026. 遗失的美好 (Live) - 张韶涵.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P137 137. 你不知道的事 - 王力宏.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P57 057. 后来 - 刘若英.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P71 071. 天路 - 韩红.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P72 072. 大城小爱 - 王力宏.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P61 061. 爱你不是两三天 - 梁静茹.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P77 077. 莫斯科没有眼泪 - Twins.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P18 018. 倔强 - 五月天.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P51 051. 一生有你 - 水木年华.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P68 068. 睫毛弯弯 - 王心凌.mp4
+2025-06-07T21:32:19 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P118 118. 不得不爱 - 弦子、潘玮柏.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P41 041. 流星雨 - F4.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P92 092. 紫藤花 - S.H.E.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P38 038. 他和她的故事 - 萧亚轩.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P50 050. 终身美丽 - 郑秀文.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P25 025. 老鼠爱大米 - 王启文.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P82 082. 不怕不怕 - 郭美美.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P24 024. 下一站天后 - Twins.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P33 033. 让我一次爱个够 - 庾澄庆.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P5 005. 黄昏 - 周传雄.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P73 073. 怒放的生命 (Live) - 汪峰.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P70 070. 千年之恋 - F.I.R..mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P13 013. 离别 - 阿杜.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P122 122. 醉赤壁 - 林俊杰.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P106 106. 有一种爱叫做放手 - 阿木.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P8 008. 曹操 - 林俊杰.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P46 046. 有没有一首歌会让你想起我 - 周华健.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P11 011. 绿光 - 孙燕姿.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P59 059. 勇气 - 梁静茹.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P28 028. 七月七日晴 - 许慧欣.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P97 097. 我要快乐 - 张惠妹.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P6 006. 断点 - 张敬轩.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P16 016. 遇见 - 孙燕姿.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P89 089. 只对你有感觉 - 飞轮海、田馥甄.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P88 088. 你是我的玫瑰花 - 庞龙.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P98 098. 表白 - 萧亚轩.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P19 019. 奔跑 - 黄征、羽·泉.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P20 020. Super Star - S.H.E.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P12 012. 海浪 - 黄品源.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P30 030. 在他乡 - 水木年华.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P43 043. 花火 - 梁咏琪.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P90 090. 三国恋 - Tank.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P104 104. 有没有人告诉你 - 陈楚生.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P127 127. 清明雨上 - 许嵩.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P14 014. 离歌 - 信乐团.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P87 087. 无赖 - 郑中基.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P114 114. 爱丫爱丫 - By2.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P111 111. 断桥残雪 - 许嵩.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P130 130. 没那么简单 - 黄小琥.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P44 044. 成全 - 刘若英.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P117 117. 突然好想你 - 五月天.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P108 108. 日不落 - 蔡依林.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P76 076. 浮夸 - 陈奕迅.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P22 022. 暗香 (Live) - 沙宝亮.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P84 084. 狼爱上羊 - 汤潮.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P95 095. 彩虹的微笑 - 王心凌.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P7 007. 倒带 - 蔡依林.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P40 040. 开始懂了 - 孙燕姿.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P67 067. 不得不爱 - 潘玮柏、弦子.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P45 045. 好想好想 - 古巨基.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P74 074. 可惜不是你 - 梁静茹.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P96 096. 如果没有你 - 莫文蔚.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P140 140. 星月神话 - 金莎.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P136 136. 需要人陪 - 王力宏.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P119 119. 情歌王 - 古巨基.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P56 056. 温柔 - 五月天.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P83 083. 想唱就唱 - 张含韵.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P9 009. 童话 - 光良.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P79 079. 香水有毒 - 胡杨林.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P1 001. 我们的爱 - F.I.R.飞儿乐团.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P4 004. 宁夏 - 梁静茹.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P78 078. 被风吹过的夏天 - 林俊杰、金莎.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P116 116. 你不是真正的快乐 - 五月天.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P131 131. 够钟 - 周柏豪.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P2 002. 夜曲 - 周杰伦.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P15 015. 唯一 - 王力宏.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P42 042. 忘忧草 - 周华健.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P27 027. 春泥 - 庾澄庆.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P123 123. 小酒窝 - 林俊杰、蔡卓妍.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P34 034. 街角的祝福 - 戴佩妮.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P80 080. 笔记 - 周笔畅.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P125 125. 我爱他 - 丁当.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P58 058. 星语心愿 - 张柏芝.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P103 103. 老人与海 - 海鸣威、吴琼.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P121 121. 洋葱 - 杨宗纬.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P102 102. 爱情转移 - 陈奕迅.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P135 135. 这，就是爱 - 张杰.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P86 086. 暧昧 - 杨丞琳.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P105 105. 我怀念的 - 孙燕姿.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P132 132. 哥 只是个传说 - 陈旭.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P113 113. 逆光 - 孙燕姿.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P62 062. 野百合也有春天 - 张蔷.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P133 133. 传奇 - 王菲.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P129 129. 此生不换 - 青鸟飞鱼.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P23 023. 挥着翅膀的女孩 - 容祖儿.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P3 003. 江南 - 林俊杰.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P65 065. 美丽的神话Ⅰ - 成龙、金喜善.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P134 134. 记得 - 林俊杰.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P85 085. 那一夜 - 谢军.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P94 094. 今天你要嫁给我 - 蔡依林、陶喆.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P36 036. 盛夏的果实 - 莫文蔚.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P66 066. 寂寞沙洲冷 (Live) - 周传雄.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P107 107. 月牙湾 - F.I.R..mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P110 110. 小小 - 容祖儿.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P139 139. 心墙 - 林俊杰.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P31 031. 爱的主打歌 - 萧亚轩.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P10 010. 知足 - 五月天.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P52 052. 刀马旦 - 李玟、周杰伦.mp4
+2025-06-07T21:32:20 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P53 053. 至少还有你 - 林忆莲.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P75 075. 酸酸甜甜就是我 - 张含韵.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P69 069. 就是爱你 - 陶喆.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P93 093. 富士山下 - 陈奕迅.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P35 035. 龙的传人 - 王力宏.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P37 037. 相爱很难 - 张学友、梅艳芳.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P81 081. 黄种人 - 谢霆锋.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P39 039. 天黑 - 阿杜.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P60 060. 天黑黑 - 孙燕姿.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P126 126. 你瞒我瞒 - 陈柏宇.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P54 054. K歌之王 - 陈奕迅.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P124 124. 说谎 - 林宥嘉.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P63 063. 爱如潮水 - 张信哲.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P109 109. 等一分钟 Wait One Minute - 徐誉滕.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P91 091. 舞娘 - 蔡依林.mp4
+2025-06-07T21:32:21 update: added /【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P48 048. 如果这都不算爱 - 张学友.mp4
+2025-06-07T21:32:37 exception: No such directory
+ALSA lib pcm_dmix.c:1000:(snd_pcm_dmix_open) unable to open slave
+2025-06-07T21:33:59 exception: Failed to open "My ALSA Device" (alsa); Failed to open ALSA device "plug:dmix": No such file or directory
+2025-06-07T21:33:59 exception: Failed to open "My ALSA Device" (alsa); Failed to open ALSA device "plug:dmix": No such file or directory
+2025-06-07T21:33:59 player: problems opening audio device while playing "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+ALSA lib pcm_dmix.c:1000:(snd_pcm_dmix_open) unable to open slave
+2025-06-07T21:34:05 exception: Failed to open "My ALSA Device" (alsa); Failed to open ALSA device "plug:dmix": No such file or directory
+2025-06-07T21:34:05 exception: Failed to open "My ALSA Device" (alsa); Failed to open ALSA device "plug:dmix": No such file or directory
+ALSA lib pcm_dmix.c:1000:(snd_pcm_dmix_open) unable to open slave
+2025-06-07T21:34:06 exception: Failed to open "My ALSA Device" (alsa); Failed to open ALSA device "plug:dmix": No such file or directory
+2025-06-07T21:34:06 exception: Failed to open "My ALSA Device" (alsa); Failed to open ALSA device "plug:dmix": No such file or directory
+2025-06-07T21:37:12 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+2025-06-07T21:38:17 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+2025-06-07T21:43:31 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+2025-06-07T22:00:17 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+2025-06-07T22:11:01 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+2025-06-07T22:14:43 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+2025-06-07T22:19:01 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+2025-06-07T22:26:56 output: Failed to play on "MPD Pulse Output" (pulse): disconnected
+2025-06-07T22:26:56 exception: Failed to open audio output
+2025-06-07T22:26:56 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"
+2025-06-07T22:31:40 player: played "【神仙打架】华语乐坛神仙打架140首！经典时代经典歌曲！8090的青春时代。 P99 099. 愿望 - 胡彦斌.mp4"

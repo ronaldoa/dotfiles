@@ -1,0 +1,214 @@
+
+[colors]
+draw_bold_text_with_bright_colors = false
+
+[colors.bright]
+black = "0x2e3436"
+blue = "0x729fcf"
+cyan = "0x34e2e2"
+green = "0x8ae234"
+magenta = "0xad7fa8"
+red = "0xef2929"
+white = "0xeeeeec"
+yellow = "0xfce94f"
+
+[colors.normal]
+black = "0x2e3436"
+blue = "0x3465a4"
+cyan = "0x06989a"
+green = "0x73d216"
+magenta = "0x75507b"
+red = "0xcc0000"
+white = "0xd3d7cf"
+yellow = "0xedd400"
+
+[colors.primary]
+foreground = "0xeeeeec"
+
+[cursor]
+vi_mode_style = "None"
+
+[cursor.style]
+blinking = "Off"
+shape = "Block"
+
+[env]
+TERM = "xterm-256color"
+
+[font]
+size = 14
+#use_thin_strokes = true
+
+[font.bold]
+family = "Hack Nerd Font"
+style = "Bold"
+
+[font.italic]
+family = "Hack Nerd Font"
+style = "Italic"
+
+[font.normal]
+family = "Hack Nerd Font"
+style = "Regular"
+
+#[font.offset]
+#x = 1
+#y = 0
+
+[[keyboard.bindings]]
+chars = "\u001D["
+key = "LBracket"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D%"
+key = "S"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Dj"
+key = "J"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Dk"
+key = "K"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Dh"
+key = "H"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Dl"
+key = "L"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001DJ"
+key = "J"
+mods = "Command|Shift"
+
+[[keyboard.bindings]]
+chars = "\u001DK"
+key = "K"
+mods = "Command|Shift"
+
+[[keyboard.bindings]]
+chars = "\u001DH"
+key = "H"
+mods = "Command|Shift"
+
+[[keyboard.bindings]]
+chars = "\u001DL"
+key = "L"
+mods = "Command|Shift"
+
+[[keyboard.bindings]]
+chars = "\u001Dw"
+key = "W"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Dc"
+key = "T"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D&"
+key = "D"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Dx"
+key = "X"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Dz"
+key = "Z"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001Dq"
+key = "N"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D:"
+key = "Semicolon"
+mods = "Command|Shift"
+
+[[keyboard.bindings]]
+chars = "\u001D1"
+key = "Key1"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D2"
+key = "Key2"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D3"
+key = "Key3"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D4"
+key = "Key4"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D5"
+key = "Key5"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D6"
+key = "Key6"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D7"
+key = "Key7"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D8"
+key = "Key8"
+mods = "Command"
+
+[[keyboard.bindings]]
+chars = "\u001D9"
+key = "Key9"
+mods = "Command"
+
+[mouse]
+hide_when_typing = false
+
+#[mouse.url]
+#modifiers = "Command"
+
+[scrolling]
+history = 10000
+multiplier = 3
+
+[selection]
+save_to_clipboard = false
+semantic_escape_chars = ",│`|:\"' ()[]{}<>\t@="
+
+[window]
+opacity = 0.9
+
+dimensions = { columns = 120, lines = 30}
+
+padding = { x = 20, y = 10}
+
+[general]
+#background_opacity = 0.95
+live_config_reload = true
+#[window.dimensions]
+#columns = 120
+#lines = 30
