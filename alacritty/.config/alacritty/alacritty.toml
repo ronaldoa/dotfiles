@@ -195,8 +195,19 @@ hide_when_typing = false
 history = 10000
 multiplier = 3
 
+[[keyboard.bindings]]
+key = "C"
+mods = "Control|Shift"
+action = "Copy"
+
+[[keyboard.bindings]]
+key = "V"
+mods = "Control|Shift"
+action = "Paste"
+
+
 [selection]
-save_to_clipboard = false
+save_to_clipboard = true
 semantic_escape_chars = ",│`|:\"' ()[]{}<>\t@="
 
 [window]

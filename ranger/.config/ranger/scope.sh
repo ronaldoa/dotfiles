@@ -171,18 +171,18 @@ handle_image() {
             exit 7;;
 
         ## Video
-        # video/*)
-        #     # Get embedded thumbnail
-        #     ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy "${IMAGE_CACHE_PATH}" && exit 6
-        #     # Get frame 10% into video
-        #     ffmpegthumbnailer -i "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" -s 0 && exit 6
-        #     exit 1;;
+         video/*)
+             # Get embedded thumbnail
+             ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy "${IMAGE_CACHE_PATH}" && exit 6
+             # Get frame 10% into video
+             ffmpegthumbnailer -i "${FILE_PATH}" -o "${IMAGE_CACHE_PATH}" -s 0 && exit 6
+             exit 1;;
 
         ## Audio
-        # audio/*)
-        #     # Get embedded thumbnail
-        #     ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy \
-        #       "${IMAGE_CACHE_PATH}" && exit 6;;
+         audio/*)
+             # Get embedded thumbnail
+             ffmpeg -i "${FILE_PATH}" -map 0:v -map -0:V -c copy \
+               "${IMAGE_CACHE_PATH}" && exit 6;;
 
         ## PDF
          application/pdf)
@@ -196,14 +196,14 @@ handle_image() {
 
 
         ## ePub, MOBI, FB2 (using Calibre)
-        # application/epub+zip|application/x-mobipocket-ebook|\
-        # application/x-fictionbook+xml)
-        #     # ePub (using https://github.com/marianosimone/epub-thumbnailer)
-        #     epub-thumbnailer "${FILE_PATH}" "${IMAGE_CACHE_PATH}" \
-        #         "${DEFAULT_SIZE%x*}" && exit 6
-        #     ebook-meta --get-cover="${IMAGE_CACHE_PATH}" -- "${FILE_PATH}" \
-        #         >/dev/null && exit 6
-        #     exit 1;;
+         application/epub+zip|application/x-mobipocket-ebook|\
+         application/x-fictionbook+xml)
+             # ePub (using https://github.com/marianosimone/epub-thumbnailer)
+             epub-thumbnailer "${FILE_PATH}" "${IMAGE_CACHE_PATH}" \
+                 "${DEFAULT_SIZE%x*}" && exit 6
+             ebook-meta --get-cover="${IMAGE_CACHE_PATH}" -- "${FILE_PATH}" \
+                 >/dev/null && exit 6
+             exit 1;;
 
         ## Font
         application/font*|application/*opentype)

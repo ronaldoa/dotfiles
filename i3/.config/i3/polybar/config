@@ -75,7 +75,7 @@ font-4 = Noto Sans CJK SC:size=12
 scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
 
-modules-left = i3 cpu memory wlan
+modules-left = i3 cpu cpu_temp memory wlan
 modules-center =  mpd 
 modules-right =  volume weather date
 
@@ -124,6 +124,17 @@ compositing-border = over
 ;; Created By Aditya Shakya @adi1090x
 ;;
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+
+
+[module/systray]
+type = internal/tray
+format = <tray>
+tray-size = 16
+tray-padding = 0
+tray-maxsize = 16
+tray-background = ${color.BACKGROUND}
+tray-offset-x = 0
+tray-offset-y = 0
 
 
 [module/cpu]
@@ -181,7 +192,7 @@ interval = 3
 format = <label>
 format-background = ${color.BACKGROUND}
 
-format-prefix = 󰍛
+format-prefix = 
 format-prefix-font = 1
 format-prefix-foreground = ${color.BLUE}
 
@@ -257,17 +268,29 @@ label-volume = %percentage%%
 label-muted = " Muted"
 label-muted-foreground = #757575
 
-ramp-volume-0 = 奄
-ramp-volume-1 = 奄
-ramp-volume-2 = 奄
-ramp-volume-3 = 奔
-ramp-volume-4 = 奔
-ramp-volume-5 = 奔
-ramp-volume-6 = 墳
-ramp-volume-7 = 墳
-ramp-volume-8 = 墳
-ramp-volume-9 = 墳
-ramp-volume-font = 2
+ramp-volume-0 = 󰝟 ; nf-md-volume_off
+ramp-volume-1 = 󰕿; nf-md-volume_low
+ramp-volume-2 = 󰕿
+ramp-volume-3 = 󰕿
+ramp-volume-4 = 󰖀 ; nf-md-volume_medium
+ramp-volume-5 = 󰖀
+ramp-volume-6 = 󰖀
+ramp-volume-7 = 󰕾  ; nf-md-volume_high
+ramp-volume-8 = 󰕾
+ramp-volume-9 = 󰕾
+
+
+#ramp-volume-0 = 奄
+#ramp-volume-1 = 奄
+#ramp-volume-2 = 奄
+#ramp-volume-3 = 奔
+#ramp-volume-4 = 奔
+#ramp-volume-5 = 奔
+#ramp-volume-6 = 墳
+#ramp-volume-7 = 墳
+#ramp-volume-8 = 墳
+#ramp-volume-9 = 墳
+ramp-volume-font = 3
 ramp-volume-foreground = ${color.BLUE}
 
 ramp-headphones-0 = 
@@ -355,14 +378,15 @@ reverse-scroll = true
 
 fuzzy-match = true
 
+;
 ; ws-icon-[0-9]+ = label;icon
 ; Note that the label needs to correspond with the bspwm workspace name
-;;ws-icon-0 = code;♚
-;;ws-icon-1 = office;♛
-;;ws-icon-2 = graphics;♜
-;;ws-icon-3 = mail;♝
-;;ws-icon-4 = web;♞
-;;ws-icon-default = ♟
+;ws-icon-0 = code;♚
+;ws-icon-1 = office;♛
+;ws-icon-2 = graphics;♜
+;ws-icon-3 = mail;♝
+;ws-icon-4 = web;♞
+;ws-icon-default = ♟
 
 format = <label-state> <label-mode>
 
@@ -459,9 +483,15 @@ format-paused = <label-song> <toggle>
 format-offline = <label-offline>
 label-offline = "Offline"
 
-label-song =  " %title%|%artist% "
+label-song =  %title% - %artist%
 label-song-maxlen = 40
-label-song-ellipsis = true
+label-song-ellipsis = false
+
+label-song-scroll = true
+label-song-scroll-speed = 2        ; 滚动速度，数字越大越慢
+label-song-scroll-delay = 2        ; 停顿开始滚动前的延迟（秒）
+label-song-scroll-padding = 5      ; 滚动末尾填充空格数，避免滚动突兀
+
 
 icon-play = " "
 icon-play-font = 2
@@ -471,10 +501,10 @@ icon-pause-font = 2
 icon-pause-foreground = ${color.YELLOW}
 icon-stop = " "
 icon-stop-foreground = ${color.RED}
-icon-prev = 玲
+icon-prev = 󰼨
 icon-prev-font = 2
 icon-prev-foreground = ${color.CYAN}
-icon-next = 怜
+icon-next = 󰼧
 icon-next-font = 2
 icon-next-foreground = ${color.CYAN}
 
@@ -482,7 +512,7 @@ icon-next-foreground = ${color.CYAN}
 
 [module/wlan]
 type = internal/network
-interface = wlp3s0
+interface = wlo1
 
 interval = 1.0
 
@@ -492,23 +522,37 @@ interval = 1.0
 accumulate-stats = true
 unknown-as-up = true
 
-format-connected = <label-connected>
+
+#format-connected = <ramp-signal> <label-signal> <label-connected>
 
 format-disconnected = <label-disconnected>
-format-disconnected-prefix = "睊 "
+format-disconnected-prefix = "󰤭 "
 format-disconnected-prefix-font = 2
 format-disconnected-prefix-foreground = ${color.RED}
 
-label-connected = " %downspeed%"
+format-connected = <ramp-signal> <label-connected>
+label-connected = "%signal%%  %downspeed%"
+
+#label-connected = " %downspeed%"
+
 label-disconnected = Disconnected
 
-ramp-signal-0 = 直
-ramp-signal-1 = 直
-ramp-signal-2 = 直
-ramp-signal-3 = 直
-ramp-signal-4 = 直
+label-signal = %signal%%
+
+ramp-signal-1 = 󰤟
+ramp-signal-2 = 󰤢
+ramp-signal-3 = 󰤥
+ramp-signal-4 = 󰤨
+ramp-signal-0 = 󰤭
 ramp-signal-font = 2
 ramp-signal-foreground = ${color.CYAN}
+
+
+[module/cpu_temp]
+type = custom/script
+exec = sensors | grep 'Tctl:' | awk '{print $2}'
+interval = 5
+label = " %output%"
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 ;;	    __________  ______
