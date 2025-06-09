@@ -483,14 +483,14 @@ format-paused = <label-song> <toggle>
 format-offline = <label-offline>
 label-offline = "Offline"
 
-label-song =  %title% - %artist%
+label-song = "%title% | %artist%"
 label-song-maxlen = 40
-label-song-ellipsis = false
+label-song-ellipsis = true
 
-label-song-scroll = true
-label-song-scroll-speed = 2        ; 滚动速度，数字越大越慢
-label-song-scroll-delay = 2        ; 停顿开始滚动前的延迟（秒）
-label-song-scroll-padding = 5      ; 滚动末尾填充空格数，避免滚动突兀
+;label-song-scroll = true
+;label-song-scroll-speed = 2        ; 滚动速度，数字越大越慢
+;label-song-scroll-delay = 2        ; 停顿开始滚动前的延迟（秒）
+;label-song-scroll-padding = 5      ; 滚动末尾填充空格数，避免滚动突兀
 
 
 icon-play = " "
