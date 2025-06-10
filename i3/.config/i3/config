@@ -102,7 +102,7 @@ assign [class="Steam"] $ws5
 
 assign [class="VirtualBox Machine"] $ws6
 
-assign [class="Thunderbird"] $ws8
+assign [class="thunderbird"] $ws8
 assign [class="Qq"] $ws8
 assign [class="TelegramDesktop"] $ws8
 assign [class="obsidian"] $ws8
@@ -129,6 +129,8 @@ bindsym $mod+Return exec --no-startup-id alacritty
 bindsym $mod+control+n exec "$HOME/Desktop/Noi_linux_0.4.0.AppImage"
 bindsym $mod+control+o exec "$HOME/Desktop/Obsidian-1.8.4.AppImage"
 bindsym $mod+control+b exec "$HOME/Desktop/bilibili-1.16.5-x86_64.AppImage"
+bindsym $mod+control+t exec "$HOME/Desktop/teams-for-linux-2.0.14.AppImage"
+bindsym $mod+control+l exec "$HOME/Desktop/LM-Studio-0.3.16-8-x64.AppImage"
 
 # Control mpd
 bindsym $mod+control+p exec mpc toggle
@@ -140,7 +142,7 @@ bindsym $mod1+p exec "$HOME/.config/i3/bin/i3bar"
 
 # start specific application
 bindsym $mod+c exec --no-startup-id firefox
-bindsym $mod1+c exec --no-startup-id code
+bindsym $mod1+c exec --no-startup-id Code
 bindsym $mod+shift+s exec --no-startup-id flameshot gui
 bindsym $mod+shift+e exec --no-startup-id emacs
 bindsym $mod+z exec --no-startup-id zathura
