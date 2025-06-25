@@ -223,3 +223,8 @@ live_config_reload = true
 #[window.dimensions]
 #columns = 120
 #lines = 30
+
+[shell]
+program = "/bin/zsh"
+args = ["-c", "tmux attach-session -t First || tmux new-session -s First"]
+
