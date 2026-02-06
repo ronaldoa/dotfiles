@@ -220,11 +220,13 @@ padding = { x = 20, y = 10}
 [general]
 #background_opacity = 0.95
 live_config_reload = true
+
+[terminal]
 #[window.dimensions]
 #columns = 120
 #lines = 30
 
-[shell]
+[terminal.shell]
 program = "/bin/zsh"
 args = ["-c", "tmux attach-session -t First || tmux new-session -s First"]
 

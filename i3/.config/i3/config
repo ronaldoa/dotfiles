@@ -59,7 +59,8 @@ exec --no-startup-id exec --no-startup-id  ~/.config/i3/wallpaper.sh &
 exec --no-startup-id picom -b
 exec --no-startup-id $HOME/.config/i3/bin/i3bar
 exec --no-startup-id nm-applet
-#exec --no-startup-id mpd
+exec --no-startup-id mpd
+exec --no-startup-id blueman-applet
 
 
 # Use pactl to adjust volume in PulseAudio.
@@ -93,8 +94,8 @@ assign [class="FirefoxNightly"] $ws3
 assign [class="Microsoft-edge-dev"] $ws3
 assign [class="Nightly"] $ws3
 assign [class="Noi"] $ws3
-assign [class="bilibili"] $ws3
 
+assign [class="bilibili"] $ws4
 assign [class="netease-cloud-music"] $ws4
 assign [class="FeelUOwn"] $ws4
 
@@ -126,11 +127,12 @@ bindsym $mod+Return exec --no-startup-id alacritty
 #bindsym $mod+control+l exec "$HOME/.local/bin/switch-i3 l"
 #bindsym $mod+control+n exec "$HOME/.local/bin/switch-i3 n"
 
-bindsym $mod+control+n exec "$HOME/Desktop/Noi_linux_0.4.0.AppImage"
-bindsym $mod+control+o exec "$HOME/Desktop/Obsidian-1.8.4.AppImage"
-bindsym $mod+control+b exec "$HOME/Desktop/bilibili-1.16.5-x86_64.AppImage"
-bindsym $mod+control+t exec "$HOME/Desktop/teams-for-linux-2.0.14.AppImage"
-bindsym $mod+control+l exec "$HOME/Desktop/LM-Studio-0.3.16-8-x64.AppImage"
+bindsym $mod+control+n exec "/mnt/data/Tools/Noi_linux_0.4.0.AppImage"
+bindsym $mod+control+o exec "/mnt/data/Tools/Obsidian-1.8.4.AppImage"
+bindsym $mod+control+b exec "/mnt/data/Tools/bilibili-1.16.5-x86_64.AppImage"
+bindsym $mod+control+t exec "/mnt/data/Tools/teams-for-linux-2.0.14.AppImage"
+bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.3.36-1-x64.AppImage"
+bindsym $mod+control+c exec "/mnt/data/Tools/Cursor-1.5.11-x86_64.AppImage"
 
 # Control mpd
 bindsym $mod+control+p exec mpc toggle
@@ -147,7 +149,7 @@ bindsym $mod+shift+s exec --no-startup-id flameshot gui
 bindsym $mod+shift+e exec --no-startup-id emacs
 bindsym $mod+z exec --no-startup-id zathura
 #bindsym $mod+n exec --no-startup-id netbeans
-bindsym $mod+n exec --no-startup-id thunderbird 
+bindsym $mod+t exec --no-startup-id thunderbird 
 bindsym $mod+shift+w exec --no-startup-id wps
 bindsym $mod+shift+n exec --no-startup-id thunar
 bindsym $mod+shift+m exec --no-startup-id feeluown
