@@ -100,6 +100,7 @@ assign [class="netease-cloud-music"] $ws4
 assign [class="FeelUOwn"] $ws4
 
 assign [class="Steam"] $ws5
+assign [class="wechat"] $ws5
 
 assign [class="VirtualBox Machine"] $ws6
 
@@ -131,8 +132,10 @@ bindsym $mod+control+n exec "/mnt/data/Tools/Noi_linux_0.4.0.AppImage"
 bindsym $mod+control+o exec "/mnt/data/Tools/Obsidian-1.8.4.AppImage"
 bindsym $mod+control+b exec "/mnt/data/Tools/bilibili-1.16.5-x86_64.AppImage"
 bindsym $mod+control+t exec "/mnt/data/Tools/teams-for-linux-2.0.14.AppImage"
-bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.3.36-1-x64.AppImage"
+bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.2-2-x64.AppImage"
 bindsym $mod+control+c exec "/mnt/data/Tools/Cursor-1.5.11-x86_64.AppImage"
+bindsym $mod+control+w exec "/mnt/data/Tools/WeChatLinux_x86_64.AppImage"
+bindsym $mod+control+z exec "/mnt/data/dotfiles/rofi/.config/rofi/bin/powermenu"
 
 # Control mpd
 bindsym $mod+control+p exec mpc toggle
@@ -140,7 +143,7 @@ bindsym $mod+control+Right exec mpc next
 bindsym $mod+control+Left exec mpc prev
 
 # Polybar reload
-bindsym $mod1+p exec "$HOME/.config/i3/bin/i3bar"
+bindsym $mod+p exec "$HOME/.config/i3/bin/i3bar"
 
 # start specific application
 bindsym $mod+c exec --no-startup-id firefox

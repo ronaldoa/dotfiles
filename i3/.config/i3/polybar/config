@@ -1,12 +1,12 @@
 ; vim:ft=dosini
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 ;;
-;;	    ____        __      __              
+;;	    ____        __      __
 ;;	   / __ \____  / /_  __/ /_  ____ ______
 ;;	  / /_/ / __ \/ / / / / __ \/ __ `/ ___/
-;;	 / ____/ /_/ / / /_/ / /_/ / /_/ / /    
-;;	/_/    \____/_/\__, /_.___/\__,_/_/     
-;;	              /____/                    
+;;	 / ____/ /_/ / / /_/ / /_/ / /_/ / /
+;;	/_/    \____/_/\__, /_.___/\__,_/_/
+;;	              /____/
 ;;
 ;; Created By Aditya Shakya @adi1090x
 ;;
@@ -22,7 +22,7 @@ margin-top = 0
 include-file = ~/.config/i3/polybar/colors
 
 [bar/main]
-monitor = 
+monitor =
 monitor-strict = false
 override-redirect = false
 
@@ -76,8 +76,8 @@ scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
 
 modules-left = i3 cpu cpu_temp memory wlan
-modules-center =  mpd 
-modules-right =  volume weather date
+modules-center = mpd
+modules-right =  volume  date powermenu 
 
 separator =
 spacing = 0
@@ -115,11 +115,11 @@ compositing-border = over
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 ;;
-;;	    __  ___          __      __         
+;;	    __  ___          __      __
 ;;	   /  |/  /___  ____/ /_  __/ /__  _____
 ;;	  / /|_/ / __ \/ __  / / / / / _ \/ ___/
-;;	 / /  / / /_/ / /_/ / /_/ / /  __(__  ) 
-;;	/_/  /_/\____/\__,_/\__,_/_/\___/____/  
+;;	 / /  / / /_/ / /_/ / /_/ / /  __(__  )
+;;	/_/  /_/\____/\__,_/\__,_/_/\___/____/
 ;;
 ;; Created By Aditya Shakya @adi1090x
 ;;
@@ -239,7 +239,7 @@ format-background = ${color.BACKGROUND}
 format-padding = 2
 
 label-maxlen = 30
-label-empty = 
+label-empty =
 
 [module/volume]
 type = internal/pulseaudio
@@ -334,7 +334,7 @@ poll-interval = 2
 time-format = %H:%M:%S
 
 format-charging = <animation-charging> <label-charging>
-format-charging-prefix = 
+format-charging-prefix =
 
 format-discharging = <ramp-capacity> <label-discharging>
 
@@ -463,11 +463,15 @@ label = %time%
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
+
+
+
+
 [module/mpd]
 type = internal/mpd
 
-;;host = 127.0.0.1
-;;port = 6600
+host = 127.0.0.1
+port = 6600
 ;;password = mysecretpassword
 
 interval = 2
@@ -482,6 +486,9 @@ format-paused = <label-song> <toggle>
 
 format-offline = <label-offline>
 label-offline = "Offline"
+
+format-stopped = MPD: Stopped
+label-stopped = "Stopped"
 
 label-song = "%title% | %artist%"
 label-song-maxlen = 40
@@ -554,11 +561,17 @@ exec = sensors | grep 'Tctl:' | awk '{print $2}'
 interval = 5
 label = " %output%"
 
+[module/powermenu]
+type = custom/text
+content = ""
+click-left = exec ~/.config/rofi/bin/powermenu
+
+
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 ;;	    __________  ______
 ;;	   / ____/ __ \/ ____/
-;;	  / __/ / / / / /_    
-;;	 / /___/ /_/ / __/    
-;;	/_____/\____/_/       
+;;	  / __/ / / / / /_
+;;	 / /___/ /_/ / __/
+;;	/_____/\____/_/
 ;;
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
