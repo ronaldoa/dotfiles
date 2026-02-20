@@ -181,3 +181,18 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 
 # OpenClaw Completion
 source "/home/ronaldo/.openclaw/completions/openclaw.zsh"
+export GOROOT=/home/ronaldo/.go
+export GOPATH=/home/ronaldo/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+export GOROOT=/home/ronaldo/.go
+export GOPATH=/home/ronaldo/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+export GOROOT=/home/ronaldo/.go
+export GOPATH=/home/ronaldo/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+export GOROOT=/home/ronaldo/.go
+export GOPATH=/home/ronaldo/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+export GOROOT=/home/ronaldo/.go
+export GOPATH=/home/ronaldo/go
+export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
