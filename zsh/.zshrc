@@ -178,6 +178,8 @@ export PATH=$CUDA_HOME/bin:$PATH
 export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
 
 export PATH="$HOME/.npm-global/bin:$PATH"
+export EDITOR="nvim"
+export VISUAL="nvim"
 
 # OpenClaw Completion
 source "/home/ronaldo/.openclaw/completions/openclaw.zsh"

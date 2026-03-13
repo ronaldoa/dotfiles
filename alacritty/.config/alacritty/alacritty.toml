@@ -213,9 +213,9 @@ semantic_escape_chars = ",│`|:\"' ()[]{}<>\t@="
 [window]
 opacity = 0.9
 
-dimensions = { columns = 120, lines = 30}
+dimensions = { columns = 120, lines = 30 }
 
-padding = { x = 20, y = 10}
+padding = { x = 20, y = 10 }
 
 [general]
 #background_opacity = 0.95
@@ -228,5 +228,17 @@ live_config_reload = true
 
 [terminal.shell]
 program = "/bin/zsh"
-args = ["-c", "tmux attach-session -t First || tmux new-session -s First"]
-
+args = ["-lc", '''
+if [ -n "$TMUX" ]; then
+  exec zsh
+fi
+base="tmux"
+name="$base"
+n=2
+while tmux has-session -t "$name" 2>/dev/null; do
+  name="${base}-${n}"
+  n=$((n+1))
+done
+tmux new-session -s "$name"
+exec zsh
+''']
