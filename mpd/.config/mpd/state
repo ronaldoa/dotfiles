@@ -1,9 +1,7 @@
 sw_volume: 54
 audio_device_state:1:MPD Pulse Output
 audio_device_state:1:my_fifo
-state: pause
-current: 0
-time: 52.877
+state: stop
 random: 0
 repeat: 1
 single: 0
@@ -13,40 +11,4 @@ mixrampdb: 0
 mixrampdelay: -1
 lastloadedplaylist: 
 playlist_begin
-0:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P23 23.雨中的阳光（Sunshine In The Rain）-BWO（空壳乐队）.mp4
-1:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P24 24.因为你（Because Of You)-Kelly Clarkson.mp4
-2:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P25 25.无心快语(Careless Whisper).mp4
-3:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P26 26.说你说我（Say You Say Me）-莱昂纳尔·里奇.mp4
-4:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P27 27.让我靠近你的心（Take Me To Your Heart）-迈克学摇滚.mp4
-5:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P28 28.因为我爱你（Because I Love You）-杜希金斯·史蒂文斯.mp4
-6:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P29 29.轻装前行（Traveling Light）-Joel Hanson、Sara Grove.mp4
-7:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P3 03.此情可待（Right Here Waiting）-Richard Marx.mp4
-8:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P30 30.你离去的原因（That‘s Why You Go Away） - Michael Learns To Rock.mp4
-9:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P31 31.天下一家（We Are The World）-迈克尔·杰克逊.mp4
-10:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P32 32.你离开的那天（The day  you went  away）-M2M.mp4
-11:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P33 33.麻烦是朋友（Trouble Is A Friend）-Lenka.mp4
-12:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P34 34.柠檬树（Lemon Tree）-Fool’s Garden.mp4
-13:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P35 35.不羁音符（Free Loop）-Daniel Powter.mp4
-14:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P36 36.美丽的你（You are beautiful)-詹姆斯·布朗特.mp4
-15:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P37 37.布列瑟农 (Bressanone) - 马修·连恩.mp4
-16:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P38 38.诺言难许（Promise Don’t Come Easy）-Caron Nightingale.mp4
-17:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P39 39.雨中的笑声（Laughter In The Rain）-TNeil Sedaka.mp4
-18:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P4 04.昨日重现（Yesterday Once More)-卡朋特.mp4
-19:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P40 40.爱情故事（Love Story）-Taylor Swift.mp4
-20:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P41 41.你并不孤单（You Are Not Alone）-Michael Jackson.mp4
-21:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P42 42.你鼓舞了我（You Raise Me Up）-西城男孩.mp4
-22:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P43 43.只要你爱我（As Long As You Love Me）-后街男孩.mp4
-23:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P44 44.青涩（Yellow）-Coldplay.mp4
-24:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P45 45.燃烧（Burning）-Maria Arredondo.mp4
-25:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P46 46.航行（Sailing）-Rod Stewar.mp4
-26:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P47 47.依偎着我哭泣(Cry On My Shoulder)-Deutschland sucht den Superstar.mp4
-27:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P48 48.寂静之声（The Sound of Silence）-保罗·西蒙.mp4
-28:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P49 49.友谊天长地久(Auld Lang Syne).mp4
-29:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P5 05.此情不渝（Nothing’s Gonna Change My Love For You）-George Benson.mp4
-30:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P50 50.告别时刻(Time To Say Goodbye)莎拉布莱曼.mp4
-31:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P6 06.带走我的呼吸（Take My Breath Away）- Berlin.mp4
-32:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P7 07.大大世界（Big Big World）-Emilia Rydberg.mp4
-33:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P8 08.斯卡布罗集市(Scarborough Fair)-莎拉布莱曼.mp4
-34:【时长3小时】世界上最好听的50首经典英文歌曲合集，一生必听的50首英文歌曲！ P9 09.爱你在心口难开（More than I can say）-Leo Sayer.mp4
-35:anthem0.mp3
 playlist_end

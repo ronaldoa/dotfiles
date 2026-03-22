@@ -133,10 +133,12 @@ bindsym $mod+control+n exec "/mnt/data/Tools/Noi_linux_0.4.0.AppImage"
 bindsym $mod+control+o exec "/mnt/data/Tools/Obsidian-1.8.4.AppImage"
 bindsym $mod+control+b exec "/mnt/data/Tools/bilibili-1.16.5-x86_64.AppImage"
 bindsym $mod+control+t exec "/mnt/data/Tools/teams-for-linux-2.0.14.AppImage"
-bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.6-1-x64.AppImage"
+#bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.6-1-x64.AppImage"
+bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.7-4-x64.AppImage"
 bindsym $mod+control+c exec "/mnt/data/Tools/Cursor-1.5.11-x86_64.AppImage"
 bindsym $mod+control+w exec "/mnt/data/Tools/WeChatLinux_x86_64.AppImage"
 bindsym $mod+control+z exec "/mnt/data/dotfiles/rofi/.config/rofi/bin/powermenu"
+bindsym $mod+control+d exec "/mnt/data/Tools/doublecmd-gtk-latest-x86_64.AppImage"
 
 # Control mpd
 bindsym $mod+control+p exec mpc toggle
@@ -170,8 +172,8 @@ bindsym control+Print exec --no-startup-id "scrot '/tmp/%F_%T_$wx$h.png' -e 'xcl
 
 # enable and disable touchpad
 # reference: https://wiki.archlinux.org/index.php/Libinput#Disable_touchpad
-bindsym $mod+control+e exec --no-startup-id "xinput enable 'DELL0828:00 06CB:7E7E Touchpad'"
-bindsym $mod+control+d exec --no-startup-id "xinput disable 'DELL0828:00 06CB:7E7E Touchpad'"
+#bindsym $mod+control+e exec --no-startup-id "xinput enable 'DELL0828:00 06CB:7E7E Touchpad'"
+#bindsym $mod+control+d exec --no-startup-id "xinput disable 'DELL0828:00 06CB:7E7E Touchpad'"
 
 # IDEs start bindsym
 set $ides "[i]dea [c]lion [g]oland [p]ycharm [d]atagrip"
