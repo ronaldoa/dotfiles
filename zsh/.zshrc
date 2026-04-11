@@ -198,3 +198,6 @@ export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 export GOROOT=/home/ronaldo/.go
 export GOPATH=/home/ronaldo/go
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+# 加到 ~/.bashrc
+export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+
