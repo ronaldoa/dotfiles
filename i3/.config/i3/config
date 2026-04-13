@@ -128,9 +128,9 @@ bindsym $mod+Return exec --no-startup-id alacritty
 #bindsym $mod+control+l exec "$HOME/.local/bin/switch-i3 l"
 #bindsym $mod+control+n exec "$HOME/.local/bin/switch-i3 n"
 
-#bindsym $mod+control+n exec "/mnt/data/Tools/Noi-1.1.0-x64.AppImage"
-bindsym $mod+control+n exec "/mnt/data/Tools/Noi_linux_0.4.0.AppImage"
-bindsym $mod+control+o exec "/mnt/data/Tools/Obsidian-1.8.4.AppImage"
+bindsym $mod+control+n exec "/mnt/data/Tools/Noi-1.1.0-x64.AppImage"
+#bindsym $mod+control+n exec "/mnt/data/Tools/Noi_linux_0.4.0.AppImage"
+bindsym $mod+control+o exec --no-startup-id obsidian
 bindsym $mod+control+b exec "/mnt/data/Tools/bilibili-1.16.5-x86_64.AppImage"
 bindsym $mod+control+t exec "/mnt/data/Tools/teams-for-linux-2.0.14.AppImage"
 #bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.6-1-x64.AppImage"
