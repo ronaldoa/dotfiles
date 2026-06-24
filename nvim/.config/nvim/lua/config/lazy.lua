@@ -32,6 +32,17 @@ require("lazy").setup({
     -- version = "*", -- try installing the latest stable version for plugins that support semver
   },
   install = { colorscheme = { "tokyonight", "habamax" } },
+  git = {
+    -- copilot.lua bundles large language-server binaries (~600MB working tree, full
+    -- history is ~340MB). Two defaults break it on a slow connection:
+    --   * filter=blob:none does a partial clone, then fetches the big blobs on demand
+    --     during checkout -> "Clone succeeded, but checkout failed".
+    --   * timeout=120 kills any git op after 2 min, so the download dies at ~120MB
+    --     ("unexpected disconnect ... fatal: early EOF").
+    -- Full clone + a generous timeout downloads everything in one pack and succeeds.
+    filter = false,
+    timeout = 800,
+  },
   checker = {
     enabled = true, -- check for plugin updates periodically
     notify = false, -- notify on update
