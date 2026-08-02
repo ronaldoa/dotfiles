@@ -61,6 +61,7 @@ exec --no-startup-id $HOME/.config/i3/bin/i3bar
 exec --no-startup-id nm-applet
 exec --no-startup-id mpd
 exec --no-startup-id blueman-applet
+exec --no-startup-id flameshot
 
 
 # Use pactl to adjust volume in PulseAudio.
@@ -135,9 +136,9 @@ bindsym $mod+control+b exec "/mnt/data/Tools/bilibili-1.16.5-x86_64.AppImage"
 bindsym $mod+control+t exec "/mnt/data/Tools/teams-for-linux-2.0.14.AppImage"
 #bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.6-1-x64.AppImage"
 #bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.7-4-x64.AppImage"
-bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.9-1-x64.AppImage"
+bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.12-1-x64.AppImage"
 bindsym $mod+control+c exec "/mnt/data/Tools/Cursor-1.5.11-x86_64.AppImage"
-bindsym $mod+control+w exec "/mnt/data/Tools/WeChatLinux_x86_64.AppImage"
+bindsym $mod+control+w exec --no-startup-id "pkill -9 -i wechat; sleep 1; /mnt/data/Tools/WeChatLinux_x86_64.AppImage"
 bindsym $mod+control+z exec "/mnt/data/dotfiles/rofi/.config/rofi/bin/powermenu"
 bindsym $mod+control+d exec "/mnt/data/Tools/doublecmd-gtk-latest-x86_64.AppImage"
 
