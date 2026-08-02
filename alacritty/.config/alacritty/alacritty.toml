@@ -232,13 +232,14 @@ args = ["-lc", '''
 if [ -n "$TMUX" ]; then
   exec zsh
 fi
-base="tmux"
-name="$base"
-n=2
-while tmux has-session -t "$name" 2>/dev/null; do
-  name="${base}-${n}"
-  n=$((n+1))
-done
-tmux new-session -s "$name"
+# 只复用「未 attach 且所有 pane 都是空闲 zsh」的 session，没有才新建
+target=$(tmux ls -F '#{session_attached} #{session_name}' 2>/dev/null | awk '$1==0{print $2}' | while read -r s; do
+  [ "$(tmux list-panes -t "$s" -F '#{pane_current_command}' 2>/dev/null | sort -u)" = zsh ] && { echo "$s"; break; }
+done)
+if [ -n "$target" ]; then
+  tmux attach -t "$target"
+else
+  tmux new-session
+fi
 exec zsh
 ''']
