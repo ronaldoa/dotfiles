@@ -271,7 +271,7 @@ tmux_conf_theme_right_separator_sub="|"
 tmux_conf_theme_status_left=" ❐ #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} "
 #tmux_conf_theme_status_left=" ❐ #S | ↑#{?uptime_y, #{uptime_y}y,}#{?uptime_d, #{uptime_d}d,}#{?uptime_h, #{uptime_h}h,}#{?uptime_m, #{uptime_m}m,} | #{pretty_pane_current_path} "
 #tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_status,#{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} "
- tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_status,#{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},}#{cpu_icon} #{cpu_percentage} , %R , %d %b | #{username}#{root} | #{hostname} "
+ tmux_conf_theme_status_right=" #{prefix}#{mouse}#{pairing}#{synchronized}#{?battery_status,#{battery_status},}#{?battery_bar, #{battery_bar},}#{?battery_percentage, #{battery_percentage},} , %R , %d %b | #{username}#{root} | #{hostname} "
 
 # status left style
 tmux_conf_theme_status_left_fg="$tmux_conf_theme_colour_6,$tmux_conf_theme_colour_7,$tmux_conf_theme_colour_8"
@@ -394,6 +394,11 @@ set -g mouse on
 #set -g status-keys vi
 set -g mode-keys vi
 
+# alacritty 实现了 DECSET 2026(实机 DECRQM 回 `CSI ?2026;2$y`)和 Smulx,但它的 terminfo
+# 里没有 Sync,而 TERM 又被 alacritty.toml 改写成 xterm-256color ⇒ tmux 两个都检测不到
+# (实测 tmux info: Sync/Smulx 皆 [missing])。alacritty 不答 XTVERSION,所以只能手动申报。
+set -as terminal-features ",xterm-256color:sync:usstyle"
+
 # replace C-b by C-a instead of using both prefixes
 # set -gu prefix2
 # unbind C-a
@@ -454,12 +459,12 @@ tmux_conf_uninstall_plugins_on_reload=true
 #set -g @continuum-restore 'on'
 
 # 1. 启用系统状态监控（记得配合状态栏变量使用）
-set -g @plugin 'tmux-plugins/tmux-cpu'
+#set -g @plugin 'tmux-plugins/tmux-cpu'
 
 # 2. 启用环境持久化组合
-set -g @plugin 'tmux-plugins/tmux-resurrect'
-set -g @plugin 'tmux-plugins/tmux-continuum'
-set -g @continuum-restore 'on'
+#set -g @plugin 'tmux-plugins/tmux-resurrect'
+#set -g @plugin 'tmux-plugins/tmux-continuum'
+#set -g @continuum-restore 'on'
 
 # 3. 启用额外的高效工作流插件
 set -g @plugin 'laktak/extrakto'
