@@ -16,13 +16,16 @@ return {
     require("cscope_maps").setup(opts)
 
     -- 跟随当前 buffer 所在项目切换 GTAGS 数据库
+    local function activate()
+      if vim.b.gutentags_files then
+        vim.fn["gutentags#gtags_maps#activate"]()
+      end
+    end
     vim.api.nvim_create_autocmd("BufEnter", {
       group = vim.api.nvim_create_augroup("GtagsMapsActivate", { clear = true }),
-      callback = function()
-        if vim.b.gutentags_files then
-          vim.fn["gutentags#gtags_maps#activate"]()
-        end
-      end,
+      callback = activate,
     })
+    -- setup() 会清空 g:cscope_maps_db_file，而启动时打开的文件在此之前已经被 gutentags 初始化过
+    activate()
   end,
 }
