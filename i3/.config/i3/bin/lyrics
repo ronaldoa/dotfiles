@@ -1,0 +1,520 @@
+#!/usr/bin/env python3
+"""Synced lyrics for the song mpd is playing.
+
+  lyrics bar     polybar tail script: prints the current lyric line whenever it changes
+  lyrics view    scrolling lyrics in a terminal, current line highlighted (? lists keys)
+  lyrics toggle  open/close the translucent floating lyrics window (Super+L); its size,
+                 position, font size and opacity are remembered in ~/.local/state
+  lyrics offset N  shift the playing song's lyrics by N seconds (+ earlier, - later, 0 reset);
+                 also ←/→ in the window. Saved per song in ~/.local/state/lyrics-offsets.json
+
+Lyrics come from a .lrc next to the music file if there is one, otherwise from lrclib.net
+(free, no key), searched by the song's title/artist tags and cached in ~/.cache/lyrics.
+A plain-text copy is also written to ncmpcpp's lyrics_directory, so `L` in ncmpcpp works too.
+"""
+import json
+import os
+import re
+import select
+import shutil
+import socket
+import subprocess
+import sys
+import termios
+import time
+import tty
+import unicodedata
+import urllib.parse
+import urllib.request
+
+MPD = ("127.0.0.1", 6600)
+MUSIC_DIR = os.path.expanduser("~/Music")
+CACHE_DIR = os.path.expanduser("~/.cache/lyrics")
+NCMPCPP_DIR = os.path.expanduser("~/.config/ncmpcpp/lyrics")
+NOT_FOUND = "NOTFOUND\n"   # cache marker; retried once it is a day old
+RETRY_AFTER = 86400
+POLL = 0.25
+LEAD = 0.3  # show a line slightly before it is sung
+OFFSETS_FILE = os.path.expanduser("~/.local/state/lyrics-offsets.json")  # per-song timing fixes
+LRC_TIME = re.compile(r"\[(\d+):(\d+(?:\.\d+)?)\]")
+
+
+# ---------- mpd ----------
+
+class Mpd:
+    def __init__(self):
+        self.sock = None
+
+    def _connect(self):
+        self.sock = socket.create_connection(MPD, timeout=3)
+        self.file = self.sock.makefile("rb")
+        self.file.readline()  # "OK MPD x.y.z"
+
+    def command(self, cmd):
+        """Run one command and return its key/value pairs; reconnects once on failure."""
+        for attempt in (0, 1):
+            try:
+                if self.sock is None:
+                    self._connect()
+                self.sock.sendall(cmd.encode() + b"\n")
+                out = {}
+                for raw in self.file:
+                    line = raw.decode("utf-8", "replace").rstrip("\n")
+                    if line == "OK":
+                        return out
+                    if line.startswith("ACK"):
+                        raise OSError(line)
+                    key, _, val = line.partition(": ")
+                    out[key] = val
+                raise OSError("mpd closed the connection")
+            except OSError:
+                self.sock = None
+                if attempt:
+                    raise
+
+    def now(self):
+        """(song dict, state, elapsed seconds), or (None, state, 0) when nothing is loaded."""
+        status = self.command("status")
+        state = status.get("state", "stop")
+        if state == "stop" or "songid" not in status:
+            return None, state, 0.0
+        return self.command("currentsong"), state, float(status.get("elapsed", 0))
+
+
+# ---------- fetching ----------
+
+def safe(name):
+    return name.replace("/", "／").strip()
+
+
+def http_json(url):
+    """GET JSON; retries a few times since lrclib often answers 503 when busy. Raises OSError."""
+    req = urllib.request.Request(url, headers={"User-Agent": "i3-lyrics (github.com/ronaldoa/dotfiles)"})
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req, timeout=10) as r:
+                return json.load(r)
+        except (OSError, ValueError):
+            if attempt == 3:
+                raise OSError(f"lrclib unreachable: {url}")
+            time.sleep(1 + attempt * 2)
+
+
+def traditional(s):
+    """Simplified -> traditional Chinese via opencc; lrclib often only has the traditional title."""
+    try:
+        return subprocess.run(["opencc", "-c", "s2t"], input=s, capture_output=True,
+                              text=True, timeout=5).stdout.strip() or s
+    except (OSError, subprocess.SubprocessError):
+        return s
+
+
+def search_lrclib(title, artist, duration):
+    """Best lrclib match: synced lyrics first, then closest duration. Returns text, or None
+    if lrclib has nothing; raises OSError when lrclib can't be reached."""
+    queries = []
+    for t, a in dict.fromkeys([(title, artist), (traditional(title), traditional(artist))]):
+        if a:
+            queries.append({"track_name": t, "artist_name": a})
+        queries.append({"track_name": t})
+    for q in queries:
+        results = http_json("https://lrclib.net/api/search?" + urllib.parse.urlencode(q))
+        results = [r for r in results if r.get("syncedLyrics") or r.get("plainLyrics")]
+        if duration:
+            # Without an artist, only trust results whose length matches
+            close = [r for r in results if abs((r.get("duration") or 0) - duration) < 8]
+            results = close if close or not artist else results
+        if results:
+            best = min(results, key=lambda r: (not r.get("syncedLyrics"),
+                                               abs((r.get("duration") or 0) - duration)))
+            return best.get("syncedLyrics") or best.get("plainLyrics")
+    return None
+
+
+def get_lyrics(song):
+    """Raw LRC/plain text for an mpd song, or None if there are none."""
+    path = song.get("file", "")
+    sidecar = os.path.join(MUSIC_DIR, os.path.splitext(path)[0] + ".lrc")
+    if os.path.isfile(sidecar):
+        with open(sidecar, encoding="utf-8", errors="replace") as f:
+            return f.read()
+
+    title = song.get("Title") or os.path.splitext(os.path.basename(path))[0]
+    artist = song.get("Artist", "")
+    name = safe(f"{artist} - {title}" if artist else title)
+    cache = os.path.join(CACHE_DIR, name + ".lrc")
+    if os.path.isfile(cache):
+        with open(cache, encoding="utf-8") as f:
+            text = f.read()
+        if text != NOT_FOUND:
+            return text
+        if time.time() - os.path.getmtime(cache) < RETRY_AFTER:
+            return None
+
+    try:
+        text = search_lrclib(title, artist, float(song.get("duration", 0) or 0))
+    except OSError:
+        return None  # offline/busy: not cached, so the next play tries again
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    tmp = cache + f".{os.getpid()}"
+    with open(tmp, "w", encoding="utf-8") as f:
+        f.write(text or NOT_FOUND)
+    os.replace(tmp, cache)
+    if text and artist:
+        os.makedirs(NCMPCPP_DIR, exist_ok=True)
+        with open(os.path.join(NCMPCPP_DIR, name + ".txt"), "w", encoding="utf-8") as f:
+            f.write("\n".join(text_of(l) for l in text.splitlines()) + "\n")
+    return text
+
+
+# ---------- parsing ----------
+
+def text_of(line):
+    return LRC_TIME.sub("", line).strip()
+
+
+def parse(text):
+    """-> (synced, lines). synced lines are sorted (seconds, text); plain lines are (None, text)."""
+    timed, plain = [], []
+    m = re.search(r"^\[offset:\s*([+-]?\d+)\]", text, re.M | re.I)
+    shift = int(m.group(1)) / 1000 if m else 0.0  # LRC [offset:ms], positive = lyrics earlier
+    for line in text.splitlines():
+        stamps = LRC_TIME.findall(line)
+        words = text_of(line)
+        if stamps:
+            timed += [(int(m) * 60 + float(s) - shift, words) for m, s in stamps]
+        elif not re.match(r"^\[[a-z]+:.*\]$", line.strip()):  # skip [ar:...] style tags
+            plain.append((None, words))
+    if timed:
+        return True, sorted(timed)
+    return False, plain
+
+
+def current_index(lines, elapsed):
+    idx = -1
+    for i, (t, _) in enumerate(lines):
+        if t > elapsed:
+            break
+        idx = i
+    return idx
+
+
+def load_offsets():
+    try:
+        with open(OFFSETS_FILE) as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
+def shift_offset(file, delta):
+    """Add `delta` seconds to a song's offset (delta None resets it); returns the new offset."""
+    offsets = load_offsets()
+    value = 0.0 if delta is None else round(offsets.get(file, 0.0) + delta, 2)
+    if value:
+        offsets[file] = value
+    else:
+        offsets.pop(file, None)
+    os.makedirs(os.path.dirname(OFFSETS_FILE), exist_ok=True)
+    tmp = OFFSETS_FILE + f".{os.getpid()}"
+    with open(tmp, "w") as f:
+        json.dump(offsets, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, OFFSETS_FILE)
+    return value
+
+
+class Tracker:
+    """Keeps the lyrics of the current song loaded."""
+    def __init__(self):
+        self.mpd = Mpd()
+        self.key = None
+        self.song = None
+        self.synced, self.lines = False, []
+        self.offsets, self.offsets_mtime = {}, None
+
+    @property
+    def offset(self):
+        return self.offsets.get(self.key, 0.0)
+
+    def poll(self):
+        """-> (state, lyric time): song position plus lead time and this song's offset."""
+        try:
+            mtime = os.path.getmtime(OFFSETS_FILE)
+        except OSError:
+            mtime = None
+        if mtime != self.offsets_mtime:  # another process (bar/view/offset command) changed it
+            self.offsets, self.offsets_mtime = load_offsets(), mtime
+        try:
+            song, state, elapsed = self.mpd.now()
+        except OSError:
+            return "offline", 0.0
+        key = song and song.get("file")
+        if key != self.key:
+            self.key, self.song = key, song
+            self.synced, self.lines = False, []
+            if song:
+                text = get_lyrics(song)
+                if text:
+                    self.synced, self.lines = parse(text)
+        return state, elapsed + LEAD + self.offset
+
+
+# ---------- modes ----------
+
+def bar():
+    tracker, last = Tracker(), None
+    while True:
+        state, clock = tracker.poll()
+        out = ""
+        if state == "play" and tracker.synced:
+            i = current_index(tracker.lines, clock)
+            out = tracker.lines[i][1] if i >= 0 else ""
+            out = f"♪ {out}" if out else "♪"
+        if out != last:
+            print(out, flush=True)
+            last = out
+        time.sleep(POLL)
+
+
+def width(s):
+    return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
+
+
+# ---------- lyrics window ----------
+
+STATE_FILE = os.path.expanduser("~/.local/state/lyrics-window.json")
+DEFAULTS = {"font": 16, "opacity": 0.55, "header": True, "rect": None}
+HELP = "←/→ 歌词延后/提前   0 重置偏移   +/- 字号   [/] 透明度   滚轮 字号   h 标题   q 关闭   Alt+左键拖动 移动   Alt+右键拖动 改大小"
+
+# Nord-ish palette: current line, then fading as lines get further from it
+FG_CURRENT = (136, 192, 208)
+FG_NEAR = (216, 222, 233)
+FG_FAR = (110, 118, 135)
+FG_HEADER = (163, 190, 140)
+
+
+def load_state():
+    try:
+        with open(STATE_FILE) as f:
+            return {**DEFAULTS, **json.load(f)}
+    except (OSError, ValueError):
+        return dict(DEFAULTS)
+
+
+def save_state(state):
+    os.makedirs(os.path.dirname(STATE_FILE), exist_ok=True)
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f)
+
+
+def window_rect():
+    """[x, y, w, h] of the lyrics window from i3, or None."""
+    try:
+        tree = json.loads(subprocess.run(["i3-msg", "-t", "get_tree"], capture_output=True,
+                                         text=True, timeout=3).stdout)
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
+    stack = [tree]
+    while stack:
+        n = stack.pop()
+        if (n.get("window_properties") or {}).get("instance") == "lyrics":
+            r = n["rect"]
+            return [r["x"], r["y"], r["width"], r["height"]]
+        stack += n.get("nodes", []) + n.get("floating_nodes", [])
+    return None
+
+
+def remember_rect():
+    rect = window_rect()
+    if rect:
+        save_state({**load_state(), "rect": rect})
+
+
+def rgb(c, bold=False):
+    return f"\033[{'1;' if bold else ''}38;2;{c[0]};{c[1]};{c[2]}m"
+
+
+def fade(dist, span):
+    """Colour for a line `dist` rows away from the current one."""
+    t = min(1.0, dist / max(span, 1))
+    return tuple(round(a + (b - a) * t) for a, b in zip(FG_NEAR, FG_FAR))
+
+
+class View:
+    def __init__(self):
+        self.tracker = Tracker()
+        self.state = load_state()
+        self.toast, self.toast_until = "", 0.0
+
+    def apply_terminal(self):
+        """Push font size / opacity into this Alacritty window (needs $ALACRITTY_WINDOW_ID)."""
+        subprocess.run(["alacritty", "msg", "config",
+                        f"font.size={self.state['font']}",
+                        f"window.opacity={self.state['opacity']:.2f}"],
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def flash(self, msg):
+        self.toast, self.toast_until = msg, time.time() + 1.5
+
+    def key(self, data):
+        """Handle input bytes; returns False to quit."""
+        st = self.state
+        for k in re.findall(rb"\x1b\[[A-D]|\x1bO[A-D]|\x1b|.", data, re.S):
+            if k in (b"q", b"Q", b"\x1b"):
+                return False
+            if k in (b"\x1b[C", b"\x1bOC", b"\x1b[D", b"\x1bOD", b"0") and self.tracker.key:
+                delta = None if k == b"0" else 0.5 if k in (b"\x1b[C", b"\x1bOC") else -0.5
+                self.flash(offset_text(shift_offset(self.tracker.key, delta)))
+                continue
+            if k in (b"+", b"=", b"\x1b[A", b"\x1bOA"):  # wheel up arrives as Up in the alt screen
+                st["font"] = min(48, st["font"] + 1)
+            elif k in (b"-", b"_", b"\x1b[B", b"\x1bOB"):
+                st["font"] = max(8, st["font"] - 1)
+            elif k == b"]":
+                st["opacity"] = round(min(1.0, st["opacity"] + 0.05), 2)
+            elif k == b"[":
+                st["opacity"] = round(max(0.0, st["opacity"] - 0.05), 2)
+            elif k in (b"h", b"H"):
+                st["header"] = not st["header"]
+                continue
+            elif k == b"?":
+                self.flash(HELP)
+                continue
+            else:
+                continue
+            self.apply_terminal()
+            self.flash(f"字号 {st['font']}   不透明度 {round(st['opacity'] * 100)}%")
+        return True
+
+    def run(self):
+        rect = self.state["rect"]
+        if rect:
+            x, y, w, h = rect
+            subprocess.run(["i3-msg", "-q", f'[instance="lyrics"] resize set {w} px {h} px, '
+                            f"move position {x} px {y} px"])
+        fd = sys.stdin.fileno()
+        saved = termios.tcgetattr(fd)
+        sys.stdout.write("\033[?1049h\033[?25l")
+        tty.setcbreak(fd)
+        self.flash("? 查看快捷键")
+        last = None
+        try:
+            while True:
+                state, clock = self.tracker.poll()
+                cols, rows = shutil.get_terminal_size()
+                t = self.tracker
+                idx = current_index(t.lines, clock) if t.synced else -1
+                toast = self.toast if time.time() < self.toast_until else ""
+                frame = (t.key, idx, cols, rows, state, toast, self.state["header"])
+                if frame != last:
+                    last = frame
+                    sys.stdout.write(self.render(state, idx, cols, rows, toast))
+                    sys.stdout.flush()
+                if select.select([fd], [], [], POLL)[0] and not self.key(os.read(fd, 64)):
+                    break
+        except KeyboardInterrupt:
+            pass
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+            sys.stdout.write("\033[?25h\033[?1049l")
+            sys.stdout.flush()
+            self.state["rect"] = window_rect() or self.state["rect"]
+            save_state(self.state)
+
+    def render(self, state, idx, cols, rows, toast):
+        t = self.tracker
+        song = t.song or {}
+        title = song.get("Title") or os.path.basename(song.get("file", ""))
+        artist = song.get("Artist", "")
+        header = f"{title}  ·  {artist}" if artist else title
+        if state == "offline":
+            header = "mpd 未运行"
+        elif not song:
+            header = "没有在播放"
+        elif state == "pause":
+            header += "  ⏸"
+
+        # Small windows drop the header and spacing so they work as a 1–3 line strip
+        show_header = self.state["header"] and rows >= 6
+        top_rows = 2 if show_header else 0
+        body_rows = max(1, rows - top_rows - (1 if toast else 0))
+        gap = 2 if body_rows >= 9 else 1  # spacing between lines when there's room
+
+        out = ["\033[H\033[2J"]
+        if show_header:
+            out.append(center(rgb(FG_HEADER, True) + header + "\033[0m", header, cols) + "\n\n")
+
+        slots = (body_rows + gap - 1) // gap
+        if not t.lines:
+            msg = "没有找到歌词" if song else ""
+            lines = [""] * (slots // 2) + [msg]
+            cur = -1
+        elif t.synced:
+            first = max(idx, 0) - slots // 2  # keep the current line in the middle
+            lines = [t.lines[i][1] if 0 <= i < len(t.lines) else "" for i in range(first, first + slots)]
+            cur = idx - first if idx >= 0 else -1
+        else:
+            lines, cur = [l for _, l in t.lines][:slots], -1
+
+        body = []
+        for n, line in enumerate(lines):
+            if n == cur:
+                line = line or "♪"  # instrumental gap
+                styled = rgb(FG_CURRENT, True) + line + "\033[0m"
+            else:
+                styled = rgb(fade(abs(n - cur) if cur >= 0 else 1, slots // 2)) + line + "\033[0m"
+            body.append(center(styled, line, cols))
+            body += [""] * (gap - 1)
+        out.append("\n".join(body[:body_rows]))
+
+        if toast:
+            out.append(f"\033[{rows};1H" + center(rgb(FG_FAR) + toast[:cols] + "\033[0m", toast[:cols], cols))
+        return "".join(out)
+
+
+def offset_text(value):
+    if not value:
+        return "歌词偏移 0（原始时间）"
+    return f"歌词偏移 {value:+.1f}s（{'提前' if value > 0 else '延后'}）"
+
+
+def offset(arg):
+    """`lyrics offset +0.5|-0.5|0`: adjust the playing song's offset (for keybindings/polybar)."""
+    song, _, _ = Mpd().now()
+    if not song:
+        sys.exit("nothing is playing")
+    value = shift_offset(song["file"], None if float(arg) == 0 else float(arg))
+    subprocess.run(["notify-send", "-t", "1500", "-h", "string:x-canonical-private-synchronous:lyrics",
+                    "歌词", offset_text(value)], stderr=subprocess.DEVNULL)
+    print(offset_text(value))
+
+
+def center(styled, plain, cols):
+    return " " * max(0, (cols - width(plain)) // 2) + styled
+
+
+def view():
+    View().run()
+
+
+def toggle():
+    if window_rect():
+        remember_rect()
+        subprocess.run(["i3-msg", "-q", '[instance="lyrics"] kill'])
+        return
+    st = load_state()
+    subprocess.Popen(["alacritty", "--class", "lyrics", "--title", "Lyrics",
+                      "-o", f"font.size={st['font']}",
+                      "-o", f"window.opacity={st['opacity']:.2f}",
+                      "-o", 'colors.primary.background="#1b1f27"',
+                      "-o", "window.padding.x=24", "-o", "window.padding.y=18",
+                      "-e", os.path.abspath(__file__), "view"], start_new_session=True,
+                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+if __name__ == "__main__":
+    mode = sys.argv[1] if len(sys.argv) > 1 else "view"
+    if mode == "offset" and len(sys.argv) == 3:
+        offset(sys.argv[2])
+    else:
+        {"bar": bar, "view": view, "toggle": toggle}.get(mode, lambda: sys.exit(__doc__))()

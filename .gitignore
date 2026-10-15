@@ -7,3 +7,5 @@
 mpd/.config/mpd/log
 mpd/.config/mpd/state
 mpd/.config/mpd/database
+ncmpcpp/.config/ncmpcpp/lyrics/
+__pycache__/

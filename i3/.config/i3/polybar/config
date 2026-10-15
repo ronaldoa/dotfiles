@@ -76,7 +76,7 @@ scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
 
 modules-left = i3 cpu cpu_temp memory wlan
-modules-center = mpd
+modules-center = mpd lyrics
 modules-right = weather volume date systray powermenu
 
 separator =
@@ -500,6 +500,20 @@ icon-prev-foreground = ${color.CYAN}
 icon-next = 󰼧
 icon-next-font = 2
 icon-next-foreground = ${color.CYAN}
+
+;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+
+[module/lyrics]
+; Current lyric line of the mpd song (~/.config/i3/bin/lyrics); click for the full lyrics window
+type = custom/script
+exec = ~/.config/i3/bin/lyrics bar
+tail = true
+click-left = ~/.config/i3/bin/lyrics toggle &
+; Scroll to fix timing for this song: up = lyrics earlier, down = later
+scroll-up = ~/.config/i3/bin/lyrics offset +0.5 &
+scroll-down = ~/.config/i3/bin/lyrics offset -0.5 &
+format-foreground = ${color.CYAN}
+label-maxlen = 60
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
