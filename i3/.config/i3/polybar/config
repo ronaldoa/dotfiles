@@ -436,15 +436,16 @@ type = internal/date
 
 interval = 1.0
 
+date = %m-%d %a
 time = %H:%M:%S
-time-alt = %Y-%m-%d %a
 
-format = <label>
+; Click to toggle a calendar popup
+format = %{A1:~/.config/i3/polybar/script/calendar.sh:}<label>%{A}
 format-prefix = " "
 format-prefix-font = 2
 format-prefix-foreground = ${color.RED}
 
-label = %time%
+label = %date% %time%
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 

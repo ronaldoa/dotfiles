@@ -133,6 +133,8 @@ for_window [window_role="pop-up|dialog|task_dialog"] floating enable
 for_window [window_type="dialog"] floating enable
 # Picture-in-picture videos float and stay on every workspace
 for_window [title="Picture-in-Picture|画中画"] floating enable, sticky enable
+# Polybar calendar popup (placed by polybar/script/calendar.sh)
+for_window [class="cal-popup"] floating enable, border pixel 1
 # ChatGPT lives in the scratchpad
 for_window [class="Chromium" instance="chatgpt.com"] floating enable, resize set 60 ppt 80 ppt, move position center, move scratchpad
 
