@@ -2,6 +2,18 @@
 # Pick a song from the mpd library in rofi (type to search) and play it.
 # Bound to clicking the song title in polybar's mpd module.
 # A song already in the queue is jumped to; otherwise it is appended to the queue and played.
+#   music-pick --refresh   rescan ~/Music and append every library song missing from the queue
+#                          (new files, or ones consume mode removed); playback isn't interrupted.
+
+if [ "$1" = "--refresh" ]; then
+    mpc -q update --wait || exit 1
+    before=$(mpc playlist | wc -l)
+    comm -23 <(mpc listall | sort) <(mpc -f '%file%' playlist | sort) | mpc -q add
+    after=$(mpc playlist | wc -l)
+    notify-send -t 3000 -h string:x-canonical-private-synchronous:music-pick \
+        "音乐库已刷新" "队列新增 $((after - before)) 首，共 $after 首"
+    exit 0
+fi
 
 FMT='%file%\t[%title%|%file%]\t[%artist%]\t[%album%]'
 library=$(mpc -f "$FMT" listall) || exit 1

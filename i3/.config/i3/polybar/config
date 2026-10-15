@@ -462,14 +462,14 @@ port = 6600
 
 interval = 2
 
-; Click the song title to pick another song (bin/music-pick)
-format-online = %{A1:~/.config/i3/bin/music-pick &:}<label-song>%{A} <icon-prev> <toggle> <icon-next>
+; Click the song title to pick another song, right-click to rescan the library into the queue (bin/music-pick)
+format-online = %{A1:~/.config/i3/bin/music-pick &:}%{A3:~/.config/i3/bin/music-pick --refresh &:}<label-song>%{A}%{A} <icon-prev> <toggle> <icon-next>
 format-online-prefix = " "
 format-online-prefix-font = 1
 format-online-prefix-foreground = ${color.GREEN}
 
 format-playing = ${self.format-online}
-format-paused = %{A1:~/.config/i3/bin/music-pick &:}<label-song>%{A} <toggle>
+format-paused = %{A1:~/.config/i3/bin/music-pick &:}%{A3:~/.config/i3/bin/music-pick --refresh &:}<label-song>%{A}%{A} <toggle>
 
 format-offline = <label-offline>
 label-offline = "Offline"
