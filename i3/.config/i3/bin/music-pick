@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# Pick a song from the mpd library in rofi (type to search) and play it.
+# Bound to clicking the song title in polybar's mpd module.
+# A song already in the queue is jumped to; otherwise it is appended to the queue and played.
+
+FMT='%file%\t[%title%|%file%]\t[%artist%]\t[%album%]'
+library=$(mpc -f "$FMT" listall) || exit 1
+[ -n "$library" ] || exit 0
+current=$(mpc -f '%file%' current)
+
+# rofi rows: "title · artist   album" with the album dimmed (pango markup, so escape &<>)
+rows=$(awk -F'\t' '
+    function esc(s) { gsub(/&/, "\\&amp;", s); gsub(/</, "\\&lt;", s); gsub(/>/, "\\&gt;", s); return s }
+    {
+        line = esc($2)
+        if ($3 != "") line = line "  ·  " esc($3)
+        if ($4 != "") line = line "   <span alpha=\"55%\">" esc($4) "</span>"
+        print line
+    }' <<<"$library")
+# Start on (and highlight) the song that is playing
+sel=$(awk -F'\t' -v cur="$current" '$1 == cur { print NR - 1; exit }' <<<"$library")
+
+idx=$(rofi -dmenu -i -markup-rows -format i -p "♪ 选歌" \
+        ${sel:+-selected-row "$sel" -a "$sel"} <<<"$rows") || exit 0
+file=$(sed -n "$((idx + 1))p" <<<"$library" | cut -f1)
+[ -n "$file" ] || exit 0
+
+pos=$(mpc -f '%position%\t%file%' playlist | awk -F'\t' -v f="$file" '$2 == f { print $1; exit }')
+if [ -z "$pos" ]; then
+    mpc -q add "$file"
+    pos=$(mpc playlist | wc -l)
+fi
+mpc -q play "$pos"
