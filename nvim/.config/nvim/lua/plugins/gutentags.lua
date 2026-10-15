@@ -11,6 +11,9 @@ return {
     -- 如果 tags 文件不存在，自动创建
     vim.g.gutentags_generate_on_missing = 1
 
+    -- ctags 生成 tags；gtags_maps (autoload/gutentags/gtags_maps.vim) 生成 GTAGS 给 cscope_maps 用
+    vim.g.gutentags_modules = { "ctags", "gtags_maps" }
+
     -- 标签缓存目录
     vim.g.gutentags_cache_dir = vim.fn.expand("~/.cache/tags")
 
