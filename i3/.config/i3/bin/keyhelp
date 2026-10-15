@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# Show all i3 key bindings in rofi (searchable). Bound to $mod+slash.
+# keyhelp --print writes the list to stdout instead.
+# Reads the config i3 has actually loaded, so it always matches the current bindings.
+# A comment line right above a bindsym is used as its description.
+
+rows=$(i3-msg -t get_config | python3 -c '
+import re, sys
+
+conf = sys.stdin.read()
+mods = {}
+for m in re.finditer(r"^\s*set\s+(\$\w+)\s+(.+?)\s*$", conf, re.M):
+    mods[m.group(1)] = {"Mod1": "Alt", "Mod4": "Super"}.get(m.group(2), m.group(2))
+
+mode, comment, rows = "", "", []
+for line in conf.splitlines():
+    s = line.strip()
+    if s.startswith("#"):
+        comment = s.lstrip("# ").strip()
+        continue
+    m = re.match(r"mode\s+\"?(.+?)\"?\s*\{", s)
+    if m:
+        mode = re.sub(r"^\$(mode_)?", "", m.group(1))
+        comment = ""
+        continue
+    if s == "}":
+        mode, comment = "", ""
+        continue
+    m = re.match(r"bindsym\s+((?:--\S+\s+)*)(\S+)\s+(.*)", s)
+    if m:
+        key = m.group(2)
+        for var, name in sorted(mods.items(), key=lambda kv: -len(kv[0])):
+            key = key.replace(var, name)
+        key = re.sub(r"(?i)\bcontrol\b|\bctrl\b", "Ctrl", key)
+        key = re.sub(r"\bshift\b", "Shift", key)
+        cmd = re.sub(r"^exec\s+(--no-startup-id\s+)?", "", m.group(3)).strip()
+        if len(cmd) > 1 and cmd[0] == cmd[-1] == "\"":
+            cmd = cmd[1:-1]
+        # exec "..." , mode "default"  ->  just the command
+        cmd = re.sub(r"\"?,\s*mode \"default\"?$", "", cmd)
+        for var, val in sorted(mods.items(), key=lambda kv: -len(kv[0])):
+            cmd = cmd.replace(var, val.strip("\""))
+        useful = comment and not comment.lower().startswith(("bindsym", "alternatively", "same bindings", "pressing"))
+        desc = f"{comment} · {cmd}" if useful else cmd
+        if len(desc) > 70:
+            desc = desc[:67] + "..."
+        key = f"[{mode}] {key}" if mode else key
+        rows.append(f"{key:<30}  {desc}")
+    elif not s or not s.startswith("bindsym"):
+        comment = ""
+print("\n".join(rows))
+')
+
+if [ "$1" = "--print" ]; then
+    echo "$rows"
+else
+    echo "$rows" | rofi -dmenu -i -p "快捷键" -no-custom \
+        -theme-str 'window {width: 60%;} listview {lines: 20;}' >/dev/null
+fi
