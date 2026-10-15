@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Archive helper for ranger's ux / uc (commands.py: extract_here, compress).
+#   archive x FILE...          extract each archive into a folder named after it, next to it;
+#                              an archive holding a single top-level entry is unpacked without
+#                              the extra folder. Never overwrites: existing names get " (2)" etc.
+#   archive c NAME FILE...     pack FILEs into NAME; the format follows the extension:
+#                              .zip .7z .tar .tar.gz/.tgz .tar.xz/.txz .tar.bz2 .tar.zst
+# Zips whose names aren't UTF-8 (typically made on Chinese Windows) are read as GBK.
+set -uo pipefail
+
+die() { echo "$*" >&2; exit 1; }
+
+# "dir/name" -> first of "dir/name", "dir/name (2)", ... that doesn't exist (keeps the extension)
+unique() {
+    local path=$1 stem ext n=2
+    [ -e "$path" ] || { echo "$path"; return; }
+    stem=$path ext=
+    if [ -f "$path" ] && [[ $(basename "$path") == ?*.* ]]; then
+        stem=${path%.*} ext=.${path##*.}
+    fi
+    while [ -e "$stem ($n)$ext" ]; do n=$((n + 1)); done
+    echo "$stem ($n)$ext"
+}
+
+# Charset of the names in a zip: entries without the UTF-8 flag are raw bytes (unzip would read
+# them as CP437); they are UTF-8 if they decode as such, otherwise GBK (Chinese Windows).
+zip_charset() {
+    python3 -I - "$1" <<'PY' 2>/dev/null || echo UTF-8
+import sys, zipfile
+raw = b"".join(i.filename.encode("cp437") for i in zipfile.ZipFile(sys.argv[1]).infolist()
+               if not i.flag_bits & 0x800)
+try:
+    raw.decode("utf-8"); print("UTF-8")
+except UnicodeDecodeError:
+    print("GBK")
+PY
+}
+
+strip_ext() {
+    local b=$1
+    case ${b,,} in
+        *.tar.gz|*.tar.xz|*.tar.bz2|*.tar.zst|*.tar.lz|*.tar.lzma) echo "${b%.*.*}" ;;
+        *.*) echo "${b%.*}" ;;
+        *) echo "$b" ;;
+    esac
+}
+
+extract_one() {
+    local f=$1 dir base tmp entries
+    [ -f "$f" ] || die "不是文件: $f"
+    dir=$(dirname -- "$f") base=$(basename -- "$f")
+    tmp=$(mktemp -d "$dir/.extract-XXXXXX") || die "无法在 $dir 创建临时目录"
+    case ${base,,} in
+        *.tar|*.tar.*|*.tgz|*.txz|*.tbz|*.tbz2|*.tzst)
+            tar -xf "$f" -C "$tmp" ;;
+        *.zip)
+            # -O applies to entries made on DOS/Windows, -I to ones made on Unix
+            cs=$(zip_charset "$f"); unzip -qq -O "$cs" -I "$cs" "$f" -d "$tmp" ;;
+        *)
+            # A dummy password makes encrypted archives fail instead of prompting
+            7z x -y -bso0 -bsp0 -pnone -o"$tmp" "$f" ;;
+    esac </dev/null || { rm -rf -- "$tmp"; die "解压失败: $base（加密的压缩包请在终端里用 7z x 解压）"; }
+
+    shopt -s dotglob nullglob
+    entries=("$tmp"/*)
+    shopt -u dotglob nullglob
+    if [ ${#entries[@]} -eq 1 ]; then
+        # Single top-level file/folder: put it straight next to the archive
+        mv -- "${entries[0]}" "$(unique "$dir/$(basename -- "${entries[0]}")")"
+        rmdir -- "$tmp"
+    else
+        mv -- "$tmp" "$(unique "$dir/$(strip_ext "$base")")"
+    fi
+}
+
+compress() {
+    local name=$1; shift
+    [ $# -gt 0 ] || die "没有要压缩的文件"
+    [ -e "$name" ] && die "已存在: $name"
+    case ${name,,} in
+        *.zip)            zip -qr "$name" "$@" ;;  # zip rejects "--"
+        *.7z)             7z a -bso0 -bsp0 -- "$name" "$@" ;;
+        *.tar)            tar -cf "$name" -- "$@" ;;
+        *.tar.gz|*.tgz)   tar -czf "$name" -- "$@" ;;
+        *.tar.xz|*.txz)   tar -cJf "$name" -- "$@" ;;
+        *.tar.bz2|*.tbz2) tar -cjf "$name" -- "$@" ;;
+        *.tar.zst|*.tzst) tar --zstd -cf "$name" -- "$@" ;;
+        *) die "不认识的格式: $name（用 .zip .7z .tar.gz .tar.xz .tar.zst 等后缀）" ;;
+    esac || { rm -f -- "$name"; die "压缩失败: $name"; }
+}
+
+case ${1:-} in
+    x) shift; [ $# -gt 0 ] || die "没有要解压的文件"
+       status=0; for f in "$@"; do ( extract_one "$f" ) || status=1; done; exit $status ;;
+    c) shift; [ $# -ge 2 ] || die "用法: archive c NAME FILE..."; compress "$@" ;;
+    *) sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//'; exit 2 ;;
+esac

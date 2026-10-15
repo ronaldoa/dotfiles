@@ -196,3 +196,16 @@ typeset -TU LD_LIBRARY_PATH ld_library_path
 # MIT 6.S081 / xv6: Arch 系的 RISC-V 交叉工具链前缀是 riscv64-elf-,
 # 而 xv6 的 Makefile 只自动探测 riscv64-unknown-elf- / riscv64-linux-gnu-.
 export TOOLPREFIX=riscv64-elf-
+
+# ranger: 退出后 shell 停在 ranger 里最后所在的目录;在 ranger 的子 shell(S)里再敲 ranger 就直接回去
+ranger() {
+    if [[ -n $RANGER_LEVEL ]]; then
+        exit
+    fi
+    local dir_file dir
+    dir_file=$(mktemp -t ranger-cd.XXXXXX)
+    command ranger --choosedir="$dir_file" "$@"
+    dir=$(<"$dir_file")
+    rm -f -- "$dir_file"
+    [[ -d $dir && $dir != $PWD ]] && cd -- "$dir"
+}
