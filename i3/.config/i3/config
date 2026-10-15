@@ -133,6 +133,8 @@ for_window [window_role="pop-up|dialog|task_dialog"] floating enable
 for_window [window_type="dialog"] floating enable
 # Picture-in-picture videos float and stay on every workspace
 for_window [title="Picture-in-Picture|画中画"] floating enable, sticky enable
+# ChatGPT lives in the scratchpad
+for_window [class="Chromium" instance="chatgpt.com"] floating enable, resize set 60 ppt 80 ppt, move position center, move scratchpad
 
 # Show all key bindings (searchable)
 bindsym $mod+slash exec --no-startup-id $HOME/.config/i3/bin/keyhelp
@@ -175,6 +177,8 @@ bindsym $mod+control+t exec "/mnt/data/Tools/teams-for-linux-2.0.14.AppImage"
 #bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.7-4-x64.AppImage"
 bindsym $mod+control+l exec "/mnt/data/Tools/LM-Studio-0.4.25-1-x64.AppImage"
 bindsym $mod+control+c exec "/mnt/data/Tools/Cursor-1.5.11-x86_64.AppImage"
+# Toggle ChatGPT scratchpad
+bindsym $mod+control+g exec --no-startup-id $HOME/.config/i3/bin/chatgpt-toggle
 bindsym $mod+control+w exec --no-startup-id "pkill -9 -i wechat; sleep 1; /mnt/data/Tools/WeChatLinux_x86_64.AppImage"
 bindsym $mod+control+z exec "/mnt/data/dotfiles/rofi/.config/rofi/bin/powermenu"
 bindsym $mod+control+d exec "/mnt/data/Tools/doublecmd-gtk-latest-x86_64.AppImage"
