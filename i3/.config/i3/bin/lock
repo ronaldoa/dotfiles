@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Lock the screen with a random image from ~/Pictures/lockscreen.
+# i3lock can't scale, so the images must be PNGs at the screen resolution (2560x1440).
+# Falls back to a plain Nord background when there are no images.
+# Used by xss-lock in the i3 config; runs i3lock in the foreground (-n) as xss-lock expects.
+
+dir="$HOME/Pictures/lockscreen"
+shopt -s nullglob
+images=("$dir"/*.png)
+
+if ((${#images[@]})); then
+    exec i3lock -n -c 2E3440 -i "${images[RANDOM % ${#images[@]}]}"
+else
+    exec i3lock -n -c 2E3440
+fi
