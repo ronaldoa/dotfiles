@@ -4,8 +4,8 @@ return {
   "dhananjaylatkar/cscope_maps.nvim",
   event = "VeryLazy",
   opts = {
-    -- <leader>c 已被 LazyVim 的 code 组占用，<C-c> 与 tmux 冲突
-    prefix = "<leader>C",
+    -- <leader>c 已被 LazyVim 的 code 组占用；tmux 只在 prefix 后绑定 C-c，不冲突
+    prefix = "<C-c>",
     -- 直接查光标下的词，不弹输入框（要手动输入用 :Cs f g <symbol>）
     skip_input_prompt = true,
     cscope = {
