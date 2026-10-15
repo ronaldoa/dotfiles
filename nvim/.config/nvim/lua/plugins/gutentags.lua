@@ -40,7 +40,7 @@ return {
       "--python-kinds=-iv", -- 忽略 import/变量
       "--java-kinds=+p", -- 加上 package
       "--js-kinds=+cfm", -- 函数/类/方法
-      "--extra=+q",
+      "--extras=+q",
     }
 
     -- 高级命令支持（如 :GutentagsToggleEnabled）

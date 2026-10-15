@@ -171,11 +171,10 @@ else
 fi
 unset __mamba_setup
 # <<< mamba initialize <<<
-export PATH="$HOME/miniforge3/bin:$PATH"
 
 export CUDA_HOME=/opt/cuda
 export PATH=$CUDA_HOME/bin:$PATH
-export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH="$CUDA_HOME/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 export PATH="$HOME/.npm-global/bin:$PATH"
 export EDITOR="nvim"
@@ -183,21 +182,17 @@ export VISUAL="nvim"
 
 # OpenClaw Completion
 source "/home/ronaldo/.openclaw/completions/openclaw.zsh"
-export GOROOT=/home/ronaldo/.go
-export GOPATH=/home/ronaldo/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-export GOROOT=/home/ronaldo/.go
-export GOPATH=/home/ronaldo/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-export GOROOT=/home/ronaldo/.go
-export GOPATH=/home/ronaldo/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-export GOROOT=/home/ronaldo/.go
-export GOPATH=/home/ronaldo/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
-export GOROOT=/home/ronaldo/.go
-export GOPATH=/home/ronaldo/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+export GOROOT="$HOME/.go"
+export GOPATH="$HOME/go"
+export PATH="$PATH:$GOROOT/bin:$GOPATH/bin"
 # 加到 ~/.bashrc
 export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
 
+# Drop duplicate PATH entries (nested shells, e.g. inside tmux, re-add them)
+typeset -U path PATH
+typeset -TU LD_LIBRARY_PATH ld_library_path
+
+
+# MIT 6.S081 / xv6: Arch 系的 RISC-V 交叉工具链前缀是 riscv64-elf-,
+# 而 xv6 的 Makefile 只自动探测 riscv64-unknown-elf- / riscv64-linux-gnu-.
+export TOOLPREFIX=riscv64-elf-

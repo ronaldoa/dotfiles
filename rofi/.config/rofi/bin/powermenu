@@ -67,14 +67,14 @@ case $chosen in
         fi
         ;;
     $lock)
-        betterlockscreen --lock
+        loginctl lock-session
         ;;
     $suspend)
 		ans=$(rdialog)
 		if [[ $ans == "yes" ]] || [[ $ans == "YES" ]] || [[ $ans == "y" ]]; then
         mpc -q pause
         amixer set Master mute
-        betterlockscreen --suspend
+        systemctl suspend
 		elif [[ $ans == "no" ]] || [[ $ans == "NO" ]] || [[ $ans == "n" ]]; then
         exit
         else
@@ -84,7 +84,7 @@ case $chosen in
     $logout)
 		ans=$(rdialog)
 		if [[ $ans == "yes" ]] || [[ $ans == "YES" ]] || [[ $ans == "y" ]]; then
-        openbox --exit
+        i3-msg exit
 		elif [[ $ans == "no" ]] || [[ $ans == "NO" ]] || [[ $ans == "n" ]]; then
         exit
         else

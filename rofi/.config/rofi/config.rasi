@@ -1,8 +1,5 @@
 configuration {
-modi: "window,combi,ssh,drun";
-width: 800;
-lines: 10;
-columns: 2;
-combi-modi: "window,ssh,drun,combi";
+modes: "window,combi,ssh,drun";
+combi-modes: "window,ssh,drun";
 font: "Hack 12";
 }
