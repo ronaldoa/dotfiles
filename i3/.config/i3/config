@@ -69,6 +69,8 @@ exec --no-startup-id nm-applet
 exec --no-startup-id mpd
 exec --no-startup-id blueman-applet
 exec --no-startup-id flameshot
+# Notifications (polybar weather/lyrics use notify-send); restart so notifyd is bound to this X session
+exec --no-startup-id "systemctl --user reset-failed xfce4-notifyd.service; systemctl --user restart xfce4-notifyd.service"
 
 
 # Use pactl to adjust volume in PulseAudio.
@@ -134,8 +136,8 @@ for_window [window_type="dialog"] floating enable
 for_window [title="Picture-in-Picture|画中画"] floating enable, sticky enable
 # Polybar calendar popup (placed by polybar/script/calendar.sh)
 for_window [class="cal-popup"] floating enable, border pixel 1
-# Lyrics window (bin/lyrics toggle)
-for_window [instance="lyrics"] floating enable, resize set 760 px 1000 px, move position center
+# Lyrics window (bin/lyrics toggle): floats on every workspace; size/position are restored by the script
+for_window [instance="lyrics"] floating enable, sticky enable, border none, resize set 1000 px 420 px, move position center
 # ChatGPT lives in the scratchpad
 for_window [class="Chromium" instance="chatgpt.com"] floating enable, resize set 60 ppt 80 ppt, move position center, move scratchpad
 
