@@ -17,6 +17,7 @@ bin/
   music-pick        rofi 搜索 mpd 曲库并播放
   chatgpt-toggle    ChatGPT 网页放在 scratchpad 里，一键呼出/隐藏
   edid-check        登录时检查 xorg 里固定的显示器 EDID 是否还对得上
+  xstack            按 WM_CLASS 把窗口提到最上层或压到最下层（给 conky 用）
   ws-icons          工作区名字后面显示程序图标
   dropdown          下拉终端
   cava-toggle       屏幕底部的音乐频谱窗口
@@ -112,7 +113,7 @@ polybar/
 
 它压在所有窗口下面，只有工作区里没有窗口挡住时才看得到（开着动态壁纸时显示在视频上面）。登录时自动启动，`Super+D` 开关。
 
-卡片全部用 Lua + Cairo 画在 `conky/.config/conky/widgets.lua` 里：卡片大小、圆角、颜色在文件开头（`CARD`、`RADIUS`、`BG` 等），网卡名在 `network_card` 里（现在是 `wlo1`）。`conky.conf` 只负责窗口位置和大小。
+卡片全部用 Lua + Cairo 画在 `conky/.config/conky/widgets.lua` 里（画圆角卡片、文字、进度条的工具函数和配色在 `lib.lua`，天气弹出卡片也用它）：卡片大小在 `widgets.lua` 开头（`CARD`），圆角和颜色在 `lib.lua` 开头（`RADIUS`、`BG` 等），网卡名在 `network_card` 里（现在是 `wlo1`）。`conky.conf` 只负责窗口位置和大小。
 
 ### 动态壁纸 —— `Super+W`
 
@@ -275,7 +276,7 @@ polybar/
 - 点击歌名：rofi 搜索曲库选歌；右键歌名：重新扫描曲库，把缺的歌补回播放队列
 - 点击频谱：开关屏幕底部的大频谱窗口
 - 点击歌词：开关浮动歌词窗口
-- 点击天气：显示详细天气
+- 点击天气：弹出 / 关闭天气卡片（和桌面组件同一种风格）：当前温度、体感、最高 / 最低温，湿度、风速、日出日落，以及未来 24 小时每 3 小时一格的预报（含降水概率）。卡片画在 `conky/.config/conky/weather-popup.lua` 里
 - 点击日期：弹出日历
 - 点击电源图标：电源菜单
 

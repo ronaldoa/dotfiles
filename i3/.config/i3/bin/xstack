@@ -1,0 +1,27 @@
+#!/usr/bin/env python3
+"""Raise or lower a top-level X window by its WM_CLASS, waiting up to 5 s for it to appear.
+
+    xstack <class> above|below
+
+For override-redirect windows i3 doesn't manage (the conky widgets), so i3 can't restack them.
+"""
+import sys
+import time
+
+from Xlib import X, display
+
+wm_class, where = sys.argv[1], sys.argv[2]
+d = display.Display()
+root = d.screen().root
+for _ in range(50):
+    for win in root.query_tree().children:
+        try:
+            cls = win.get_wm_class()
+        except Exception:
+            continue
+        if cls and cls[1] == wm_class:
+            win.configure(stack_mode=X.Above if where == "above" else X.Below)
+            d.sync()
+            sys.exit(0)
+    time.sleep(0.1)
+sys.exit(1)

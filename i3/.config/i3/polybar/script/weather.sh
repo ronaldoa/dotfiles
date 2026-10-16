@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Polybar weather module (OpenWeatherMap).
 #   weather.sh           -> short text for the bar: "<icon> 18°"
-#   weather.sh --detail  -> desktop notification with details
+#   weather.sh --detail  -> toggle the weather card (current, details, next 24 h)
 # API key is read from ~/.config/openweathermap/key (kept out of the repo) or $OWM_KEY.
 
 CITY="Boston"
@@ -40,19 +40,13 @@ fetch() {
 }
 
 if [ "$1" = "--detail" ]; then
+    # Toggle the weather card (conky, drawn by ~/.config/conky/weather-popup.lua)
+    conf="$HOME/.config/conky/weather-popup.conf"
+    pkill -f "conky -d -c $conf" && exit 0
     [ -s "$CACHE" ] || fetch || { notify-send "天气" "获取天气失败"; exit 1; }
-    body=$(jq -r '
-        def t: . | round | tostring + "°";
-        def hm: strflocaltime("%H:%M");
-        .current as $c | .forecast.list as $l |
-        "\($c.weather[0].description)  \($c.main.temp | t)(体感 \($c.main.feels_like | t))\n" +
-        "24 小时: \([$l[].main.temp_min] | min | t) ~ \([$l[].main.temp_max] | max | t)\n" +
-        "湿度 \($c.main.humidity)%   风速 \($c.wind.speed) m/s\n" +
-        "日出 \($c.sys.sunrise | hm)   日落 \($c.sys.sunset | hm)\n\n" +
-        ([$l[0:4][] | "\(.dt | hm)  \(.main.temp | t)  \(.weather[0].description)"] | join("\n"))
-    ' "$CACHE")
-    notify-send -i weather-few-clouds "$CITY 天气" "$body"
-    exit 0
+    conky -d -c "$conf" >/dev/null 2>&1
+    # conky puts its override window at the bottom of the stack; bring the popup above all windows
+    exec ~/.config/i3/bin/xstack weather-popup above
 fi
 
 fetch
