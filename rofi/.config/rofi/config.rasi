@@ -3,3 +3,6 @@ modes: "window,combi,ssh,drun";
 combi-modes: "window,ssh,drun";
 font: "Hack 12";
 }
+
+/* Colours from ~/.config/i3/bin/theme: the pywal theme, or empty (rofi's default look) */
+@import "~/.cache/theme/rofi.rasi"

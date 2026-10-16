@@ -76,7 +76,7 @@ scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
 
 modules-left = i3 cpu cpu_temp memory wlan
-modules-center = mpd lyrics
+modules-center = mpd cava lyrics
 modules-right = weather volume date systray powermenu
 
 separator =
@@ -389,25 +389,25 @@ label-mode-padding = 2
 ;label-dimmed-underline = ${color.YELLOW}
 ;label-dimmed-focused-background = ${color.BACKGROUND}
 
-label-focused = %index%
+label-focused = %name%
 label-focused-foreground = ${color.BACKGROUND}
 label-focused-background = ${color.BLUE}
 ;label-focused-underline = ${color.RED}
 label-focused-padding = 1
 
-label-occupied = %index%
+label-occupied = %name%
 label-occupied-foreground = ${color.BACKGROUND}
 label-occupied-background = ${color.GREEN}
 ;label-occupied-underline = ${color.GREEN}
 label-occupied-padding = 1
 
-label-urgent = %index%
+label-urgent = %name%
 label-urgent-foreground = ${color.BACKGROUND}
 label-urgent-background = ${color.RED}
 ;label-urgent-underline = ${color.RED}
 label-urgent-padding = 1
 
-label-empty = %index%
+label-empty = %name%
 label-empty-foreground = ${color.FOREGROUND}
 label-empty-padding = 1
 
@@ -501,6 +501,16 @@ icon-prev-foreground = ${color.CYAN}
 icon-next = 󰼧
 icon-next-font = 2
 icon-next-foreground = ${color.CYAN}
+
+;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+
+[module/cava]
+; Audio spectrum of whatever is playing (hidden when silent); click for the big visualizer window
+type = custom/script
+exec = ~/.config/i3/polybar/script/cava.sh
+tail = true
+click-left = ~/.config/i3/bin/cava-toggle &
+format-foreground = ${color.BLUE}
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 

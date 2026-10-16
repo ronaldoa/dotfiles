@@ -1,0 +1,27 @@
+# cava audio visualizer. Used by the floating visualizer window (i3/bin/cava-toggle, Super+V)
+# and run with its own raw-output config by the polybar module (i3/polybar/script/cava.sh).
+
+[general]
+framerate = 60
+bar_width = 2
+bar_spacing = 1
+# Fall slowly, like a real spectrum analyzer
+noise_reduction = 0.77
+
+[input]
+method = pulse
+source = auto
+
+[output]
+method = noncurses
+
+[color]
+# Nord: frost blue at the bottom fading into purple at the peaks
+gradient = 1
+gradient_color_1 = '#5E81AC'
+gradient_color_2 = '#81A1C1'
+gradient_color_3 = '#88C0D0'
+gradient_color_4 = '#B48EAD'
+
+[smoothing]
+monstercat = 1

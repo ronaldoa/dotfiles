@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+"""Rename i3 workspaces to their number plus an icon for each app on them, e.g. "3  ".
+
+Started by exec_always in the i3 config. The number prefix keeps `workspace number N`,
+`assign ... number N` and polybar ordering working. Icons are Nerd Font glyphs.
+"""
+import os
+import signal
+
+import i3ipc
+
+# window class or instance (lowercase) -> icon; first match wins, so put specific names first
+ICONS = [
+    ("alacritty", ""), ("kitty", ""), ("dropdown", ""),
+    ("firefox", ""), ("nightly", ""),
+    ("chromium", ""), ("google-chrome", ""), ("microsoft-edge", ""),
+    ("code", ""), ("cursor", ""), ("jetbrains", ""), ("netbeans", ""),
+    ("thunderbird", ""),
+    ("telegram", ""), ("wechat", ""), ("qq", ""),
+    ("discord", ""), ("teams", ""),
+    ("steam", ""),
+    ("netease-cloud-music", ""), ("feeluown", ""),
+    ("bilibili", ""), ("mpv", ""), ("vlc", ""), ("freetube", ""),
+    ("obsidian", ""), ("zathura", ""), ("libreoffice", ""),
+    ("thunar", ""), ("doublecmd", ""),
+    ("virtualbox", ""), ("gimp", ""),
+    ("pavucontrol", ""), ("blueman", ""),
+    ("lm studio", ""), ("lm-studio", ""), ("noi", ""),
+]
+DEFAULT = ""
+
+
+def icon_for(win):
+    names = f"{win.window_class or ''} {win.window_instance or ''}".lower()
+    for key, icon in ICONS:
+        if key in names:
+            return icon
+    return DEFAULT
+
+
+def rename(i3, _event=None):
+    for ws in i3.get_tree().workspaces():
+        if ws.num < 0:  # named workspace without a number (e.g. scratchpad)
+            continue
+        icons = []
+        for win in ws.leaves():
+            if win.ipc_data.get("sticky"):  # follows you everywhere (lyrics, PiP): not part of this workspace
+                continue
+            icon = icon_for(win)
+            if icon not in icons:
+                icons.append(icon)
+        new = f"{ws.num} {' '.join(icons)}" if icons else str(ws.num)
+        if ws.name != new:
+            i3.command(f'rename workspace "{ws.name}" to "{new}"')
+
+
+# exec_always runs this again on every i3 restart: replace any older copy
+for pid in filter(str.isdigit, os.listdir("/proc")):
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            argv = f.read().split(b"\0")
+    except OSError:
+        continue
+    if int(pid) != os.getpid() and len(argv) > 1 and argv[1].endswith(b"bin/ws-icons"):
+        os.kill(int(pid), signal.SIGTERM)
+
+i3 = i3ipc.Connection()
+for event in ("window::new", "window::close", "window::move", "window::floating", "workspace::init"):
+    i3.on(event, rename)
+rename(i3)
+i3.main()

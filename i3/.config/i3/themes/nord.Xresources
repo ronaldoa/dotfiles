@@ -1,0 +1,16 @@
+! Nord palette for bin/theme. i3 (set_from_resource) and polybar (${xrdb:...}) read theme.* resources,
+! falling back to these same values when nothing has been merged into xrdb.
+theme.background: #2E3440
+theme.foreground: #D8DEE9
+theme.black:      #3B4252
+theme.red:        #BF616A
+theme.green:      #A3BE8C
+theme.yellow:     #EBCB8B
+theme.blue:       #81A1C1
+theme.magenta:    #B48EAD
+theme.cyan:       #88C0D0
+theme.white:      #E5E9F0
+theme.altblack:   #4C566A
+theme.altcyan:    #8FBCBB
+theme.altwhite:   #ECEFF4
+theme.accent:     #5E81AC

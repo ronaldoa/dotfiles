@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Toggle the conky desktop widget (Super+D); `widgets start` only starts it if it isn't running.
+# conky is an override-redirect window that starts on top of the stack, so push it below every window.
+if pgrep -x conky >/dev/null; then
+    [ "$1" = start ] || pkill -x conky
+    exit 0
+fi
+
+conky -d -c ~/.config/conky/conky.conf >/dev/null 2>&1
+python3 - <<'PY'
+import time
+from Xlib import X, display
+
+d = display.Display()
+root = d.screen().root
+for _ in range(50):  # wait up to 5 s for the window to appear
+    for win in root.query_tree().children:
+        try:
+            cls = win.get_wm_class()
+        except Exception:
+            continue
+        if cls and "conky" in cls:
+            win.configure(stack_mode=X.Below)
+            d.sync()
+            raise SystemExit
+    time.sleep(0.1)
+PY

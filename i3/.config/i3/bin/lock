@@ -1,15 +1,36 @@
 #!/usr/bin/env bash
-# Lock the screen with a random image from ~/Pictures/lockscreen.
+# Lock the screen. Used by xss-lock in the i3 config; runs i3lock in the foreground (-n) as xss-lock expects.
+# Background: a random image from ~/Pictures/lockscreen, or a blurred shot of the desktop when there are none.
 # i3lock can't scale, so the images must be PNGs at the screen resolution (2560x1440).
-# Falls back to a plain Nord background when there are no images.
-# Used by xss-lock in the i3 config; runs i3lock in the foreground (-n) as xss-lock expects.
+# With i3lock-color it also draws a clock and a Nord-coloured ring that reacts to typing;
+# with plain i3lock it falls back to just the image (or a Nord background).
 
 dir="$HOME/Pictures/lockscreen"
 shopt -s nullglob
 images=("$dir"/*.png)
 
 if ((${#images[@]})); then
-    exec i3lock -n -c 2E3440 -i "${images[RANDOM % ${#images[@]}]}"
-else
-    exec i3lock -n -c 2E3440
+    bg=(-i "${images[RANDOM % ${#images[@]}]}")
 fi
+
+# i3lock-color's version looks like 2.13.c.5
+if ! i3lock --version 2>&1 | grep -q '\.c\.'; then
+    exec i3lock -n -c 2E3440 "${bg[@]}"
+fi
+
+((${#bg[@]})) || bg=(--blur 8)
+
+# Colours are RRGGBBAA
+exec i3lock -n -c 2E3440 "${bg[@]}" \
+    --clock --indicator --radius 110 --ring-width 8 \
+    --time-str '%H:%M' --date-str '%Y-%m-%d %A' \
+    --time-font 'Hack Nerd Font' --date-font 'Hack Nerd Font' \
+    --layout-font 'Hack Nerd Font' --verif-font 'Hack Nerd Font' --wrong-font 'Hack Nerd Font' \
+    --time-size 40 --date-size 16 \
+    --time-color ECEFF4ff --date-color D8DEE9ff \
+    --inside-color 2E3440aa --ring-color 5E81ACff --line-uses-inside \
+    --keyhl-color 88C0D0ff --bshl-color D08770ff --separator-color 00000000 \
+    --insidever-color 2E3440aa --ringver-color EBCB8Bff --verif-color EBCB8Bff \
+    --insidewrong-color 2E3440aa --ringwrong-color BF616Aff --wrong-color BF616Aff \
+    --verif-text '验证中…' --wrong-text '密码错误' --noinput-text '' \
+    --pass-media-keys --pass-volume-keys

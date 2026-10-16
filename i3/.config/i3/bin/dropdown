@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Quake-style drop-down terminal (Super+Return): slides down from the top, press again to hide it.
+# Launched on first use; afterwards it lives in the scratchpad so its shell session survives.
+running() { i3-msg -t get_tree | grep -q '"instance":"dropdown"'; }
+
+if ! running; then
+    alacritty --class dropdown --title dropdown &
+    # for_window sizes it and sends it to the scratchpad; wait for it, then show it
+    for _ in $(seq 50); do running && break; sleep 0.1; done
+    sleep 0.2
+fi
+i3-msg -q '[instance="dropdown"] scratchpad show'
