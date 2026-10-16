@@ -16,14 +16,14 @@ KEY="${OWM_KEY:-$(cat "$HOME/.config/openweathermap/key" 2>/dev/null)}"
 # OpenWeatherMap icon code -> nf-weather glyph (Hack Nerd Font)
 get_icon() {
     case $1 in
-        01d) printf '';; 01n) printf '';;
-        02d) printf '';; 02n) printf '';;
-        03*) printf '';; 04*) printf '';;
+        01d) printf '';; 01n) printf '';;
+        02d) printf '';; 02n) printf '';;
+        03*) printf '';; 04*) printf '';;
         09*) printf '';;
         10d) printf '';; 10n) printf '';;
         11d) printf '';; 11n) printf '';;
         13d) printf '';; 13n) printf '';;
-        50d) printf '';; 50n) printf '';;
+        50d) printf '';; 50n) printf '';;
         *)   printf '';;
     esac
 }
