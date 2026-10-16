@@ -1,0 +1,36 @@
+#!/bin/bash
+# Login self-check for /etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf, which pins the monitor as
+# always-connected with a saved EDID (fixes black screen after powering the HDMI monitor off/on).
+# The pin is only right for the monitor + port it was captured from; warn when the live one differs.
+CONF=${CONF:-/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf}
+SAVED_EDID=${SAVED_EDID:-/etc/X11/dell-s2725ds.edid}
+PINNED_PORT=${PINNED_PORT:-card0-HDMI-A-1}   # DRM name of the port that NVIDIA calls DFP-4
+LOG=${LOG:-$HOME/.cache/edid-check.log}
+
+[[ -f "$CONF" ]] || exit 0   # pin removed: nothing to check
+
+warn() {
+  echo "$(date '+%F %T') $1 | $2" >> "$LOG"
+  notify-send -u critical -t 0 "显示器 EDID 固定配置已过期" "$1\n$2"
+}
+
+connected=()
+for s in /sys/class/drm/card*-*/status; do
+  [[ "$(cat "$s")" == connected ]] && connected+=("$(basename "$(dirname "$s")")")
+done
+# No monitor reported (e.g. powered off at login): cannot judge, stay silent.
+(( ${#connected[@]} == 0 )) && exit 0
+
+if [[ ! " ${connected[*]} " =~ " $PINNED_PORT " ]]; then
+  warn "显示器接在 ${connected[*]},固定配置写的是 $PINNED_PORT(DFP-4)。" \
+       "换了接口:sudo rm $CONF 后重新登录(关显示器黑屏的问题会回来,需要按新接口重做)。"
+  exit 1
+fi
+
+# Pipe through cat: sysfs reports st_size 0, and `cmp -s` short-circuits on differing sizes.
+if ! cat "/sys/class/drm/$PINNED_PORT/edid" | cmp -s - "$SAVED_EDID"; then
+  warn "$PINNED_PORT 上的显示器和保存的 EDID 不一致(换了显示器?)。" \
+       "更新:sudo cp /sys/class/drm/$PINNED_PORT/edid $SAVED_EDID 后重新登录。"
+  exit 1
+fi
+exit 0
