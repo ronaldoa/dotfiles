@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Set up every connected monitor at its preferred resolution with the highest refresh rate that
+# resolution supports (e.g. 2560x1440 @ 99.95 Hz instead of the 59.95 Hz the monitor prefers).
+# Several monitors are placed left to right in xrandr's order. Run at login from the i3 config.
+#   display          apply
+#   display --dry    print the xrandr command instead of running it
+
+args=()
+prev=
+while read -r output mode rate; do
+    args+=(--output "$output" --mode "$mode" --rate "$rate")
+    [ -n "$prev" ] && args+=(--right-of "$prev")
+    prev=$output
+done < <(xrandr | awk '
+    / connected/ { output = $1; next }
+    / disconnected/ { output = ""; next }
+    # The preferred mode is the one marked "+"; take the highest rate listed on its line
+    output != "" && /\+/ {
+        best = 0
+        for (i = 2; i <= NF; i++) { r = $i; gsub(/[*+]/, "", r); if (r + 0 > best + 0) best = r }
+        print output, $1, best
+        output = ""
+    }')
+
+((${#args[@]})) || exit 0
+if [ "$1" = --dry ]; then
+    echo xrandr "${args[@]}"
+else
+    xrandr "${args[@]}"
+fi

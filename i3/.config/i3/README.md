@@ -26,6 +26,7 @@ bin/
   theme             配色切换：Nord ⇄ pywal（从壁纸取色）
   appimage          启动 /mnt/data/Tools 里某个程序最新版本的 AppImage
   popup-pos         算出弹出卡片的位置：鼠标正下方、状态栏下面
+  display           按显示器实际支持的分辨率和最高刷新率设置屏幕
 themes/
   nord.Xresources   Nord 配色（theme 脚本用）
 polybar/
@@ -43,7 +44,7 @@ polybar/
 | `bin/theme restore` | 恢复上次选的配色（Nord / pywal） |
 | `bin/ws-icons` | 工作区图标（i3 重启时自动换新的一份） |
 | `bin/widgets start` | conky 桌面组件 |
-| xrandr | HDMI-0 设为 2560x1440 @ 100Hz |
+| `bin/display` | 每个已连接的显示器用它的首选分辨率，并选这个分辨率支持的最高刷新率（现在这台是 2560x1440 @ 99.95Hz）；多台显示器从左到右排 |
 | polkit-gnome | 图形程序要 root 时弹出密码框（pamac、gparted 等） |
 | nitrogen --restore | 恢复壁纸（先运行一次 `nitrogen` 选好壁纸） |
 | udiskie | U 盘自动挂载，带托盘图标 |
@@ -120,7 +121,7 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 
 ### 锁屏 —— `Super+Esc`，或 5 分钟无操作
 
-背景是 `~/Pictures/lockscreen` 里随机一张 PNG；这个文件夹为空时，用当前桌面的模糊截图。中间是时钟、日期和一个圆环：打字时圆环闪青色，退格闪橙色，验证时变黄，密码错误变红。直接输入密码按 Enter 解锁。锁屏时媒体键和音量键照常可用。
+背景是 `~/Pictures/lockscreen` 里随机一张 PNG，等比缩放铺满屏幕（任何分辨率的图都行）；这个文件夹为空时，用当前桌面的模糊截图。中间是时钟、日期和一个圆环：打字时圆环闪青色，退格闪橙色，验证时变黄，密码错误变红。直接输入密码按 Enter 解锁。锁屏时媒体键和音量键照常可用。
 
 没装 i3lock-color 时自动退回到普通 i3lock（只有背景图）。
 
@@ -138,7 +139,7 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 
 它压在所有窗口下面，只有工作区里没有窗口挡住时才看得到（开着动态壁纸时显示在视频上面）。登录时自动启动，`Super+D` 开关。
 
-卡片全部用 Lua + Cairo 画在 `conky/.config/conky/widgets.lua` 里（画圆角卡片、文字、进度条的工具函数和配色在 `lib.lua`，天气和日历弹出卡片也用它）：卡片大小在 `widgets.lua` 开头（`CARD`），圆角和颜色在 `lib.lua` 开头（`RADIUS`、`BG` 等），网卡名在 `network_card` 里（现在是 `wlo1`）。`conky.conf` 只负责窗口位置和大小。
+卡片全部用 Lua + Cairo 画在 `conky/.config/conky/widgets.lua` 里（画圆角卡片、文字、进度条的工具函数和配色在 `lib.lua`，天气和日历弹出卡片也用它）：卡片大小在 `widgets.lua` 开头（`CARD`），圆角和颜色在 `lib.lua` 开头（`RADIUS`、`BG` 等）。网络卡片自动用默认路由所在的网卡。`conky.conf` 只负责窗口位置和大小。
 
 ### 动态壁纸 —— `Super+W`
 
@@ -316,6 +317,18 @@ Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都�
 - 点击日期：弹出 / 关闭日历卡片：左边是今天（星期、日期、第几周、今年第几天和剩余天数），右边是月历（周一开头，今天用红圈标出，周末字色较淡）。点右上角的 ‹ › 或在卡片上滚动鼠标滚轮可以看上个月 / 下个月，点月份名字回到本月。卡片画在 `conky/.config/conky/calendar-popup.lua` 里
 - 点击电源图标：电源菜单
 - 天气和日历卡片会出现在鼠标点击位置的正下方（`bin/popup-pos`），所以状态栏右边增减模块后也能对准
+
+## 换显示器
+
+和屏幕有关的设置都是按实际情况算出来的，换一台显示器（比如 24 寸 1080p）不用改配置：
+
+- 分辨率和刷新率：`bin/display` 登录时自动选
+- 状态栏占满宽度；下拉终端、频谱窗口、天气和日历卡片都按当前屏幕的可用区域定位
+- 锁屏图片自动缩放铺满
+- 桌面组件和弹出卡片：conky 会按屏幕 DPI 调整窗口大小；窗口比卡片小时，卡片整体等比缩小，不会被裁掉
+- 网卡名自动识别（polybar 取第一个无线网卡，桌面组件取默认路由的网卡）
+
+唯一和这台显示器绑定的是 `bin/edid-check`：它检查 `/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf` 里固定的 EDID（用来解决 HDMI 显示器断电后黑屏）。换显示器后登录会弹通知提醒，那时要按通知里的提示重新生成那个文件，或者删掉它。
 
 ## 依赖
 

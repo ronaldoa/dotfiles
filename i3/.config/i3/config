@@ -53,7 +53,8 @@ smart_gaps on
 # screen before suspend. Use loginctl lock-session to lock your screen.
 exec --no-startup-id xset s 300 300
 exec --no-startup-id xss-lock --transfer-sleep-lock -- ~/.config/i3/bin/lock
-exec --no-startup-id xrandr --output HDMI-0 --mode 2560x1440 --rate 99.95
+# Each connected monitor at its preferred resolution and highest refresh rate (bin/display)
+exec --no-startup-id $HOME/.config/i3/bin/display
 
 # Polkit agent: password prompt for GUI apps that need root (pamac, gparted, ...)
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1

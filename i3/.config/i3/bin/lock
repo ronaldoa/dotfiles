@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
 # Lock the screen. Used by xss-lock in the i3 config; runs i3lock in the foreground (-n) as xss-lock expects.
 # Background: a random image from ~/Pictures/lockscreen, or a blurred shot of the desktop when there are none.
-# i3lock can't scale, so the images must be PNGs at the screen resolution (2560x1440).
-# With i3lock-color it also draws a clock and a Nord-coloured ring that reacts to typing;
-# with plain i3lock it falls back to just the image (or a Nord background).
+# With i3lock-color the image is scaled to fill the screen (any resolution works), and it draws
+# a clock and a Nord-coloured ring that reacts to typing. Plain i3lock can't scale, so it only
+# looks right with PNGs at the screen resolution; it falls back to just the image (or a Nord background).
 
 dir="$HOME/Pictures/lockscreen"
 shopt -s nullglob
 images=("$dir"/*.png)
 
 if ((${#images[@]})); then
-    bg=(-i "${images[RANDOM % ${#images[@]}]}")
+    image=${images[RANDOM % ${#images[@]}]}
+    bg=(-i "$image")
 fi
 
 # i3lock-color's version looks like 2.13.c.5
@@ -18,7 +19,11 @@ if ! i3lock --version 2>&1 | grep -q '\.c\.'; then
     exec i3lock -n -c 2E3440 "${bg[@]}"
 fi
 
-((${#bg[@]})) || bg=(--blur 8)
+if ((${#bg[@]})); then
+    bg+=(--fill)
+else
+    bg=(--blur 8)
+fi
 
 # Colours are RRGGBBAA
 exec i3lock -n -c 2E3440 "${bg[@]}" \

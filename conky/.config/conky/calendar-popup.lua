@@ -23,7 +23,7 @@ local function days_in(year, month)
 end
 
 function conky_calendar_popup()
-    local cr = L.begin()
+    local cr = L.begin(W + 2, H + 2)
     if not cr then return end
     local x, y = 1, 1
     card(x, y, W, H, 0.96)
@@ -105,7 +105,11 @@ function conky_calendar_popup()
     L.finish()
 end
 
-local function inside(r, ev) return r and ev.x >= r[1] and ev.x <= r[3] and ev.y >= r[2] and ev.y <= r[4] end
+-- Hit areas are in drawing coordinates; events are in window pixels
+local function inside(r, ev)
+    local x, y = ev.x / L.scale, ev.y / L.scale
+    return r and x >= r[1] and x <= r[3] and y >= r[2] and y <= r[4]
+end
 
 local function area(ev)
     for _, name in ipairs {'prev', 'next', 'title'} do

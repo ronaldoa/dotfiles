@@ -74,11 +74,19 @@ L.cached, L.split, L.num = cached, split, num
 
 local cr
 
+-- Drawing scale; mouse hooks divide event coordinates by it
+L.scale = 1
+
 -- Start drawing on the conky window; returns the cairo context (nil before the window exists).
+-- Everything is drawn in a design_w x design_h coordinate space. conky sizes its window by the
+-- screen DPI (bigger than that on a high-DPI screen, smaller on e.g. a 24" 1080p one); when the
+-- window is smaller the drawing is shrunk to fit instead of being cut off.
 -- conky_surface() belongs to conky, so only the context is ours to destroy.
-function L.begin()
+function L.begin(design_w, design_h)
     if conky_window == nil then return nil end
     cr = cairo_create(conky_surface())
+    L.scale = math.min(1, conky_window.width / design_w, conky_window.height / design_h)
+    cairo_scale(cr, L.scale, L.scale)
     return cr
 end
 
