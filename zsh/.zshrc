@@ -143,34 +143,22 @@ setopt HIST_IGNORE_ALL_DUPS
 setopt SHARE_HISTORY
 
 
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/ronaldo/miniforge3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/home/ronaldo/miniforge3/etc/profile.d/conda.sh" ]; then
-        . "/home/ronaldo/miniforge3/etc/profile.d/conda.sh"
-    else
-        export PATH="/home/ronaldo/miniforge3/bin:$PATH"
-    fi
+# conda, without putting it on PATH.
+#
+# This replaces the `conda init` / `mamba shell init` blocks that used to live
+# here: they pointed at ~/miniforge3, which no longer exists, so the hook failed
+# every time and the fallback branch appended a non-existent directory to PATH.
+#
+# Sourcing conda.sh (~4 ms) only defines the `conda` shell function -- verified
+# that it leaves PATH untouched, so `python3` keeps resolving to the system
+# 3.14 and distro packages (python-i3ipc, python-xlib, ...) stay importable.
+# It is `conda activate` that prepends anaconda's bin, which is what we want:
+# opt in per shell, rather than on every shell.
+#   conda activate <env>   enter an env      conda deactivate   leave it
+# `conda init` would undo this, so don't run it.
+if [[ -r "$HOME/anaconda3/etc/profile.d/conda.sh" ]]; then
+  source "$HOME/anaconda3/etc/profile.d/conda.sh"
 fi
-unset __conda_setup
-# <<< conda initialize <<<
-
-
-# >>> mamba initialize >>>
-# !! Contents within this block are managed by 'mamba shell init' !!
-export MAMBA_EXE='/home/ronaldo/miniforge3/bin/mamba';
-export MAMBA_ROOT_PREFIX='/home/ronaldo/miniforge3';
-__mamba_setup="$("$MAMBA_EXE" shell hook --shell zsh --root-prefix "$MAMBA_ROOT_PREFIX" 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__mamba_setup"
-else
-    alias mamba="$MAMBA_EXE"  # Fallback on help from mamba activate
-fi
-unset __mamba_setup
-# <<< mamba initialize <<<
 
 export CUDA_HOME=/opt/cuda
 export PATH=$CUDA_HOME/bin:$PATH
