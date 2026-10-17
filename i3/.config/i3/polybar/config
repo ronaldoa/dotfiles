@@ -43,9 +43,9 @@ radius-bottom = 0.0
 line-size = 3
 line-color = ${color.BLUE}
 
-; Full width, with a 10px gap above (from the screen edge) and below (to the windows; same as i3's inner gaps).
+; Full width, 3px from the top of the screen, and a 10px gap below to the windows (same as i3's inner gaps).
 ; i3 places dock windows itself (offset-x/y are ignored), so the gaps are a fully transparent border.
-border-top-size = 10
+border-top-size = 3
 border-left-size = 0
 border-right-size = 0
 border-bottom-size = 10
