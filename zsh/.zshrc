@@ -177,6 +177,22 @@ export PATH=$CUDA_HOME/bin:$PATH
 export LD_LIBRARY_PATH="$CUDA_HOME/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
 
 export PATH="$HOME/.npm-global/bin:$PATH"
+
+# nvm, lazily. Sourcing nvm.sh costs ~230 ms (4400 lines) and would roughly
+# triple zsh startup, so only put the default version's bin on PATH here --
+# that is all `node`, `npm`, `npx` and globally installed CLIs (codex, ...)
+# need. The `nvm` command itself loads on first use.
+export NVM_DIR="$HOME/.nvm"
+if [[ -s "$NVM_DIR/nvm.sh" ]]; then
+  if [[ -r "$NVM_DIR/alias/default" ]]; then
+    # alias/default may hold a bare major ("20"), so glob and take the newest match.
+    _nvm_bin=("$NVM_DIR/versions/node/v${$(<"$NVM_DIR/alias/default")#v}"*(/N))
+    (( $#_nvm_bin )) && PATH="${_nvm_bin[-1]}/bin:$PATH"
+    unset _nvm_bin
+  fi
+  nvm() { unfunction nvm; source "$NVM_DIR/nvm.sh"; nvm "$@"; }
+fi
+
 export EDITOR="nvim"
 export VISUAL="nvim"
 

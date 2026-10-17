@@ -32,6 +32,19 @@ Everything a host can override is funnelled through one directory,
 | `mpd/.config/mpd/mpd.conf` | `include_optional "…/mpd.conf"` | silently skipped (needs mpd ≥ 0.22) |
 | `zsh/.zshrc` | `[[ -r … ]] && source` | silently skipped |
 
+### The alacritty trap
+
+`import` does **not** work like i3's `include`: the importing file is resolved
+last, so a key set in `alacritty.toml` beats the same key in an imported file.
+Verified on 0.17 — with `window.title` set in both, the main file's value is the
+one the window gets; comment it out and the import's value appears.
+
+So for alacritty a key is overridable from `hosts/` **only if the generic config
+does not set it at all**. That is why `alacritty.toml` carries no `[font] size`
+(it lives in the host files) and no palette (it lives in `colors.toml`).
+Adding `size = …` back to the generic file would silently disable every host's
+font size.
+
 So a machine with no `hosts/` directory of its own still gets a working setup
 from the generic config alone — the overrides are purely additive.
 

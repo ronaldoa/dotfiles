@@ -1,0 +1,8 @@
+# Desktop with a 27" 2560x1440 monitor -- the size the generic config used to
+# carry before font size moved into the hosts/ layer.
+#
+# !! RENAME the parent directory to that machine's `hostname` (see ../../README.md
+#    in hosts/), otherwise bin/dotfiles-bootstrap will not pick it up.
+
+[font]
+size = 14
