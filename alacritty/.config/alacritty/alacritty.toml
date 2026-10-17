@@ -67,7 +67,8 @@ padding = { x = 20, y = 10 }
 [general]
 # Later imports override earlier ones; missing files are skipped.
 # ~/.cache/theme/alacritty.toml is written by ~/.config/i3/bin/theme (pywal colours, or empty for the default)
-import = ["~/.config/alacritty/colors.toml", "~/.cache/theme/alacritty.toml"]
+# dotfiles-host/alacritty.toml is per-machine (font size etc.), stowed from hosts/<hostname>/
+import = ["~/.config/alacritty/colors.toml", "~/.cache/theme/alacritty.toml", "~/.config/dotfiles-host/alacritty.toml"]
 #background_opacity = 0.95
 live_config_reload = true
 

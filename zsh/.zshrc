@@ -180,8 +180,11 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 export EDITOR="nvim"
 export VISUAL="nvim"
 
-# OpenClaw Completion
-source "/home/ronaldo/.openclaw/completions/openclaw.zsh"
+# OpenClaw Completion (only on machines where openclaw is installed).
+# $HOME, not a hardcoded path, so this also works under another username.
+if [[ -r "$HOME/.openclaw/completions/openclaw.zsh" ]]; then
+  source "$HOME/.openclaw/completions/openclaw.zsh"
+fi
 export GOROOT="$HOME/.go"
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOROOT/bin:$GOPATH/bin"
@@ -209,3 +212,10 @@ ranger() {
     rm -f -- "$dir_file"
     [[ -d $dir && $dir != $PWD ]] && cd -- "$dir"
 }
+
+# Per-machine overrides (PATH, proxies, machine-local aliases).
+# Stowed from hosts/<hostname>/ by bin/dotfiles-bootstrap.
+# `if` rather than `&&` so a missing file does not leave .zshrc returning 1.
+if [[ -r ~/.config/dotfiles-host/zshrc ]]; then
+  source ~/.config/dotfiles-host/zshrc
+fi

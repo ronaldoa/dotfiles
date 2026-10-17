@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """Synced lyrics for the song mpd is playing.
 
   lyrics bar     polybar tail script: prints the current lyric line whenever it changes

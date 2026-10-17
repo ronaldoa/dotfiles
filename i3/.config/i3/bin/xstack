@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """Raise or lower a top-level X window by its WM_CLASS, waiting up to 5 s for it to appear.
 
     xstack <class> above|below

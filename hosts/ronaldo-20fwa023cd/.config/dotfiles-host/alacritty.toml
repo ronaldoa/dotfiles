@@ -1,0 +1,6 @@
+# ThinkPad T460p -- 14" 1920x1080 panel.
+# The generic config's size 14 is tuned for the desktop's 27" 2560x1440.
+# Imported last, so this wins.
+
+[font]
+size = 10

@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Install these dotfiles on the current machine.
+#
+#   bin/dotfiles-bootstrap            # stow generic packages + this host's overrides
+#   bin/dotfiles-bootstrap -n         # dry run, show what would change
+#   bin/dotfiles-bootstrap -R         # restow (fix up links after adding/removing files)
+#   bin/dotfiles-bootstrap -D         # uninstall
+#   DOTFILES_HOST=other bin/dotfiles-bootstrap   # pretend to be another host
+#
+# Everything is stowed into $HOME, resolved at run time -- so this works under
+# any username, unlike a .stowrc with a hardcoded --target.
+set -euo pipefail
+
+DOTFILES="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+HOST="${DOTFILES_HOST:-$(hostname)}"
+STOW_FLAGS=(--target="$HOME")
+ACTION="--stow"
+
+while getopts ':nRDh' opt; do
+  case "$opt" in
+    n) STOW_FLAGS+=(--no --verbose) ;;
+    R) ACTION="--restow" ;;
+    D) ACTION="--delete" ;;
+    h) sed -n '2,12p' "$0"; exit 0 ;;
+    *) echo "unknown option -$OPTARG (try -h)" >&2; exit 2 ;;
+  esac
+done
+
+command -v stow >/dev/null || { echo "GNU stow is not installed" >&2; exit 1; }
+
+# Generic packages = every top-level directory that is not infrastructure.
+mapfile -t PACKAGES < <(
+  find "$DOTFILES" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
+    | grep -vxE '\.git|hosts|bin' | sort
+)
+[ ${#PACKAGES[@]} -gt 0 ] || { echo "no packages found in $DOTFILES" >&2; exit 1; }
+
+echo "dotfiles : $DOTFILES"
+echo "target   : $HOME"
+echo "host     : $HOST"
+echo "packages : ${PACKAGES[*]}"
+echo
+
+stow "${STOW_FLAGS[@]}" --dir="$DOTFILES" "$ACTION" "${PACKAGES[@]}"
+
+# Per-machine overrides. Absent is fine: every include hook in the generic
+# configs tolerates a missing file (i3 `include`, alacritty `import`,
+# mpd `include_optional`, the `[[ -r ]]` guard in .zshrc).
+if [ -d "$DOTFILES/hosts/$HOST" ]; then
+  stow "${STOW_FLAGS[@]}" --dir="$DOTFILES/hosts" "$ACTION" "$HOST"
+  echo "host overrides: applied hosts/$HOST"
+else
+  echo "host overrides: none for '$HOST' (generic config only)"
+  echo "  to add some:  mkdir -p hosts/$HOST/.config/dotfiles-host"
+  echo "  available  : $(find "$DOTFILES/hosts" -mindepth 1 -maxdepth 1 -type d -printf '%f ' 2>/dev/null)"
+fi
+
+[ "$ACTION" = "--delete" ] && exit 0
+
+# Report anything the generic i3 config launches that is not installed here.
+missing=()
+for c in i3 polybar picom dunst rofi ranger ncmpcpp mpd alacritty nvim tmux \
+         autotiling playerctl xss-lock nitrogen udiskie copyq fcitx5 flameshot conky; do
+  command -v "$c" >/dev/null || missing+=("$c")
+done
+if [ ${#missing[@]} -gt 0 ]; then
+  echo
+  echo "not installed on this machine: ${missing[*]}"
+  echo "  (the configs degrade gracefully, but those features stay dead)"
+fi
