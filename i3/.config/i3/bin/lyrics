@@ -87,6 +87,17 @@ def safe(name):
     return name.replace("/", "／").strip()
 
 
+def filename_metadata(path):
+    """Extract a useful title/artist from numbered collection filenames."""
+    stem = os.path.splitext(os.path.basename(path))[0]
+    stem = re.sub(r"^\d+[.、]\s*", "", stem).strip()
+    match = re.match(r"^.*?[（(]([^（）()]+)[）)]\s*(?:-\s*)?(.*)$", stem)
+    if match:
+        return match.group(1).strip(), match.group(2).strip()
+    title, separator, artist = stem.rpartition("-")
+    return (title.strip(), artist.strip()) if separator else (stem, "")
+
+
 def http_json(url):
     """GET JSON; retries a few times since lrclib often answers 503 when busy. Raises OSError."""
     req = urllib.request.Request(url, headers={"User-Agent": "i3-lyrics (github.com/ronaldoa/dotfiles)"})
@@ -139,8 +150,9 @@ def get_lyrics(song):
         with open(sidecar, encoding="utf-8", errors="replace") as f:
             return f.read()
 
-    title = song.get("Title") or os.path.splitext(os.path.basename(path))[0]
-    artist = song.get("Artist", "")
+    filename_title, filename_artist = filename_metadata(path)
+    title = song.get("Title") or filename_title
+    artist = song.get("Artist") or filename_artist
     name = safe(f"{artist} - {title}" if artist else title)
     cache = os.path.join(CACHE_DIR, name + ".lrc")
     if os.path.isfile(cache):
