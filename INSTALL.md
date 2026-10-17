@@ -165,6 +165,8 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
 
 各功能的用法和快捷键见 `i3/.config/i3/README.md`。
 
+Firefox 的视频和音频默认跟随系统输出：`wireplumber` 配置只关闭 Firefox 播放流的设备记忆，保留音量和静音记忆。修改后执行 `systemctl --user restart wireplumber`，再重新开始网页播放；之后在 pavucontrol「输出设备」中设置默认设备即可。
+
 ## Mac
 
 Mac 上只用得到一部分（nvim、tmux、zsh、终端、ranger、mpd 等），窗口管理换成 AeroSpace。安装步骤和需要的软件见 `aerospace/.config/aerospace/README.md`。
