@@ -1,0 +1,15 @@
+/* Palette shared by all rofi themes here (Nord).
+ * ~/.cache/theme/rofi.rasi is written by ~/.config/i3/bin/theme: empty for Nord,
+ * or the same variables with pywal colours, which then override these. */
+
+* {
+    bg:          #2E3440;
+    bg-alt:      #3B4252;
+    bg-sel:      #434C5E;
+    fg:          #ECEFF4;
+    fg-dim:      #D8DEE980;
+    accent:      #88C0D0;
+    urgent:      #BF616A;
+}
+
+@import "~/.cache/theme/rofi.rasi"

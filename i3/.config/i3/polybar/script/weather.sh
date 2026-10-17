@@ -44,7 +44,8 @@ if [ "$1" = "--detail" ]; then
     conf="$HOME/.config/conky/weather-popup.conf"
     pkill -f "conky -d -c $conf" && exit 0
     [ -s "$CACHE" ] || fetch || { notify-send "天气" "获取天气失败"; exit 1; }
-    conky -d -c "$conf" >/dev/null 2>&1
+    read -r x y < <(~/.config/i3/bin/popup-pos 402)
+    conky -d -c "$conf" -x "$x" -y "$y" >/dev/null 2>&1
     # conky puts its override window at the bottom of the stack; bring the popup above all windows
     exec ~/.config/i3/bin/xstack weather-popup above
 fi

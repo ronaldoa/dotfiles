@@ -1,0 +1,247 @@
+# AeroSpace (macOS tiling window manager), translated from the i3 config in this repo
+# (i3/.config/i3/config) so the same keys work on the Mac. Alt = Option.
+# What maps to what, and what has no AeroSpace equivalent, is in README.md next to this file.
+# Reference: https://nikitabobko.github.io/AeroSpace/guide
+
+start-at-login = true
+
+# Normalization keeps the tree flat and alternates orientation, which behaves much like
+# i3 + autotiling: new windows split along the longer side.
+enable-normalization-flatten-containers = true
+enable-normalization-opposite-orientation-for-nested-containers = true
+
+default-root-container-layout = 'tiles'
+default-root-container-orientation = 'auto'
+
+accordion-padding = 30
+
+# Mouse follows focus when switching monitors
+on-focused-monitor-changed = ['move-mouse monitor-lazy-center']
+
+# Focus border like i3's: JankyBorders (brew install FelixKratz/formulae/borders), Nord colours
+after-startup-command = [
+    'exec-and-forget borders active_color=0xff5E81AC inactive_color=0xff3B4252 width=4.0 hidpi=on',
+]
+
+# Commands run from AeroSpace get launchd's minimal PATH; add Homebrew so mpc, borders, etc. are found
+[exec]
+inherit-env-vars = true
+
+[exec.env-vars]
+PATH = '/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:${PATH}'
+
+[key-mapping]
+preset = 'qwerty'
+
+# Same 10px gaps as i3 (there is no smart_gaps: outer gaps stay with a single window)
+[gaps]
+inner.horizontal = 10
+inner.vertical = 10
+outer.left = 10
+outer.right = 10
+outer.top = 10
+outer.bottom = 10
+
+[mode.main.binding]
+
+# ---------------------------------------------------------------- windows
+
+# Focus / move: hjkl or arrow keys
+alt-h = 'focus left'
+alt-j = 'focus down'
+alt-k = 'focus up'
+alt-l = 'focus right'
+alt-left = 'focus left'
+alt-down = 'focus down'
+alt-up = 'focus up'
+alt-right = 'focus right'
+
+alt-shift-h = 'move left'
+alt-shift-j = 'move down'
+alt-shift-k = 'move up'
+alt-shift-l = 'move right'
+alt-shift-left = 'move left'
+alt-shift-down = 'move down'
+alt-shift-up = 'move up'
+alt-shift-right = 'move right'
+
+# Close the window (i3: kill)
+alt-q = 'close'
+
+# ---------------------------------------------------------------- layout
+
+# i3 "split h / split v": AeroSpace has no pre-split; join the focused window with its
+# neighbour on the right / below into a new container instead
+alt-semicolon = 'join-with right'
+alt-v = 'join-with down'
+# Toggle the split orientation (i3: split toggle)
+alt-shift-q = 'layout horizontal vertical'
+
+# i3 stacking / tabbed -> accordion; toggle split -> tiles
+alt-s = 'layout accordion vertical'
+alt-w = 'layout accordion horizontal'
+alt-e = 'layout tiles horizontal vertical'
+
+alt-f = 'fullscreen'
+alt-shift-space = 'layout floating tiling'
+
+# Resize mode, like i3's $mod+r
+alt-r = 'mode resize'
+
+# ---------------------------------------------------------------- workspaces
+
+# Pressing the current workspace's number again goes back to the previous one
+# (i3: workspace_auto_back_and_forth)
+alt-1 = 'workspace --auto-back-and-forth 1'
+alt-2 = 'workspace --auto-back-and-forth 2'
+alt-3 = 'workspace --auto-back-and-forth 3'
+alt-4 = 'workspace --auto-back-and-forth 4'
+alt-5 = 'workspace --auto-back-and-forth 5'
+alt-6 = 'workspace --auto-back-and-forth 6'
+alt-7 = 'workspace --auto-back-and-forth 7'
+alt-8 = 'workspace --auto-back-and-forth 8'
+alt-9 = 'workspace --auto-back-and-forth 9'
+alt-0 = 'workspace --auto-back-and-forth 10'
+
+alt-shift-1 = 'move-node-to-workspace 1'
+alt-shift-2 = 'move-node-to-workspace 2'
+alt-shift-3 = 'move-node-to-workspace 3'
+alt-shift-4 = 'move-node-to-workspace 4'
+alt-shift-5 = 'move-node-to-workspace 5'
+alt-shift-6 = 'move-node-to-workspace 6'
+alt-shift-7 = 'move-node-to-workspace 7'
+alt-shift-8 = 'move-node-to-workspace 8'
+alt-shift-9 = 'move-node-to-workspace 9'
+alt-shift-0 = 'move-node-to-workspace 10'
+
+# Move the window and follow it there
+alt-ctrl-1 = 'move-node-to-workspace --focus-follows-window 1'
+alt-ctrl-2 = 'move-node-to-workspace --focus-follows-window 2'
+alt-ctrl-3 = 'move-node-to-workspace --focus-follows-window 3'
+alt-ctrl-4 = 'move-node-to-workspace --focus-follows-window 4'
+alt-ctrl-5 = 'move-node-to-workspace --focus-follows-window 5'
+alt-ctrl-6 = 'move-node-to-workspace --focus-follows-window 6'
+alt-ctrl-7 = 'move-node-to-workspace --focus-follows-window 7'
+alt-ctrl-8 = 'move-node-to-workspace --focus-follows-window 8'
+alt-ctrl-9 = 'move-node-to-workspace --focus-follows-window 9'
+alt-ctrl-0 = 'move-node-to-workspace --focus-follows-window 10'
+
+alt-backtick = 'workspace-back-and-forth'
+alt-leftSquareBracket = 'workspace prev'
+alt-rightSquareBracket = 'workspace next'
+
+# Send the whole workspace to the next monitor
+alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
+
+# ---------------------------------------------------------------- apps
+
+alt-enter = 'exec-and-forget open -na Alacritty'
+alt-c = 'exec-and-forget open -a Firefox'
+alt-t = 'exec-and-forget open -a Thunderbird'
+alt-shift-n = 'exec-and-forget open ~'
+
+alt-ctrl-o = 'exec-and-forget open -a Obsidian'
+alt-ctrl-n = 'exec-and-forget open -a Noi'
+alt-ctrl-b = 'exec-and-forget open -a bilibili'
+alt-ctrl-t = 'exec-and-forget open -a "Microsoft Teams"'
+alt-ctrl-l = 'exec-and-forget open -a "LM Studio"'
+alt-ctrl-c = 'exec-and-forget open -a Cursor'
+alt-ctrl-g = 'exec-and-forget open -a ChatGPT'
+alt-ctrl-w = 'exec-and-forget open -a WeChat'
+
+# Screenshot: pick an area, copied to the clipboard (i3: flameshot gui)
+alt-shift-s = 'exec-and-forget screencapture -ic'
+
+# mpd
+alt-ctrl-p = 'exec-and-forget mpc toggle'
+alt-ctrl-right = 'exec-and-forget mpc next'
+alt-ctrl-left = 'exec-and-forget mpc prev'
+
+# ---------------------------------------------------------------- AeroSpace itself
+
+# Reload this file (i3: $mod+Shift+c)
+alt-shift-c = 'reload-config'
+
+# Service mode: rarely needed fixes for the window tree
+alt-shift-semicolon = 'mode service'
+
+[mode.resize.binding]
+h = 'resize width -50'
+j = 'resize height +50'
+k = 'resize height -50'
+l = 'resize width +50'
+left = 'resize width -50'
+down = 'resize height +50'
+up = 'resize height -50'
+right = 'resize width +50'
+# Even out all windows
+equal = 'balance-sizes'
+enter = 'mode main'
+esc = 'mode main'
+alt-r = 'mode main'
+
+[mode.service.binding]
+# Reset the layout of this workspace
+r = ['flatten-workspace-tree', 'mode main']
+# Tiling <-> floating
+f = ['layout floating tiling', 'mode main']
+# Close every window on this workspace except the focused one
+backspace = ['close-all-windows-but-current', 'mode main']
+esc = ['reload-config', 'mode main']
+
+# ---------------------------------------------------------------- window rules
+# Same workspaces as in i3. Matching is on the app name (a case-insensitive substring),
+# so it works without knowing each app's bundle id. The first matching rule wins.
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'libreoffice'
+run = 'move-node-to-workspace 1'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'intellij|goland|pycharm|clion|datagrip|webstorm|jetbrains toolbox'
+run = 'move-node-to-workspace 2'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'firefox|edge dev|noi'
+run = 'move-node-to-workspace 3'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'bilibili|neteasemusic|网易云音乐'
+run = 'move-node-to-workspace 4'
+
+# Steam floats (as in i3) and lives on 5
+[[on-window-detected]]
+if.app-name-regex-substring = 'steam'
+run = ['layout floating', 'move-node-to-workspace 5']
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'wechat|微信'
+run = 'move-node-to-workspace 5'
+
+# VirtualBox: the manager floats, VMs go to 6
+[[on-window-detected]]
+if.app-name-regex-substring = 'virtualbox vm'
+run = 'move-node-to-workspace 6'
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'virtualbox'
+run = 'layout floating'
+
+# QQ floats (as in i3) and lives on 8
+[[on-window-detected]]
+if.app-name-regex-substring = '^qq$'
+run = ['layout floating', 'move-node-to-workspace 8']
+
+[[on-window-detected]]
+if.app-name-regex-substring = 'thunderbird|telegram|obsidian'
+run = 'move-node-to-workspace 8'
+
+# Small utility windows float
+[[on-window-detected]]
+if.app-name-regex-substring = 'calculator|计算器|system settings|系统设置|copyq|raycast'
+run = 'layout floating'
+
+# Picture-in-picture videos float
+[[on-window-detected]]
+if.window-title-regex-substring = 'picture-in-picture|画中画'
+run = 'layout floating'

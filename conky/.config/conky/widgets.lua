@@ -89,7 +89,9 @@ end
 
 local function network_card(x, y)
     card(x, y, CARD, CARD)
-    local iface = 'wlo1'
+    -- Interface of the default route (wired or wireless), so nothing is hard-coded
+    local iface = cached("ip route show default | awk '{print $5; exit}'", 30)
+    if iface == '' then iface = 'lo' end
     local down = num(conky_parse('${downspeedf ' .. iface .. '}'))   -- KiB/s
     local up = num(conky_parse('${upspeedf ' .. iface .. '}'))
     table.insert(history, down)
@@ -149,7 +151,7 @@ end
 -- ---------------------------------------------------------------- entry point
 
 function conky_main()
-    cr = L.begin()
+    cr = L.begin(2 * CARD + GAP + 2, 2 * CARD + 2 * GAP + MUSIC_H + 2)
     if not cr then return end
 
     local x1, x2 = 1, 1 + CARD + GAP

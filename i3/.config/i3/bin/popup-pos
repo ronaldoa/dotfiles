@@ -1,0 +1,30 @@
+#!/usr/bin/env python3
+"""Print "x y" for a conky popup of the given width: centred under the mouse pointer, just below the bar.
+
+    popup-pos <width>
+
+Used by the polybar click scripts, so popups line up with whatever module was clicked.
+The popup stays inside the focused workspace's area (which starts below polybar).
+The result is in conky's units: conky scales -x/-y by the screen DPI relative to 96
+(2560 px over 602 mm here, about 1.125), so the pixel position is divided by that.
+"""
+import json
+import subprocess
+import sys
+
+from Xlib import display
+
+width = int(sys.argv[1])
+screen = display.Display().screen()
+pointer = screen.root.query_pointer()
+workspaces = json.loads(subprocess.check_output(["i3-msg", "-t", "get_workspaces"]))
+area = next(w["rect"] for w in workspaces if w["focused"])
+
+margin = 8
+x = pointer.root_x - width // 2
+x = max(area["x"] + margin, min(x, area["x"] + area["width"] - width - margin))
+y = area["y"] + margin
+
+scale_x = 25.4 * screen.width_in_pixels / screen.width_in_mms / 96
+scale_y = 25.4 * screen.height_in_pixels / screen.height_in_mms / 96
+print(round(x / scale_x), round(y / scale_y))

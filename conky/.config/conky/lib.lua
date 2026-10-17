@@ -4,7 +4,6 @@
 --        L.begin(); ...draw...; L.finish()   -- inside the conky_* draw hook
 
 require 'cairo'
-require 'cairo_xlib'
 
 local L = {}
 
@@ -73,21 +72,27 @@ L.cached, L.split, L.num = cached, split, num
 
 -- ---------------------------------------------------------------- drawing
 
-local cr, surface
+local cr
 
--- Start drawing on the conky window; returns the cairo context (nil before the window exists)
-function L.begin()
+-- Drawing scale; mouse hooks divide event coordinates by it
+L.scale = 1
+
+-- Start drawing on the conky window; returns the cairo context (nil before the window exists).
+-- Everything is drawn in a design_w x design_h coordinate space. conky sizes its window by the
+-- screen DPI (bigger than that on a high-DPI screen, smaller on e.g. a 24" 1080p one); when the
+-- window is smaller the drawing is shrunk to fit instead of being cut off.
+-- conky_surface() belongs to conky, so only the context is ours to destroy.
+function L.begin(design_w, design_h)
     if conky_window == nil then return nil end
-    surface = cairo_xlib_surface_create(conky_window.display, conky_window.drawable,
-        conky_window.visual, conky_window.width, conky_window.height)
-    cr = cairo_create(surface)
+    cr = cairo_create(conky_surface())
+    L.scale = math.min(1, conky_window.width / design_w, conky_window.height / design_h)
+    cairo_scale(cr, L.scale, L.scale)
     return cr
 end
 
 function L.finish()
     cairo_destroy(cr)
-    cairo_surface_destroy(surface)
-    cr, surface = nil, nil
+    cr = nil
 end
 
 local function rgba(c, a) cairo_set_source_rgba(cr, c[1], c[2], c[3], a or c[4]) end

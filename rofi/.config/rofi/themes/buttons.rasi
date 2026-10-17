@@ -1,0 +1,59 @@
+/* A row of big icon buttons (power menu and its yes/no confirmation).
+ * The caller sets the number of columns and the matching window width with -theme-str
+ * (buttons are 116px wide with 14px between them, plus 22px padding each side). */
+
+@import "colors.rasi"
+
+* {
+    font:             "Noto Sans CJK SC 12";
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+window {
+    location:         center;
+    background-color: @bg;
+    padding:          22px;
+}
+
+mainbox {
+    spacing:  18px;
+    children: [ message, listview ];
+}
+
+textbox {
+    text-color:       @fg-dim;
+    horizontal-align: 0.5;
+}
+
+listview {
+    lines:        1;
+    spacing:      14px;
+    fixed-height: true;
+    scrollbar:    false;
+}
+
+element {
+    width:         116px;
+    padding:       18px 0px 14px 0px;
+    border-radius: 16px;
+    background-color: @bg-alt;
+}
+
+element selected {
+    background-color: @bg-sel;
+}
+
+element selected.normal {
+    text-color: @accent;
+}
+
+element selected.urgent, element urgent {
+    text-color: @urgent;
+}
+
+element-text {
+    text-color:       inherit;
+    horizontal-align: 0.5;
+    font:             "Noto Sans CJK SC 11";
+}

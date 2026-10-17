@@ -1,0 +1,3 @@
+# Default X cursor (root window and non-GTK apps)
+[Icon Theme]
+Inherits=breeze-cursors

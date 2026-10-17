@@ -1,0 +1,73 @@
+# Notifications: dark rounded cards in the top-right corner, matching the conky widgets (Nord).
+# Super+N brings back the last notification, Super+Shift+N closes them all (i3 config).
+
+[global]
+    monitor = 0
+    follow = none
+    origin = top-right
+    # Just below polybar
+    offset = (16, 55)
+    width = (300, 420)
+    height = (0, 240)
+    notification_limit = 5
+    gap_size = 10
+    corner_radius = 16
+    padding = 14
+    horizontal_padding = 16
+    text_icon_padding = 14
+    frame_width = 1
+    frame_color = "#ffffff10"
+    separator_height = 0
+    transparency = 0
+
+    font = Noto Sans CJK SC 11
+    markup = full
+    # App name in small dim caps, then the summary in bold, then the body
+    format = "<span size='x-small' foreground='#D8DEE980'>%a</span>\n<b>%s</b>\n%b"
+    alignment = left
+    vertical_alignment = center
+    ellipsize = end
+    word_wrap = yes
+    show_age_threshold = 60
+    ignore_newline = no
+    stack_duplicates = true
+    hide_duplicate_count = false
+    show_indicators = no
+
+    icon_theme = Papirus-Dark
+    enable_recursive_icon_lookup = true
+    icon_position = left
+    min_icon_size = 32
+    max_icon_size = 48
+
+    progress_bar = true
+    progress_bar_height = 6
+    progress_bar_frame_width = 0
+    progress_bar_corner_radius = 3
+
+    history_length = 30
+    sticky_history = yes
+    idle_threshold = 120
+
+    mouse_left_click = do_action, close_current
+    mouse_middle_click = close_all
+    mouse_right_click = close_current
+
+[urgency_low]
+    background = "#2E3440F2"
+    foreground = "#D8DEE9"
+    highlight = "#81A1C1"
+    timeout = 5
+
+[urgency_normal]
+    background = "#2E3440F2"
+    foreground = "#ECEFF4"
+    highlight = "#88C0D0"
+    timeout = 8
+
+[urgency_critical]
+    background = "#2E3440F2"
+    foreground = "#ECEFF4"
+    frame_color = "#BF616A"
+    highlight = "#BF616A"
+    timeout = 0

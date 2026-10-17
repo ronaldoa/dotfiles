@@ -62,7 +62,16 @@ EOF
         section("colors.bright"; .colors | bright)
     ' "$json" > "$state/alacritty.toml"
 
-    cp ~/.cache/wal/colors-rofi-dark.rasi "$state/rofi.rasi"
+    # Same variables as ~/.config/rofi/themes/colors.rasi, so only the colours change
+    jq -r '"* {",
+        "    bg:     \(.special.background);",
+        "    bg-alt: \(.colors.color0);",
+        "    bg-sel: \(.colors.color8);",
+        "    fg:     \(.special.foreground);",
+        "    fg-dim: \(.special.foreground)80;",
+        "    accent: \(.colors.color4);",
+        "    urgent: \(.colors.color1);",
+        "}"' "$json" > "$state/rofi.rasi"
 }
 
 if [ "$mode" = wal ] && ! apply_wal; then

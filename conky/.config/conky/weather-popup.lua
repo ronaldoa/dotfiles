@@ -37,7 +37,7 @@ local function load()
 end
 
 function conky_weather_popup()
-    local cr = L.begin()
+    local cr = L.begin(W + 2, H + 2)
     if not cr then return end
     local x, y = 1, 1
     card(x, y, W, H, 0.96)

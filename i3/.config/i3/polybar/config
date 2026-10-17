@@ -30,7 +30,7 @@ bottom = false
 fixed-center = true
 
 width = 100%
-height = 25
+height = 34
 offset-x = 0
 offset-y = 0
 
@@ -43,10 +43,15 @@ radius-bottom = 0.0
 line-size = 3
 line-color = ${color.BLUE}
 
-border-size = 5
-border-color = ${color.BACKGROUND}
+; Full width, 3px from the top of the screen, and a 10px gap below to the windows (same as i3's inner gaps).
+; i3 places dock windows itself (offset-x/y are ignored), so the gaps are a fully transparent border.
+border-top-size = 3
+border-left-size = 0
+border-right-size = 0
+border-bottom-size = 10
+border-color = #00000000
 
-padding = 1
+padding = 2
 module-margin-left = 1
 module-margin-right = 1
 
@@ -117,6 +122,8 @@ compositing-border = over
 type = internal/tray
 format = <tray>
 tray-size = 16
+; A little space between tray icons
+tray-spacing = 4px
 tray-padding = 0
 tray-background = ${color.BACKGROUND}
 
@@ -530,7 +537,8 @@ label-maxlen = 60
 
 [module/wlan]
 type = internal/network
-interface = wlo1
+; First wireless interface, whatever it is called on this machine
+interface-type = wireless
 
 interval = 1.0
 
