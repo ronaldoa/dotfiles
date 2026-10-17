@@ -389,6 +389,9 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # start with mouse mode enabled
 set -g mouse on
 
+# Use heavier separator lines between panes.
+set -g pane-border-lines heavy
+
 # force Vi mode
 #   really you should export VISUAL or EDITOR environment variable, see manual
 #set -g status-keys vi

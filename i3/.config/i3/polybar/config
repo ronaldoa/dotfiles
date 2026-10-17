@@ -70,7 +70,7 @@ module-margin-right = 1
 
 #font-1 = "LiterationMono Nerd Font:size=12;3"
 font-0 = Hack Nerd Font:size=12
-font-1 = Font Awesome 7 Free:style=Solid:pixelsize=13
+font-1 = Font Awesome 7 Free:style=Solid:pixelsize=13;2
 font-2 = NotoColorEmoji:pixelsize=10:fontformat=truetype:antialias=true
 font-3 = Weather Icons:style=Regular:size=10
 font-4 = Noto Sans CJK SC:size=12
@@ -80,7 +80,10 @@ font-4 = Noto Sans CJK SC:size=12
 scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
 
-modules-left = i3 cpu cpu_temp memory gpu network disks
+; Compact hardware summary: CPU/GPU temperature and memory usage.
+modules-left = i3 cpu_temp gpu_temp memory
+; Optional full layout: comment the line above and uncomment this one to restore.
+; modules-left = i3 cpu cpu_temp memory gpu network disks
 ; An empty env value uses the fallback too: keep that empty for focus/secondary bars.
 modules-center = ${env:BAR_CENTER:}
 modules-right = ${env:BAR_RIGHT:weather backlight battery volume date systray focus powermenu}
@@ -166,6 +169,9 @@ label = " %percentage:2%%"
 
 [module/memory]
 type = internal/memory
+; Wrap prefix and value together, so either opens the details.
+format = %{A1:~/.config/i3/bin/hardware memory-info:}%{T2}%{T-}%{F-} <label>%{A}
+format-foreground = ${color.BLUE}
 
 ; Seconds to sleep between updates
 ; Default: 1
@@ -181,12 +187,8 @@ interval = 3
 ;   <bar-swap-free>
 ;   <ramp-swap-used>
 ;   <ramp-swap-free>
-format = <label>
 format-background = ${color.BACKGROUND}
-
-format-prefix = 
-format-prefix-font = 1
-format-prefix-foreground = ${color.BLUE}
+label = %percentage_used%%
 
 ; Available tokens:
 ;   %percentage_used% (default)
@@ -206,7 +208,8 @@ format-prefix-foreground = ${color.BLUE}
 ;   %gb_swap_free%
 ;   %gb_swap_used%
 
-label = " %gb_used% / %gb_total%"
+; Optional capacity display:
+; label = %gb_used% / %gb_total%
 
 ; Only applies if <ramp-used> is used
 ;;ramp-used-0 = 
@@ -493,7 +496,19 @@ format-foreground = ${color.CYAN}
 type = custom/script
 exec = ~/.config/i3/bin/hardware cpu-temp
 interval = 5
-format-foreground = ${color.YELLOW}
+format-prefix = " "
+format-prefix-font = 2
+format-prefix-foreground = ${color.YELLOW}
+click-left = ~/.config/i3/bin/hardware cpu-info
+
+[module/gpu_temp]
+type = custom/script
+exec = ~/.config/i3/bin/hardware gpu-temp
+interval = 5
+format-prefix = "󰢮 "
+format-prefix-font = 1
+format-prefix-foreground = ${color.GREEN}
+click-left = ~/.config/i3/bin/hardware gpu-info
 
 [module/disks]
 type = custom/script

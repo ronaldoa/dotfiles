@@ -166,7 +166,12 @@ for __conda_root in "$HOME/miniforge3" "$HOME/mambaforge" "$HOME/anaconda3" \
   [[ -r "$__conda_root/etc/profile.d/conda.sh" ]] || continue
   source "$__conda_root/etc/profile.d/conda.sh"
   # miniforge/mambaforge ship mamba alongside conda; anaconda does not.
-  [[ -r "$__conda_root/etc/profile.d/mamba.sh" ]] && source "$__conda_root/etc/profile.d/mamba.sh"
+  # mamba.sh expects these variables even in a fresh shell (e.g. a tmux pane).
+  if [[ -r "$__conda_root/etc/profile.d/mamba.sh" && -x "$__conda_root/bin/mamba" ]]; then
+    export MAMBA_EXE="$__conda_root/bin/mamba"
+    export MAMBA_ROOT_PREFIX="$__conda_root"
+    source "$__conda_root/etc/profile.d/mamba.sh"
+  fi
   break
 done
 unset __conda_root

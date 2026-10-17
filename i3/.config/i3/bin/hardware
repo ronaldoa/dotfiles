@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 """Shared, cached hardware readings for Polybar and Conky; no machine-specific IDs.
 
-hardware json|conky|cpu-temp|gpu|battery|network|disks|disk-menu|backlight|backlight-device|compositor-flag
+hardware json|conky|cpu-temp|gpu-temp|gpu|battery|network|disks|disk-menu|backlight|backlight-device|compositor-flag
+hardware cpu-info|gpu-info|memory-info [--print]   show details (or print without a GUI)
 Missing metrics stay absent. NVIDIA GPUs in runtime suspend are never queried.
 """
 import csv
@@ -10,6 +11,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -94,15 +96,17 @@ def gpu_readings():
     if nvidia:
         # Explicit bus IDs keep a sleeping secondary NVIDIA GPU out of the query.
         out = command(['nvidia-smi', '--id=' + ','.join(bus for bus, _ in nvidia),
-                       '--query-gpu=pci.bus_id,utilization.gpu,temperature.gpu,memory.used,memory.total',
+                       '--query-gpu=pci.bus_id,utilization.gpu,temperature.gpu,memory.used,memory.total,name',
                        '--format=csv,noheader,nounits'])
         by_bus = {bus.lower().split(':', 1)[1]: gpu for bus, gpu in nvidia}
         for row in csv.reader(out.splitlines(), skipinitialspace=True):
-            if len(row) != 5:
+            if len(row) not in (5, 6):
                 continue
             gpu = by_bus.get(':'.join(row[0].strip().lower().split(':')[-2:]))
             if gpu is None:
                 continue
+            if len(row) == 6:
+                gpu['name'] = row[5].strip()
             for key, value in zip(('percent', 'temperature', 'memory_used', 'memory_total'), row[1:]):
                 try:
                     gpu[key] = float(value)
@@ -305,6 +309,112 @@ def single_line(value):
     return re.sub(r'[\x00-\x1f\x7f]', ' ', value)
 
 
+def cpu_times():
+    line = read(PROC / 'stat').splitlines()
+    if not line or not line[0].startswith('cpu '):
+        return None
+    try:
+        # guest/guest_nice are already included in user/nice; count the first 8 fields only.
+        times = [int(value) for value in line[0].split()[1:9]]
+    except ValueError:
+        return None
+    return (sum(times), times[3] + times[4]) if len(times) >= 5 else None
+
+
+def cpu_details():
+    processors = []
+    for block in read(PROC / 'cpuinfo').split('\n\n'):
+        fields = dict((key.strip().lower(), value.strip()) for line in block.splitlines()
+                      if ':' in line for key, value in [line.split(':', 1)])
+        if fields:
+            processors.append(fields)
+    models = [p.get('model name') or p.get('hardware') or p.get('processor', '') for p in processors]
+    model = next((name for name in models if name and not name.isdigit()), os.uname().machine)
+    logical = sum(p.get('processor', '').isdigit() for p in processors) or os.cpu_count()
+    rows = [f'型号    {model}', f'逻辑处理器    {logical or "未提供"}']
+    cores = {(p.get('physical id', '0'), p['core id']) for p in processors if 'core id' in p}
+    if cores:
+        rows.append(f'物理核心    {len(cores)}')
+    before = cpu_times()
+    if before:
+        time.sleep(0.2)
+        after = cpu_times()
+        if after and after[0] > before[0]:
+            percent = 100 * (1 - (after[1] - before[1]) / (after[0] - before[0]))
+            rows.append(f'当前占用    {max(0, min(100, percent)):.1f}%')
+    temp = cpu_temperature()
+    rows.append('温度    ' + (temperature(temp) or '当前未提供读数'))
+    load = read(PROC / 'loadavg').split()
+    if len(load) >= 3:
+        rows.append('系统负载（1 / 5 / 15 分钟）    ' + ' / '.join(load[:3]))
+    return rows
+
+
+def gpu_details():
+    rows = []
+    for index, gpu in enumerate(gpu_readings(), 1):
+        device = SYS / 'class/drm' / gpu['card'] / 'device'
+        model = gpu.get('name')
+        if not model and not gpu['sleeping']:
+            # Optional pciutils lookup for AMD/Intel; never probe a sleeping GPU.
+            bus = device.resolve().name
+            if re.fullmatch(r'[\da-fA-F]{4}:[\da-fA-F]{2}:[\da-fA-F]{2}\.\d', bus):
+                try:
+                    fields = shlex.split(command(['lspci', '-mm', '-s', bus]))
+                except ValueError:
+                    fields = []
+                if len(fields) >= 4:
+                    model = ' '.join(fields[2:4])
+        rows.append(f"显卡 {index}    {model or gpu['vendor']} ({gpu['card']})")
+        rows.append('状态    ' + ('休眠' if gpu['sleeping'] else '活动'))
+        if gpu['sleeping']:
+            continue
+        if (device / 'driver').exists():
+            rows.append('驱动    ' + (device / 'driver').resolve().name)
+        rows.append('温度    ' + (temperature(gpu.get('temperature')) or '当前未提供读数'))
+        if gpu.get('percent') is not None:
+            rows.append(f"GPU 利用率    {gpu['percent']:.1f}%")
+        else:
+            rows.append('GPU 利用率    当前驱动未提供')
+        used, total = gpu.get('memory_used'), gpu.get('memory_total')
+        if used is not None and total:
+            rows.append(f'显存    {capacity(used * 1048576)} / {capacity(total * 1048576)}'
+                        f'  ({100 * used / total:.1f}%)')
+    return rows or ['未发现支持的显卡']
+
+
+def memory_details():
+    memory = {key: int(value) * 1024 for key, value in
+              re.findall(r'^(\w+):\s+(\d+)\s+kB', read(PROC / 'meminfo'), re.M)}
+    total = memory.get('MemTotal', 0)
+    if not total:
+        return ['未读取到内存信息']
+    cached = memory.get('Buffers', 0) + memory.get('Cached', 0) + memory.get('SReclaimable', 0)
+    # Same MemAvailable calculation as Polybar's internal/memory module.
+    available = memory.get('MemAvailable', memory.get('MemFree', 0) + cached - memory.get('Shmem', 0))
+    available = max(0, min(total, available))
+    used = total - available
+    rows = [f'总容量    {capacity(total)}', f'已用    {capacity(used)}  ({100 * used / total:.1f}%)',
+            f'可用    {capacity(available)}', f'完全空闲    {capacity(memory.get("MemFree", 0))}',
+            f'缓存与缓冲    {capacity(cached)}', f'共享内存    {capacity(memory.get("Shmem", 0))}']
+    swap = memory.get('SwapTotal', 0)
+    if swap:
+        swap_used = max(0, swap - memory.get('SwapFree', 0))
+        rows.append(f'Swap    {capacity(swap_used)} / {capacity(swap)}  ({100 * swap_used / swap:.1f}%)')
+    else:
+        rows.append('Swap    未启用')
+    return rows
+
+
+def show_details(title, rows):
+    subprocess.run(['rofi', '-dmenu', '-i', '-p', title, '-no-custom', '-no-sort', '-no-markup-rows',
+                    '-no-show-icons', '-mesg', f'<b>{title}</b>',
+                    '-theme-str', 'window { width: 720px; } listview { lines: 12; } '
+                    'mode-switcher { enabled: false; } entry { placeholder: "筛选详情…"; }'],
+                   input='\n'.join(single_line(row) for row in rows), text=True,
+                   stdout=subprocess.DEVNULL)
+
+
 def disk_label(disks):
     if not disks:
         return ''
@@ -332,8 +442,11 @@ def disk_menu(disks):
 
 def labels(data):
     battery, net, light = data['battery'], data['network'], data['backlight']
+    gpu_temperatures = [g['temperature'] for g in data['gpus']
+                        if not g['sleeping'] and g.get('temperature') is not None]
     return {
         'cpu-temp': temperature(data['cpu_temperature']),
+        'gpu-temp': temperature(max(gpu_temperatures, default=None)),
         'gpu': ' · '.join(gpu_text(g) for g in data['gpus']),
         'battery': (('AC ' if battery['online'] or battery['charging'] else 'BAT ')
                     + f"{battery['percent']:.0f}%") if battery else '',
@@ -345,6 +458,18 @@ def labels(data):
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else 'json'
+    details = {'cpu-info': ('CPU 详情', cpu_details), 'gpu-info': ('GPU 详情', gpu_details),
+               'memory-info': ('内存详情', memory_details)}
+    if mode in details:
+        if sys.argv[2:] not in ([], ['--print']):
+            sys.exit(__doc__)
+        title, collect_details = details[mode]
+        rows = collect_details()
+        if '--print' in sys.argv:
+            print('\n'.join(rows))
+        else:
+            show_details(title, rows)
+        return
     if mode == 'compositor-flag':
         print(compositor_flag())
         return

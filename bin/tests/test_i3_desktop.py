@@ -110,11 +110,12 @@ class HardwareTests(unittest.TestCase):
         self.nvidia('card3', '0000:03:00.0', 'active')
         self.nvidia('card8', '0000:08:00.0', 'suspended')
         self.files('class/drm/card0/device', vendor='0x8086')
-        with patch.object(hw, 'command', return_value='00000000:03:00.0, 12, 45, [N/A], 8192') as cmd:
+        with patch.object(hw, 'command', return_value='00000000:03:00.0, 12, 45, [N/A], 8192, GeForce Test') as cmd:
             gpus = hw.gpu_readings()
         self.assertIn('--id=0000:03:00.0', cmd.call_args.args[0])
         self.assertEqual(gpus[1]['percent'], 12)
         self.assertEqual(gpus[1]['temperature'], 45)
+        self.assertEqual(gpus[1]['name'], 'GeForce Test')
         self.assertNotIn('memory_used', gpus[1])
         self.assertIsNone(gpus[0]['percent'])
 
@@ -169,6 +170,66 @@ class HardwareTests(unittest.TestCase):
                 self.assertEqual(process.exitcode, 0)
         self.assertEqual(queries.read_text().splitlines(), ['query'])
 
+
+
+class DetailTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.proc = Path(self.temp.name)
+        patched = patch.object(hw, 'PROC', self.proc)
+        patched.start()
+        self.addCleanup(patched.stop)
+
+    def test_cpu_topology_usage_and_guest_time(self):
+        (self.proc / 'cpuinfo').write_text('processor: 0\nmodel name: Test CPU\nphysical id: 0\ncore id: 0\n\n'
+                                         'processor: 1\nmodel name: Test CPU\nphysical id: 0\ncore id: 0\n')
+        (self.proc / 'stat').write_text('cpu 10 0 20 50 5 0 10 5 8 2\n')
+        self.assertEqual(hw.cpu_times(), (100, 55))  # Guest time must not be counted twice.
+        with patch.object(hw, 'cpu_times', side_effect=[(100, 55), (200, 105)]), \
+                patch.object(hw.time, 'sleep'), patch.object(hw, 'cpu_temperature', return_value=42):
+            rows = hw.cpu_details()
+        self.assertIn('型号    Test CPU', rows)
+        self.assertIn('逻辑处理器    2', rows)
+        self.assertIn('物理核心    1', rows)
+        self.assertIn('当前占用    50.0%', rows)
+        self.assertIn('温度    42°C', rows)
+
+    def test_memory_matches_available_and_reports_swap(self):
+        (self.proc / 'meminfo').write_text('MemTotal: 1048576 kB\nMemAvailable: 786432 kB\n'
+            'MemFree: 524288 kB\nBuffers: 65536 kB\nCached: 131072 kB\nSReclaimable: 65536 kB\n'
+            'Shmem: 32768 kB\nSwapTotal: 524288 kB\nSwapFree: 393216 kB\n')
+        rows = hw.memory_details()
+        self.assertIn('总容量    1.0 GiB', rows)
+        self.assertIn('已用    256.0 MiB  (25.0%)', rows)
+        self.assertIn('缓存与缓冲    256.0 MiB', rows)
+        self.assertIn('Swap    128.0 MiB / 512.0 MiB  (25.0%)', rows)
+
+    def test_old_memory_kernel_and_unavailable_readings(self):
+        self.assertEqual(hw.memory_details(), ['未读取到内存信息'])
+        (self.proc / 'meminfo').write_text('MemTotal: 1024 kB\nMemFree: 256 kB\nBuffers: 64 kB\n'
+                                         'Cached: 128 kB\nSReclaimable: 128 kB\nShmem: 64 kB\n')
+        rows = hw.memory_details()
+        self.assertIn('已用    512 KiB  (50.0%)', rows)
+        self.assertIn('Swap    未启用', rows)
+
+    def test_gpu_details_keep_sleeping_cards_asleep(self):
+        gpus = [{'card': 'card0', 'vendor': 'NVIDIA', 'name': 'GeForce Test', 'sleeping': False,
+                 'percent': 12, 'temperature': 45, 'memory_used': 2048, 'memory_total': 8192},
+                {'card': 'card1', 'vendor': 'AMD', 'sleeping': True}]
+        with patch.object(hw, 'gpu_readings', return_value=gpus), patch.object(hw, 'command') as query:
+            rows = hw.gpu_details()
+        query.assert_not_called()
+        self.assertIn('显卡 1    GeForce Test (card0)', rows)
+        self.assertIn('显卡 2    AMD (card1)', rows)
+        self.assertIn('状态    休眠', rows)
+        self.assertIn('显存    2.0 GiB / 8.0 GiB  (25.0%)', rows)
+
+    def test_detail_card_esc_is_harmless_and_text_is_not_markup(self):
+        with patch.object(hw.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1)) as popup:
+            hw.show_details('CPU 详情', ['型号    A<B>\nmodel', '温度    42°C'])
+        self.assertIn('-no-markup-rows', popup.call_args.args[0])
+        self.assertEqual(popup.call_args.kwargs['input'], '型号    A<B> model\n温度    42°C')
 
 
 class DiskTests(unittest.TestCase):
