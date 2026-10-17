@@ -1,8 +1,15 @@
 configuration {
-modes: "window,combi,ssh,drun";
-combi-modes: "window,ssh,drun";
-font: "Hack 12";
+    modes:               "window,combi,ssh,drun";
+    combi-modes:         "window,ssh,drun";
+    show-icons:          true;
+    icon-theme:          "Papirus-Dark";
+    display-drun:        "Apps";
+    display-run:         "Run";
+    display-window:      "Windows";
+    display-combi:       "Search";
+    drun-display-format: "{name}";
+    window-format:       "{c}  ·  {t}";
 }
 
-/* Colours from ~/.config/i3/bin/theme: the pywal theme, or empty (rofi's default look) */
-@import "~/.cache/theme/rofi.rasi"
+/* Dark card theme; colours in themes/colors.rasi (Nord, or pywal via ~/.config/i3/bin/theme) */
+@theme "~/.config/rofi/themes/card.rasi"

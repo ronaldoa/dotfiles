@@ -1,94 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Power menu: a row of big buttons (rofi, themes/buttons.rasi). Everything except Lock asks
+# for confirmation with a Yes / No pair of buttons. Bound to Alt+Ctrl+Z and the polybar power icon.
 
-# Available Styles
-# >> Styles Below Only Works With "rofi-git(AUR)", Tested On Version: 1.5.4-76-gca067234
-# full     full_circle     full_rounded     full_alt
-# card     card_circle     column     column_circle
-# row     row_alt     row_circle
-# single     single_circle     single_full     single_full_circle     single_rounded     single_text
+theme="$HOME/.config/rofi/themes/buttons.rasi"
 
-## Default
-DIR="default"
-STYLE="powermenu"
+# Entries are separated by '|' so each button can have the icon and the label on separate lines
+# (-eh 3: the big icon takes about two lines of height);
+# button <icon> <label> makes one entry with a large Nerd Font icon above the label
+button() { printf '<span font="Hack Nerd Font 22">%s</span>\n%s' "$1" "$2"; }
 
-rofi_command="rofi -theme $DIR/$STYLE.rasi"
-
-uptime=$(uptime -p | sed -e 's/up //g')
-
-# Options
-if [[ "$DIR" == "powermenus" ]]; then
-	shutdown=""
-	reboot=""
-	lock=""
-	suspend=""
-	logout=""
-	ddir="$HOME/.config/rofi/$DIR"
-else
-	shutdown=" Shutdown"
-	reboot=" Restart"
-	lock=" Lock"
-	suspend=" Sleep"
-	logout=" Logout"
-	ddir="$HOME/.config/rofi/dialogs"
-fi
-
-rdialog () {
-rofi -dmenu\
-    -i\
-    -no-fixed-num-lines\
-    -p "Are You Sure? : "\
-    -theme "$ddir/confirm.rasi"
+menu() {  # menu <prompt> <columns> <entries...>
+    local prompt=$1 columns=$2
+    shift 2
+    local width=$((columns * 116 + (columns - 1) * 14 + 44))
+    local IFS='|'
+    printf '%s' "$*" | rofi -dmenu -sep '|' -eh 3 -markup-rows -no-custom -i -format i -mesg "$prompt" -theme "$theme" \
+        -theme-str "listview { columns: $columns; } window { width: ${width}px; }"
 }
 
-# Variable passed to rofi
-MSG="Options : yes/no/y/n"
-options="$lock\n$suspend\n$logout\n$reboot\n$shutdown"
+confirm() {
+    [ "$(menu "$1?" 2 "$(button  'Yes')" "$(button  'No')")" = 0 ]
+}
 
-chosen="$(echo -e "$options" | $rofi_command -p "UP - $uptime" -dmenu -selected-row 0)"
-case $chosen in
-    $shutdown)
-		ans=$(rdialog)
-		if [[ $ans == "yes" ]] || [[ $ans == "YES" ]] || [[ $ans == "y" ]]; then
-        systemctl poweroff
-		elif [[ $ans == "no" ]] || [[ $ans == "NO" ]] || [[ $ans == "n" ]]; then
-        exit
-        else
-        rofi -theme "$ddir/confirm.rasi" -e "$MSG"
-        fi
-        ;;
-    $reboot)
-		ans=$(rdialog)
-		if [[ $ans == "yes" ]] || [[ $ans == "YES" ]] || [[ $ans == "y" ]]; then
-        systemctl reboot
-		elif [[ $ans == "no" ]] || [[ $ans == "NO" ]] || [[ $ans == "n" ]]; then
-        exit
-        else
-        rofi -theme "$ddir/confirm.rasi" -e "$MSG"
-        fi
-        ;;
-    $lock)
-        loginctl lock-session
-        ;;
-    $suspend)
-		ans=$(rdialog)
-		if [[ $ans == "yes" ]] || [[ $ans == "YES" ]] || [[ $ans == "y" ]]; then
-        mpc -q pause
-        amixer set Master mute
-        systemctl suspend
-		elif [[ $ans == "no" ]] || [[ $ans == "NO" ]] || [[ $ans == "n" ]]; then
-        exit
-        else
-        rofi -theme "$ddir/confirm.rasi" -e "$MSG"
-        fi
-        ;;
-    $logout)
-		ans=$(rdialog)
-		if [[ $ans == "yes" ]] || [[ $ans == "YES" ]] || [[ $ans == "y" ]]; then
-        i3-msg exit
-		elif [[ $ans == "no" ]] || [[ $ans == "NO" ]] || [[ $ans == "n" ]]; then
-        exit
-        else
-        rofi -theme "$ddir/confirm.rasi" -e "$MSG"
-        fi
-        ;;
+uptime=$(uptime -p | sed 's/^up //')
+choice=$(menu "Up $uptime" 5 \
+    "$(button  'Lock')" "$(button  'Sleep')" "$(button  'Log out')" "$(button  'Restart')" "$(button  'Shut down')")
+
+case $choice in
+    0) loginctl lock-session ;;
+    1) confirm "Sleep" && { mpc -q pause; systemctl suspend; } ;;
+    2) confirm "Log out" && i3-msg exit ;;
+    3) confirm "Restart" && systemctl reboot ;;
+    4) confirm "Shut down" && systemctl poweroff ;;
 esac

@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
 # Quake-style drop-down terminal (Super+Return): slides down from the top, press again to hide it.
 # Launched on first use; afterwards it lives in the scratchpad so its shell session survives.
+# Each time it is shown it is lined up with the bar: same 12px side margins, 45% of the height.
 running() { i3-msg -t get_tree | grep -q '"instance":"dropdown"'; }
 
 if ! running; then
     alacritty --class dropdown --title dropdown &
-    # for_window sizes it and sends it to the scratchpad; wait for it, then show it
+    # for_window sends it to the scratchpad; wait for it, then show it
     for _ in $(seq 50); do running && break; sleep 0.1; done
     sleep 0.2
 fi
 i3-msg -q '[instance="dropdown"] scratchpad show'
+
+# Shown (not hidden again)? Then place it in the usable area of this workspace, below the bar
+visible=$(i3-msg -t get_tree | jq '[.. | objects | select(.type? == "workspace" and .name != "__i3_scratch")
+    | .. | objects | select(.window_properties?.instance == "dropdown")] | length')
+if [ "$visible" -gt 0 ]; then
+    read -r x y w h < <(i3-msg -t get_workspaces | jq -r '.[] | select(.focused).rect | "\(.x) \(.y) \(.width) \(.height)"')
+    i3-msg -q "[instance=\"dropdown\"] resize set $((w - 24)) px $((h * 45 / 100)) px, move absolute position $((x + 12)) px $((y + 8)) px"
+fi

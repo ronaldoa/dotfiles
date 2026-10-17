@@ -24,6 +24,8 @@ bin/
   widgets           开关 conky 桌面组件
   livewall          视频动态壁纸
   theme             配色切换：Nord ⇄ pywal（从壁纸取色）
+  appimage          启动 /mnt/data/Tools 里某个程序最新版本的 AppImage
+  popup-pos         算出弹出卡片的位置：鼠标正下方、状态栏下面
 themes/
   nord.Xresources   Nord 配色（theme 脚本用）
 polybar/
@@ -31,7 +33,7 @@ polybar/
   script/           天气、日历弹窗、频谱
 ```
 
-相关的其他目录（同一个 dotfiles 仓库）：`picom/`（特效）、`cava/`（频谱配色）、`conky/`（桌面组件）、`alacritty/colors.toml`（终端默认配色）、`rofi/config.rasi`（引入主题配色）。
+相关的其他目录（同一个 dotfiles 仓库）：`picom/`（特效）、`cava/`（频谱配色）、`conky/`（桌面组件和弹出卡片）、`dunst/`（通知）、`rofi/`（启动器主题和电源菜单）、`gtk/`（GTK 主题、图标、光标）、`alacritty/colors.toml`（终端默认配色）。
 
 ## 开机自启
 
@@ -48,6 +50,7 @@ polybar/
 | autotiling | 新窗口自动沿当前窗口较长的一边切分 |
 | setxkbmap | Caps Lock 和 Ctrl 互换 |
 | fcitx5 | 输入法 |
+| xsettingsd | 把 GTK 主题、图标、光标、字体下发给 GTK 程序 |
 | xfce4-power-manager | 电源管理 |
 | copyq | 剪贴板历史 |
 | picom | 合成器（阴影、透明、淡入淡出） |
@@ -55,7 +58,7 @@ polybar/
 | nm-applet / blueman-applet | 网络 / 蓝牙托盘 |
 | mpd | 音乐服务 |
 | flameshot | 截图 |
-| xfce4-notifyd | 桌面通知 |
+| dunst | 桌面通知（`xfce4-notifyd.service` 已用 `systemctl --user mask` 屏蔽，免得它抢先占用通知服务；想换回去就 `unmask`） |
 | edid-check | 登录 10 秒后检查显示器 EDID |
 
 ## 外观
@@ -64,6 +67,28 @@ polybar/
 - 窗口间距 10px，工作区只有一个窗口时不留间距（`smart_gaps`）
 - 标题居中，显示 mark
 - 全屏时只显示属于当前全屏程序的弹窗（`popup_during_fullscreen smart`）
+- 状态栏是一条悬浮的圆角条，离屏幕上、左、右边缘留出空隙
+- 启动器、电源菜单、通知、桌面组件、天气和日历卡片都是同一种深色圆角卡片
+
+### rofi（启动器）
+
+`Alt+D`、`Alt+O`、`Alt+Tab`、`Alt+/` 打开的都是屏幕中间的深色圆角卡片：顶部是搜索框，下面是带图标的列表（Papirus-Dark 图标），底部可以切换模式。主题在 `rofi/.config/rofi/themes/card.rasi`，颜色在 `themes/colors.rasi`（切到 pywal 时只替换颜色）。
+
+**电源菜单**（`Alt+Ctrl+Z` 或点状态栏电源图标）：一排五个大按钮——锁屏、睡眠、注销、重启、关机。用方向键或鼠标选择，除了锁屏都会再弹出「Yes / No」两个按钮确认。
+
+### 通知（dunst）
+
+右上角、状态栏下方的深色圆角卡片，左边是程序图标，上面一行小字是程序名，下面是标题和正文；音量这类带进度的通知会显示进度条。紧急通知有红色边框，而且不会自动消失。
+
+- 左键：执行通知的默认动作并关掉它；右键：关掉；中键：全部关掉
+- `Super+N`：重新显示最近一条通知（可以连按往回翻，最多保留 30 条）
+- `Super+Shift+N`：关掉所有通知
+
+配置在 `dunst/.config/dunst/dunstrc`。
+
+### GTK 程序
+
+Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题、Papirus-Dark 图标、Breeze 光标和 Noto Sans CJK 字体。登录时由 xsettingsd 下发，改 `~/.config/xsettingsd/xsettingsd.conf` 后执行 `pkill -HUP xsettingsd`，已经打开的程序会马上换。`gtk-3.0/settings.ini`、`gtk-4.0/settings.ini` 和 `~/.gtkrc-2.0` 里是同样的设置，作为 xsettingsd 没运行时的备用。使用 libadwaita 的新版 GNOME 程序不认主题，只会跟着切到深色。
 
 ## 特效
 
@@ -76,13 +101,13 @@ polybar/
 | 窗口动画 | 打开窗口时从 90% 放大并淡入，关闭时缩小并淡出。i3 切换工作区时会把旧窗口藏起来、新窗口显示出来，所以切工作区时也有这个动画 |
 | 圆角 | 窗口 10px 圆角；polybar、conky、全屏窗口保持直角 |
 | 失焦变暗 | 没聚焦的窗口暗 20%，浏览器、mpv、Zathura、画中画、歌词窗口不变暗 |
-| 毛玻璃 | 半透明的窗口背后会模糊：rofi（85%）、通知（88%）、所有浮动窗口（92%） |
+| 毛玻璃 | 半透明的窗口背后会模糊：rofi（92%，18px 圆角）、所有浮动窗口（92%）。通知、桌面组件、弹出卡片自己画圆角，所以不加模糊和阴影 |
 
 想调整的话：动画快慢改 `duration`（秒），变暗程度改 `dim`，圆角改 `corner-radius`，透明度改各条规则里的 `opacity`。改完执行 `pkill picom; picom -b` 生效。
 
 ### 下拉终端 —— `Super+Enter`
 
-按一下，从屏幕顶部滑下一个占满宽度、45% 高度的终端；再按一下滑回去。终端一直在后台运行（放在 scratchpad 里），所以命令、历史都还在。第一次按时才启动。
+按一下，从状态栏下方滑下一个 45% 高度的终端，左右和状态栏对齐；再按一下滑回去。终端一直在后台运行（放在 scratchpad 里），所以命令、历史都还在。第一次按时才启动。
 
 ### 音乐频谱
 
@@ -128,7 +153,7 @@ polybar/
 - **Nord**：默认配色
 - **pywal**：从当前 nitrogen 壁纸里提取颜色生成一套配色
 
-换了壁纸以后想让配色跟上，执行 `~/.config/i3/bin/theme wal`。也可以用 `theme nord` / `theme wal` 直接指定。选择会记住，下次登录自动恢复。conky、通知、电源菜单不跟着变。
+换了壁纸以后想让配色跟上，执行 `~/.config/i3/bin/theme wal`。也可以用 `theme nord` / `theme wal` 直接指定。选择会记住，下次登录自动恢复。rofi 的启动器和电源菜单都跟着变；conky 卡片、通知、GTK 程序不跟着变。
 
 ## 快捷键
 
@@ -199,6 +224,8 @@ polybar/
 | `Alt+Ctrl+d` | Double Commander |
 | `Alt+Ctrl+w` | 微信（先杀掉旧进程再重新打开） |
 
+Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都是 `/mnt/data/Tools` 里的 AppImage，由 `bin/appimage` 按文件名前缀找版本号最大的那个来启动。下载新版本后直接放进去就行，不用改配置；旧版本可以删掉，也可以留着。
+
 ### 截图（flameshot）
 
 | 按键 | 功能 |
@@ -218,6 +245,15 @@ polybar/
 | `Super+l` | 开关浮动歌词窗口 |
 | 音量键 / 静音键 / 麦克风静音键 | pactl 调音量（每次 2%） |
 | 亮度键 | 通过 DDC/CI 调外接显示器亮度（ddcutil） |
+
+### 剪贴板、emoji、通知
+
+| 按键 | 功能 |
+|---|---|
+| `Alt+Shift+V` | 剪贴板历史（copyq），选中一条再粘贴 |
+| `Super+.` | emoji 和符号选择器（rofimoji），可以用英文名搜索，选中后复制到剪贴板 |
+| `Super+N` | 重新显示最近一条通知 |
+| `Super+Shift+N` | 关掉所有通知 |
 
 ### 特效（Super 键）
 
@@ -260,7 +296,8 @@ polybar/
 
 **特殊窗口**
 
-- 下拉终端：浮动，占满顶部，平时藏在 scratchpad
+- 下拉终端：浮动，在状态栏下方，平时藏在 scratchpad
+- copyq 剪贴板窗口：浮动，屏幕居中
 - 频谱窗口：浮动、无边框、在所有工作区显示、不抢焦点
 - 画中画视频：浮动，并在所有工作区显示
 - 歌词窗口：浮动、无边框、在所有工作区显示
@@ -278,6 +315,7 @@ polybar/
 - 点击天气：弹出 / 关闭天气卡片（和桌面组件同一种风格）：当前温度、体感、最高 / 最低温，湿度、风速、日出日落，以及未来 24 小时每 3 小时一格的预报（含降水概率）。卡片画在 `conky/.config/conky/weather-popup.lua` 里
 - 点击日期：弹出 / 关闭日历卡片：左边是今天（星期、日期、第几周、今年第几天和剩余天数），右边是月历（周一开头，今天用红圈标出，周末字色较淡）。点右上角的 ‹ › 或在卡片上滚动鼠标滚轮可以看上个月 / 下个月，点月份名字回到本月。卡片画在 `conky/.config/conky/calendar-popup.lua` 里
 - 点击电源图标：电源菜单
+- 天气和日历卡片会出现在鼠标点击位置的正下方（`bin/popup-pos`），所以状态栏右边增减模块后也能对准
 
 ## 依赖
 
@@ -290,5 +328,8 @@ polybar/
 | python-pywal16 | AUR | 从壁纸取色 |
 | autotiling | AUR | 自动切分方向 |
 | playerctl | 官方源 | 媒体键控制浏览器等播放器 |
+| xsettingsd | 官方源 | 把 GTK 主题设置下发给 GTK 程序 |
+| nordic-theme | AUR | GTK 主题 |
+| rofimoji | 官方源 | emoji 选择器 |
 
-其他：picom v12 以上（动画需要）、python-i3ipc（工作区图标）、jq、mpv、i3、xss-lock、polybar、rofi、flameshot、nitrogen、udiskie、polkit-gnome、copyq、fcitx5、redshift、ddcutil、mpd/mpc。
+其他：picom v12 以上（动画需要）、python-i3ipc（工作区图标）、jq、mpv、i3、xss-lock、polybar、rofi、flameshot、nitrogen、udiskie、polkit-gnome、copyq、dunst、papirus-icon-theme、breeze（光标）、python-xlib、fcitx5、redshift、ddcutil、mpd/mpc。

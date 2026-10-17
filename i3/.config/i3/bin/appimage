@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Launch the newest AppImage in /mnt/data/Tools whose name starts with the given prefix,
+# so key bindings keep working after downloading a new version:  appimage LM-Studio-
+# Extra arguments are passed on to the app.
+dir=/mnt/data/Tools
+prefix=$1
+shift
+
+app=$(printf '%s\n' "$dir/$prefix"*.AppImage | sort -V | tail -n 1)
+if [ ! -f "$app" ]; then
+    notify-send "AppImage" "在 $dir 里找不到 $prefix*.AppImage"
+    exit 1
+fi
+exec "$app" "$@"
