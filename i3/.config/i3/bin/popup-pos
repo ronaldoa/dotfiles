@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 """Print "x y" for a conky popup of the given width: centred under the mouse pointer, just below the bar.
 
     popup-pos <width>
