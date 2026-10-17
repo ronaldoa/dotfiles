@@ -373,6 +373,24 @@ label-separator-padding = 0
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
+[module/collapse]
+; Arrow that folds the informational modules away when the bar runs out of room
+; (bin/bar-collapse hides them over IPC; the group is BAR_COLLAPSIBLE).
+; custom/ipc rather than custom/script so the arrow flips the instant it is
+; clicked instead of on the next poll.
+type = custom/ipc
+; hook-0 = expanded, click to collapse.  hook-1 = collapsed, click to expand.
+; No `initial`: it does not fire on startup here (verified -- the module stayed
+; blank until a hook action arrived), so bin/i3bar runs `bar-collapse restore`
+; once the bars are up, which sets both the arrow and the hidden modules.
+hook-0 = echo ""
+hook-1 = echo ""
+format-font = 1
+format-foreground = ${color.CYAN}
+click-left = ~/.config/i3/bin/bar-collapse
+
+;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+
 [module/weather]
 type = custom/script
 exec = ~/.config/i3/polybar/script/weather.sh

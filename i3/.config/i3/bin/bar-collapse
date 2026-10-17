@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Collapse the informational modules on the right of the bar into a single arrow,
+# for when the bar runs out of room. Toggles live over Polybar's IPC
+# (module_hide / module_show, Polybar >= 3.6), so no bar restart and no flicker.
+#
+#   bar-collapse            toggle
+#   bar-collapse collapse   hide the group
+#   bar-collapse expand     show it
+#   bar-collapse restore    re-apply the saved state (bin/i3bar calls this on startup:
+#                           hidden modules and the arrow both live inside the Polybar
+#                           process, so fresh bars come up blank and expanded)
+#   bar-collapse state      print "collapsed" or "expanded"
+#
+# Which modules belong to the group is BAR_COLLAPSIBLE, overridable per machine in
+# hosts/<hostname>/.config/dotfiles-host/bar.env.
+set -euo pipefail
+
+runtime="${XDG_RUNTIME_DIR:-/tmp}"
+state="$runtime/dotfiles-i3bar-collapsed-$UID"
+
+host_bar="$HOME/.config/dotfiles-host/bar.env"
+if [ -r "$host_bar" ]; then
+    . "$host_bar"
+fi
+read -ra mods <<<"${BAR_COLLAPSIBLE:-weather backlight battery volume}"
+
+# The arrow is a custom/ipc module, so it can be switched instantly instead of
+# waiting for a polling interval: hook-0 is expanded, hook-1 is collapsed.
+apply() {
+    local action=$1 hook=$2
+    for m in "${mods[@]}"; do
+        polybar-msg action "#$m.$action" >/dev/null 2>&1 || true
+    done
+    polybar-msg action "#collapse.hook.$hook" >/dev/null 2>&1 || true
+}
+
+case "${1:-toggle}" in
+    state)    [ -e "$state" ] && echo collapsed || echo expanded; exit 0 ;;
+    collapse) want=collapsed ;;
+    expand)   want=expanded ;;
+    toggle)   [ -e "$state" ] && want=expanded || want=collapsed ;;
+    restore)  [ -e "$state" ] && want=collapsed || want=expanded ;;
+    *) echo 'usage: bar-collapse [toggle|collapse|expand|restore|state]' >&2; exit 2 ;;
+esac
+
+if [ "$want" = collapsed ]; then
+    : >"$state"
+    apply module_hide 1
+else
+    rm -f "$state"
+    apply module_show 0
+fi

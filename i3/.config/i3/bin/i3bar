@@ -47,13 +47,18 @@ for screen in "${ordered[@]}"; do
     geometry=${screen#*: }; geometry=${geometry%% *}
     [ -n "${seen[$geometry]:-}" ] && continue
     seen[$geometry]=1
-    center='' right='weather backlight battery volume date focus powermenu'
+    center='' right='collapse weather backlight battery volume date focus powermenu'
     if [ "$monitor" = "$primary" ]; then
         center='mpd cava lyrics'
-        right='weather backlight battery volume date systray focus powermenu'
+        right='collapse weather backlight battery volume date systray focus powermenu'
     fi
     [ -f "$runtime/dotfiles-i3-focus-$UID.json" ] && center=''
     MONITOR="$monitor" BAR_LEFT="$BAR_LEFT" BAR_CENTER="$center" BAR_RIGHT="$right" \
         polybar main -c "$HOME/.config/i3/polybar/config" \
         >"$log_dir/${monitor//\//_}.log" 2>&1 9>&- &
 done
+
+# Both the hidden modules and the arrow's hook live inside the Polybar process, so
+# fresh bars come up expanded with a blank arrow. Re-apply the saved state either
+# way; the bars need a moment before they accept IPC.
+(sleep 1; "$HOME/.config/i3/bin/bar-collapse" restore >/dev/null 2>&1) &
