@@ -342,7 +342,7 @@ Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都�
 | autotiling | AUR | 自动切分方向 |
 | playerctl | 官方源 | 媒体键控制浏览器等播放器 |
 | xsettingsd | 官方源 | 把 GTK 主题设置下发给 GTK 程序 |
-| nordic-theme | AUR | GTK 主题 |
+| nordic-theme-git | AUR | GTK 主题（Nordic） |
 | rofimoji | 官方源 | emoji 选择器 |
 
 其他：picom v12 以上（动画需要）、python-i3ipc（工作区图标）、jq、mpv、i3、xss-lock、polybar、rofi、flameshot、nitrogen、udiskie、polkit-gnome、copyq、dunst、papirus-icon-theme、breeze（光标）、python-xlib、fcitx5、redshift、ddcutil、mpd/mpc。
