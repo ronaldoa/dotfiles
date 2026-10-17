@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """Shared, cached hardware readings for Polybar and Conky; no machine-specific IDs.
 
-hardware json|conky|cpu-temp|gpu|battery|network|backlight|backlight-device|compositor-flag
+hardware json|conky|cpu-temp|gpu|battery|network|disks|disk-menu|backlight|backlight-device|compositor-flag
 Missing metrics stay absent. NVIDIA GPUs in runtime suspend are never queried.
 """
 import csv
@@ -15,6 +15,7 @@ import sys
 import time
 
 SYS = Path('/sys')
+PROC = Path('/proc')
 
 
 def read(path):
@@ -190,13 +191,66 @@ def network_reading(previous, now):
     return data
 
 
+def disk_readings():
+    """Mounted local filesystems, once per filesystem (including bind mounts/subvolumes)."""
+    def unescape(value):
+        return re.sub(r'\\([0-7]{3})', lambda match: chr(int(match[1], 8)), value)
+
+    mounts = {}
+    for line in read(PROC / 'self/mountinfo').splitlines():
+        before, separator, after = line.partition(' - ')
+        fields, filesystem = before.split(), after.split()
+        if not separator or len(fields) < 6 or len(filesystem) < 3:
+            continue
+        mount = unescape(fields[4])
+        mounts[mount] = {'mount': mount, 'device': fields[2], 'root': unescape(fields[3]),
+                         'fstype': filesystem[0], 'source': unescape(filesystem[1])}
+    if '/' not in mounts:
+        mounts['/'] = {'mount': '/', 'device': '', 'root': '/', 'fstype': '', 'source': ''}
+
+    # Prefer the root filesystem and whole-filesystem mounts over their bind aliases.
+    ordered = sorted(mounts.values(), key=lambda m: (m['mount'] != '/', m['root'] != '/',
+                     m['mount'].startswith('/boot'), len(m['mount']), m['mount']))
+    disks, seen = [], set()
+    virtual = {'tmpfs', 'devtmpfs', 'ramfs', 'overlay', 'squashfs', 'iso9660', 'udf', 'autofs'}
+    for item in ordered:
+        mount, source, kind = item['mount'], item['source'], item['fstype']
+        device = SYS / 'dev/block' / item['device']
+        if mount != '/':
+            if kind in virtual or re.match(r'^/dev/loop\d', source) or (device / 'loop').is_dir():
+                continue
+            if not (device.exists() or source.startswith('/dev/') or kind in ('btrfs', 'zfs')):
+                continue
+        try:
+            if not os.path.isdir(mount):
+                continue
+            usage = os.statvfs(mount)
+        except OSError:
+            continue  # Unplugged, unmounted or inaccessible since reading mountinfo.
+        total = usage.f_blocks * usage.f_frsize
+        if total <= 0:
+            continue
+        # fsid also recognises Btrfs subvolumes sharing one capacity pool.
+        identity = (kind, getattr(usage, 'f_fsid', 0) or item['device'])
+        if identity in seen:
+            continue
+        seen.add(identity)
+        used = max(0, total - usage.f_bfree * usage.f_frsize)
+        available = max(0, usage.f_bavail * usage.f_frsize)
+        denominator = used + available
+        disks.append({'mount': mount, 'source': source, 'fstype': kind, 'total': total,
+                      'used': used, 'available': available,
+                      'percent': 100 * used / denominator if denominator else 0})
+    return disks
+
+
 def collect(previous=None):
     previous = previous or {}
     temp, gpus = cpu_temperature(), gpu_readings()
-    battery, backlight = battery_reading(), backlight_reading()
+    battery, backlight, disks = battery_reading(), backlight_reading(), disk_readings()
     now = time.monotonic()
     return {'at': now, 'cpu_temperature': temp, 'gpus': gpus,
-            'battery': battery, 'backlight': backlight,
+            'battery': battery, 'backlight': backlight, 'disks': disks,
             'network': network_reading(previous, now)}
 
 
@@ -240,6 +294,42 @@ def speed(value):
     return f'{value / 1048576:.1f}M' if value >= 1048576 else f'{value / 1024:.0f}K'
 
 
+def capacity(value):
+    for unit, divisor in (('TiB', 2 ** 40), ('GiB', 2 ** 30), ('MiB', 2 ** 20)):
+        if value >= divisor:
+            return f'{value / divisor:.1f} {unit}'
+    return f'{value / 1024:.0f} KiB'
+
+
+def single_line(value):
+    return re.sub(r'[\x00-\x1f\x7f]', ' ', value)
+
+
+def disk_label(disks):
+    if not disks:
+        return ''
+    index = int(time.time() // 5) % len(disks)
+    disk = disks[index]
+    # Mount paths are text, never Polybar action/colour markup.
+    mount = single_line(disk['mount']).replace('%', '％')
+    page = f' {index + 1}/{len(disks)}' if len(disks) > 1 else ''
+    return f"DISK{page} {mount} {disk['percent']:.0f}%"
+
+
+def disk_menu(disks):
+    rows = [f"{single_line(d['mount'])}    {capacity(d['used'])} / {capacity(d['total'])}"
+            f"  ({d['percent']:.0f}%)    可用 {capacity(d['available'])}" for d in disks]
+    if not rows:
+        return
+    choice = subprocess.run(['rofi', '-dmenu', '-i', '-p', '磁盘用量', '-no-custom', '-format', 'i'],
+                            input='\n'.join(rows), text=True, capture_output=True)
+    if choice.returncode == 0 and choice.stdout.strip().isdigit():
+        index = int(choice.stdout.strip())
+        if index < len(disks):
+            subprocess.Popen(['xdg-open', disks[index]['mount']], start_new_session=True,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
 def labels(data):
     battery, net, light = data['battery'], data['network'], data['backlight']
     return {
@@ -249,6 +339,7 @@ def labels(data):
                     + f"{battery['percent']:.0f}%") if battery else '',
         'backlight': f"☀ {light['percent']:.0f}%" if light else '',
         'network': f"{net['iface']} ↓{speed(net['down'])} ↑{speed(net['up'])}" if net else 'Disconnected',
+        'disks': disk_label(data.get('disks', [])),
     }
 
 
@@ -264,6 +355,8 @@ def main():
     data = snapshot()
     if mode == 'json':
         print(json.dumps(data, ensure_ascii=False, indent=2))
+    elif mode == 'disk-menu':
+        disk_menu(data.get('disks', []))
     elif mode == 'conky':
         # A small key=value protocol avoids adding a JSON dependency to Conky's Lua.
         values = labels(data)
@@ -273,6 +366,12 @@ def main():
                            'network_ip': net.get('ip', ''), 'network_down': (net.get('down') or 0) / 1024,
                            'network_up': (net.get('up') or 0) / 1024}.items():
             print(f'{key}={value}')
+        disks = data.get('disks', [])
+        print(f'disk_count={len(disks)}')
+        for index, disk in enumerate(disks, 1):
+            print(f"disk_{index}_mount={single_line(disk['mount'])}")
+            print(f"disk_{index}_usage={capacity(disk['used'])} / {capacity(disk['total'])}")
+            print(f"disk_{index}_percent={disk['percent']}")
     elif mode in labels(data):
         print(labels(data)[mode])
     else:

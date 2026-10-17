@@ -80,7 +80,7 @@ font-4 = Noto Sans CJK SC:size=12
 scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
 
-modules-left = i3 cpu cpu_temp memory gpu network
+modules-left = i3 cpu cpu_temp memory gpu network disks
 ; An empty env value uses the fallback too: keep that empty for focus/secondary bars.
 modules-center = ${env:BAR_CENTER:}
 modules-right = ${env:BAR_RIGHT:weather backlight battery volume date systray focus powermenu}
@@ -206,7 +206,7 @@ format-prefix-foreground = ${color.BLUE}
 ;   %gb_swap_free%
 ;   %gb_swap_used%
 
-label = " %mb_used%"
+label = " %gb_used% / %gb_total%"
 
 ; Only applies if <ramp-used> is used
 ;;ramp-used-0 = 
@@ -494,6 +494,15 @@ type = custom/script
 exec = ~/.config/i3/bin/hardware cpu-temp
 interval = 5
 format-foreground = ${color.YELLOW}
+
+[module/disks]
+type = custom/script
+exec = ~/.config/i3/bin/hardware disks
+interval = 5
+format-foreground = ${color.MAGENTA}
+label-maxlen = 28
+label-ellipsis = true
+click-left = ~/.config/i3/bin/hardware disk-menu
 
 [module/gpu]
 type = custom/script

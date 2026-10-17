@@ -5,9 +5,11 @@ import json
 import multiprocessing
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -166,6 +168,150 @@ class HardwareTests(unittest.TestCase):
                 process.join(timeout=3)
                 self.assertEqual(process.exitcode, 0)
         self.assertEqual(queries.read_text().splitlines(), ['query'])
+
+
+
+class DiskTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        for name, value in [('PROC', self.root / 'proc'), ('SYS', self.root / 'sys')]:
+            patched = patch.object(hw, name, value)
+            patched.start()
+            self.addCleanup(patched.stop)
+        self.mounts, self.usages = [], {}
+
+    def mount(self, target, device='8:1', source='/dev/sda1', kind='ext4', fsroot='/',
+              fsid=1, blocks=100, free=40, available=30):
+        def escape(value):
+            return value.replace('\\', r'\134').replace(' ', r'\040').replace('\t', r'\011').replace('\n', r'\012')
+        self.mounts.append(f'1 0 {device} {escape(fsroot)} {escape(target)} rw shared:2 - {kind} {escape(source)} rw')
+        self.usages[target] = SimpleNamespace(f_blocks=blocks, f_bfree=free, f_bavail=available,
+                                              f_frsize=1024, f_fsid=fsid)
+
+    def collect(self):
+        mountinfo = hw.PROC / 'self/mountinfo'
+        mountinfo.parent.mkdir(parents=True, exist_ok=True)
+        mountinfo.write_text('\n'.join(self.mounts))
+
+        def statvfs(target):
+            value = self.usages.get(target, FileNotFoundError(target))
+            if isinstance(value, OSError):
+                raise value
+            return value
+
+        with patch.object(hw.os.path, 'isdir', side_effect=lambda path: str(path) in self.usages), \
+                patch.object(hw.os, 'statvfs', side_effect=statvfs):
+            return hw.disk_readings()
+
+    def test_root_home_data_and_usb_are_discovered(self):
+        self.mount('/', source='/dev/nvme0n1p2', fsid=10)
+        self.mount('/mnt/data', device='259:1', source='/dev/nvme1n1', fsid=20)
+        self.mount('/home', device='259:5', source='/dev/mapper/home', fsid=30)
+        self.mount('/run/media/user/USB Disk', device='8:17', source='/dev/sdb1', kind='exfat', fsid=40)
+        disks = self.collect()
+        self.assertEqual(disks[0]['mount'], '/')
+        self.assertEqual({d['mount'] for d in disks}, {'/', '/mnt/data', '/home', '/run/media/user/USB Disk'})
+        self.assertEqual(disks[0]['used'], 60 * 1024)
+        self.assertEqual(disks[0]['available'], 30 * 1024)
+        self.assertAlmostEqual(disks[0]['percent'], 100 * 60 / 90)  # Match df: exclude reserved free blocks.
+
+    def test_virtual_network_appimage_and_loop_mounts_are_filtered(self):
+        self.mount('/')
+        for index, (target, kind, source) in enumerate([
+            ('/proc', 'proc', 'proc'), ('/tmp', 'tmpfs', 'tmpfs'),
+            ('/var/lib/docker/overlay', 'overlay', 'overlay'), ('/mnt/nfs', 'nfs4', 'server:/data'),
+            ('/tmp/.mount_App', 'fuse.AppImage', 'App.AppImage'),
+            ('/snap/app', 'squashfs', '/dev/loop1'), ('/mnt/image', 'ext4', '/dev/loop2'),
+        ], 2):
+            self.mount(target, device=f'0:{index}', kind=kind, source=source, fsid=index)
+        self.assertEqual([d['mount'] for d in self.collect()], ['/'])
+
+    def test_bind_mount_and_btrfs_subvolume_capacities_are_not_duplicated(self):
+        self.mount('/', kind='btrfs', device='0:42', fsroot='/@', fsid=10)
+        self.mount('/home', kind='btrfs', device='0:43', fsroot='/@home', fsid=10)
+        self.mount('/mnt/data', device='259:1', source='/dev/nvme1n1', fsid=20)
+        self.mount('/data', device='259:1', source='/dev/nvme1n1', fsroot='/files', fsid=20)
+        self.assertEqual([d['mount'] for d in self.collect()], ['/', '/mnt/data'])
+
+    def test_unplug_permission_error_and_zero_capacity_do_not_break_other_disks(self):
+        self.mount('/')
+        for index, target in enumerate(['/mnt/unplugged', '/mnt/private', '/mnt/empty'], 2):
+            self.mount(target, device=f'8:{index}', source=f'/dev/sd{index}', fsid=index)
+        self.usages['/mnt/unplugged'] = FileNotFoundError()
+        self.usages['/mnt/private'] = PermissionError()
+        self.usages['/mnt/empty'].f_blocks = 0
+        self.assertEqual([d['mount'] for d in self.collect()], ['/'])
+
+    def test_hotplug_removal_updates_the_next_sample(self):
+        self.mount('/')
+        self.mount('/media/usb', device='8:17', source='/dev/sdb1', fsid=2)
+        self.assertEqual(len(self.collect()), 2)
+        self.mounts.pop()
+        self.assertEqual(len(self.collect()), 1)
+
+    def test_missing_mountinfo_keeps_root_and_invalid_lines_are_ignored(self):
+        self.mount('/')
+        self.mounts = ['malformed line']
+        self.assertEqual([d['mount'] for d in self.collect()], ['/'])
+
+    def test_escaped_paths_and_bar_markup_are_plain_text(self):
+        mount = '/media/disk\\name with\tspace\nand%{A:command:}'
+        self.mount(mount, fsid=2)
+        disks = self.collect()
+        self.assertEqual(disks[0]['mount'], mount)
+        with patch.object(hw.time, 'time', return_value=0):
+            label = hw.disk_label(disks)
+        self.assertNotIn('\n', label)
+        self.assertNotIn('\t', label)
+        self.assertNotIn('%{', label)
+
+    def test_menu_cancellation_and_selected_mount_with_spaces(self):
+        disks = [{'mount': '/media/USB Disk', 'used': 10, 'total': 100, 'available': 90, 'percent': 10}]
+        with patch.object(hw.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1, '')), \
+                patch.object(hw.subprocess, 'Popen') as opened:
+            hw.disk_menu(disks)
+            opened.assert_not_called()
+        with patch.object(hw.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, '0\n')), \
+                patch.object(hw.subprocess, 'Popen') as opened:
+            hw.disk_menu(disks)
+            self.assertEqual(opened.call_args.args[0], ['xdg-open', '/media/USB Disk'])
+
+    @unittest.skipUnless(shutil.which('lua'), 'Lua is optional for the widget rendering test')
+    def test_widget_paginates_all_disks_and_handles_removal(self):
+        script = r'''
+local sample, drawn = '', {}
+local noop = function() end
+local L = {cached=function() return sample end, split=function() return {''} end,
+           num=function(v) return tonumber(v) or 0 end, rgba=noop, rounded=noop,
+           card=noop, bar=noop, finish=noop,
+           text=function(x, y, value) drawn[value] = true end,
+           begin=function(w, h) assert(h == 602); return {} end}
+dofile = function() return L end
+conky_parse = function() return '0' end
+cairo_move_to, cairo_line_to, cairo_close_path, cairo_fill = noop, noop, noop, noop
+assert(loadfile(WIDGETS))()
+local mounts = {'/', '/home', '/mnt/data', '/boot/efi'}
+sample = 'disk_count=4\n'
+for i, mount in ipairs(mounts) do
+    sample = sample .. 'disk_' .. i .. '_mount=' .. mount .. '\n'
+        .. 'disk_' .. i .. '_usage=10 GiB / 20 GiB\n'
+        .. 'disk_' .. i .. '_percent=50\n'
+end
+os.time = function() return 0 end
+conky_main()
+assert(drawn['/'] and drawn['/home'] and drawn['/mnt/data'] and not drawn['/boot/efi'])
+drawn = {}
+os.time = function() return 10 end
+conky_main()
+assert(drawn['/boot/efi'])
+drawn, sample = {}, 'disk_count=0\n'
+conky_main()
+assert(drawn['No mounted local disks'])
+'''
+        source = 'local WIDGETS = ' + json.dumps(str(ROOT / 'conky/.config/conky/widgets.lua')) + '\n' + script
+        subprocess.run(['lua', '-'], input=source, text=True, check=True, capture_output=True)
 
 
 class DisplayTests(unittest.TestCase):

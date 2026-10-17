@@ -1,5 +1,5 @@
 -- Apple-style desktop widgets drawn with Cairo: rounded translucent cards in a 2x2 grid
--- (clock, weather, system, network) plus a wide "now playing" card underneath.
+-- (clock, weather, system, network) plus wide storage and "now playing" cards underneath.
 -- Loaded by conky.conf; conky_main runs on every update. Drawing helpers live in lib.lua.
 
 local L = dofile(os.getenv('HOME') .. '/.config/conky/lib.lua')
@@ -10,7 +10,7 @@ local BG, TEXT, DIM, TRACK = L.BG, L.TEXT, L.DIM, L.TRACK
 local CYAN, BLUE, GREEN, YELLOW, ORANGE, PURPLE = L.CYAN, L.BLUE, L.GREEN, L.YELLOW, L.ORANGE, L.PURPLE
 
 local CARD, GAP = 164, 14
-local MUSIC_H = 96
+local MUSIC_H, STORAGE_H = 96, 134
 
 local cr
 
@@ -86,8 +86,7 @@ local function system_card(x, y)
     local temp = hw.cpu_temp or ''
     local rows = {
         {'CPU', conky_parse('${cpu cpu0}') .. '%' .. (temp ~= '' and '  ' .. temp or ''), num(conky_parse('${cpu cpu0}')) / 100, GREEN},
-        {'RAM', conky_parse('${mem}'), num(conky_parse('${memperc}')) / 100, BLUE},
-        {'DISK', conky_parse('${fs_used /}') .. ' / ' .. conky_parse('${fs_size /}'), num(conky_parse('${fs_used_perc /}')) / 100, PURPLE},
+        {'RAM', conky_parse('${mem}') .. '/' .. conky_parse('${memmax}'), num(conky_parse('${memperc}')) / 100, BLUE},
     }
     if hw.gpu and hw.gpu ~= '' then
         rows[#rows + 1] = {'GPU', hw.gpu, nil, ORANGE}
@@ -140,6 +139,32 @@ local function network_card(x, y)
     cairo_fill(cr)
 end
 
+local function storage_card(x, y, w)
+    card(x, y, w, STORAGE_H)
+    text(x + PAD, y + PAD + 12, 'STORAGE', FONT_BOLD, 12, PURPLE)
+    local hw = hardware()
+    local count = num(hw.disk_count)
+    if count == 0 then
+        text(x + PAD, y + 76, 'No mounted local disks', FONT, 13, DIM)
+        return
+    end
+    local pages = math.ceil(count / 3)
+    local page = math.floor(os.time() / 10) % pages
+    if pages > 1 then
+        text(x + w - PAD, y + PAD + 12, string.format('%d / %d', page + 1, pages), FONT, 11, DIM, 'right')
+    end
+    for row = 1, 3 do
+        local index = page * 3 + row
+        if index > count then break end
+        local prefix = 'disk_' .. index
+        local ry = y + 24 + row * 30
+        local pct = num(hw[prefix .. '_percent'])
+        text(x + PAD, ry, hw[prefix .. '_mount'] or '', FONT_BOLD, 11, TEXT, 'left', w - 2 * PAD - 195)
+        text(x + w - PAD, ry, (hw[prefix .. '_usage'] or '') .. string.format(' · %.0f%%', pct), FONT, 11, DIM, 'right', 190)
+        bar(x + PAD, ry + 7, w - 2 * PAD, 5, pct / 100, pct >= 90 and ORANGE or PURPLE)
+    end
+end
+
 local function music_card(x, y, w)
     card(x, y, w, MUSIC_H)
     local m = music()
@@ -166,7 +191,7 @@ end
 -- ---------------------------------------------------------------- entry point
 
 function conky_main()
-    cr = L.begin(2 * CARD + GAP + 2, 2 * CARD + 2 * GAP + MUSIC_H + 2)
+    cr = L.begin(2 * CARD + GAP + 2, 2 * CARD + 3 * GAP + STORAGE_H + MUSIC_H + 2)
     if not cr then return end
 
     local x1, x2 = 1, 1 + CARD + GAP
@@ -175,7 +200,8 @@ function conky_main()
     weather_card(x2, y1)
     system_card(x1, y2)
     network_card(x2, y2)
-    music_card(x1, y2 + CARD + GAP, 2 * CARD + GAP)
+    storage_card(x1, y2 + CARD + GAP, 2 * CARD + GAP)
+    music_card(x1, y2 + CARD + 2 * GAP + STORAGE_H, 2 * CARD + GAP)
 
     L.finish()
 end
