@@ -26,6 +26,7 @@ bin/
   dropdown          下拉终端
   cava-toggle       屏幕底部的音乐频谱窗口
   widgets           开关 conky 桌面组件
+  conky-drag        Alt+拖动桌面组件，记住位置（widgets 自动启动）
   livewall          视频动态壁纸
   theme             配色切换：Nord ⇄ pywal（从壁纸取色）
   appimage          启动 /mnt/data/Tools 里某个程序最新版本的 AppImage
@@ -144,6 +145,8 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | Now Playing | mpd 当前歌曲、歌手、播放进度；暂停时显示 PAUSED，没在放时显示 Not Playing |
 
 它压在所有窗口下面，只有工作区里没有窗口挡住时才看得到（开着动态壁纸时显示在视频上面）。登录时自动启动，`Super+D` 开关。
+
+按住 `Alt`（和 i3 拖动浮动窗口同一个键）用左键拖动，所有卡片作为一个整体移动，不会拖出当前显示器；松手后位置保存在 `~/.cache/conky-widgets/position`，下次启动自动恢复（显示器变了、位置不在任何屏幕上时回到默认的右上角）。`Alt` + 右键单击恢复默认位置。
 
 卡片全部用 Lua + Cairo 画在 `conky/.config/conky/widgets.lua` 里（画圆角卡片、文字、进度条的工具函数和配色在 `lib.lua`，天气和日历弹出卡片也用它）：卡片大小在 `widgets.lua` 开头（`CARD`），圆角和颜色在 `lib.lua` 开头（`RADIUS`、`BG` 等）。网络卡片自动用默认路由所在的网卡。`conky.conf` 只负责窗口位置和大小。
 

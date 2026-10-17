@@ -19,3 +19,6 @@ fi
 
 conky -d -c "$conf" >/dev/null 2>&1
 ~/.config/i3/bin/xstack conky below
+# Alt+drag moves the widget and restores its saved position; the helper exits with the window.
+pkill -u "$UID" -x conky-drag
+setsid -f ~/.config/i3/bin/conky-drag >/dev/null 2>&1
