@@ -2,22 +2,25 @@
 """Shared, cached hardware readings for Polybar and Conky; no machine-specific IDs.
 
 hardware json|conky|cpu-temp|gpu-temp|gpu|battery|network|disks|disk-menu|backlight|backlight-device|compositor-flag
-hardware cpu-info|gpu-info|memory-info [--print]   show details (or print without a GUI)
+hardware cpu-info|gpu-info|memory-info|network-info [--print]   toggle details (or print them)
 Missing metrics stay absent. NVIDIA GPUs in runtime suspend are never queried.
 """
 import csv
 import fcntl
+import html
 import json
 import os
 from pathlib import Path
 import re
 import shlex
+import signal
 import subprocess
 import sys
 import time
 
 SYS = Path('/sys')
 PROC = Path('/proc')
+CPU_DRIVERS = {'coretemp', 'k10temp', 'k8temp', 'zenpower', 'cpu_thermal', 'cpu_thermal_zone'}
 
 
 def read(path):
@@ -44,7 +47,7 @@ def command(args):
 
 def cpu_temperature():
     candidates = []
-    drivers = {'coretemp', 'k10temp', 'k8temp', 'zenpower', 'cpu_thermal', 'cpu_thermal_zone'}
+    drivers = CPU_DRIVERS
     for chip in (SYS / 'class/hwmon').glob('hwmon*'):
         name = read(chip / 'name').lower()
         for sensor in chip.glob('temp*_input'):
@@ -55,7 +58,8 @@ def cpu_temperature():
             value = number(sensor)
             if value is not None and -20000 < value < 150000:
                 rank = 0 if label.startswith(('package', 'tdie', 'cpu')) else 1 if label == 'tctl' else 2
-                candidates.append((rank, value / 1000))
+                # CPU drivers beat motherboard chips whose CPUTIN label is often bogus.
+                candidates.append(((name not in drivers, rank), value / 1000))
     if candidates:
         rank = min(r for r, _ in candidates)
         return max(v for r, v in candidates if r == rank)
@@ -80,6 +84,9 @@ def gpu_readings():
             continue
         sleeping = read(device / 'power/runtime_status') in ('suspended', 'suspending')
         gpu = {'card': card.name, 'vendor': name, 'sleeping': sleeping}
+        bus = device.resolve().name
+        if re.fullmatch(r'[\da-fA-F]{4}:[\da-fA-F]{2}:[\da-fA-F]{2}\.\d', bus):
+            gpu['bus'] = bus
         gpus.append(gpu)
         if sleeping:
             continue
@@ -89,10 +96,8 @@ def gpu_readings():
         used, total = number(device / 'mem_info_vram_used'), number(device / 'mem_info_vram_total')
         if used is not None and total:
             gpu.update(memory_used=used / 1048576, memory_total=total / 1048576)
-        if name == 'NVIDIA':
-            bus = device.resolve().name
-            if re.fullmatch(r'[\da-fA-F]{4}:[\da-fA-F]{2}:[\da-fA-F]{2}\.\d', bus):
-                nvidia.append((bus, gpu))
+        if name == 'NVIDIA' and 'bus' in gpu:
+            nvidia.append((gpu['bus'], gpu))
     if nvidia:
         # Explicit bus IDs keep a sleeping secondary NVIDIA GPU out of the query.
         out = command(['nvidia-smi', '--id=' + ','.join(bus for bus, _ in nvidia),
@@ -258,10 +263,15 @@ def collect(previous=None):
             'network': network_reading(previous, now)}
 
 
-def snapshot():
-    # One sample per 3 seconds, shared by all bars and Conky; flock prevents duplicate GPU queries.
+def cache_dir():
     cache = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home() / '.cache'))) / 'i3-hardware'
     cache.mkdir(parents=True, exist_ok=True)
+    return cache
+
+
+def snapshot():
+    # One sample per 3 seconds, shared by all bars and Conky; flock prevents duplicate GPU queries.
+    cache = cache_dir()
     with (cache / 'lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         try:
@@ -321,6 +331,81 @@ def cpu_times():
     return (sum(times), times[3] + times[4]) if len(times) >= 5 else None
 
 
+def cpu_sensors():
+    """(label, °C) for every sensor of a CPU driver chip, e.g. Tctl/Tccd1 or Package/Core N."""
+    sensors = []
+    for chip in sorted((SYS / 'class/hwmon').glob('hwmon*')):
+        if read(chip / 'name').lower() not in CPU_DRIVERS:
+            continue
+        for sensor in sorted(chip.glob('temp*_input'), key=lambda p: int(re.sub(r'\D', '', p.name) or 0)):
+            value = number(sensor)
+            if value is not None and -20000 < value < 150000:
+                label = read(sensor.with_name(sensor.name.replace('_input', '_label'))) or sensor.name[:-6]
+                sensors.append((label, value / 1000))
+    return sensors
+
+
+def cpu_frequency(processors):
+    base = SYS / 'devices/system/cpu'
+    current = [v / 1e6 for v in map(number, base.glob('cpu[0-9]*/cpufreq/scaling_cur_freq')) if v]
+    if not current:  # VMs without cpufreq still report MHz in cpuinfo.
+        current = [float(p['cpu mhz']) / 1000 for p in processors
+                   if re.fullmatch(r'[\d.]+', p.get('cpu mhz', ''))]
+    if not current:
+        return ''
+    limit = max((v / 1e6 for v in map(number, base.glob('cpu[0-9]*/cpufreq/cpuinfo_max_freq')) if v),
+                default=None)
+    text = f'avg {sum(current) / len(current):.2f} GHz · max {max(current):.2f} GHz'
+    return text + (f' (limit {limit:.2f} GHz)' if limit else '')
+
+
+def cpu_governor():
+    policy = SYS / 'devices/system/cpu/cpu0/cpufreq'
+    parts = [read(policy / 'scaling_governor'), read(policy / 'energy_performance_preference')]
+    text = ' · '.join(part for part in parts if part)
+    driver = read(policy / 'scaling_driver')
+    return text + (f' ({driver})' if text and driver else '')
+
+
+def cpu_caches():
+    units = {'': 1, 'K': 1024, 'M': 2 ** 20, 'G': 2 ** 30}
+    totals, seen = {}, set()
+    for index in (SYS / 'devices/system/cpu').glob('cpu[0-9]*/cache/index[0-9]*'):
+        level, size = read(index / 'level'), re.fullmatch(r'(\d+)([KMG]?)', read(index / 'size'))
+        key = (level, read(index / 'type'), read(index / 'shared_cpu_list'))
+        if level in ('2', '3') and size and key not in seen:  # Count each shared cache once.
+            seen.add(key)
+            totals[level] = totals.get(level, 0) + int(size[1]) * units[size[2]]
+    return ' · '.join(f'L{level} {capacity(totals[level])}' for level in sorted(totals))
+
+
+def pressure(resource, kinds=('some', 'full')):
+    """Share of the last 10 s in which some/all tasks stalled on this resource (Linux PSI)."""
+    values = dict(re.findall(r'^(some|full) avg10=([\d.]+)', read(PROC / 'pressure' / resource), re.M))
+    names = {'some': 'some', 'full': 'full'}
+    return ' · '.join(f'{names[kind]} {float(values[kind]):.1f}%' for kind in kinds if kind in values)
+
+
+def uptime():
+    try:
+        seconds = int(float(read(PROC / 'uptime').split()[0]))
+    except (IndexError, ValueError):
+        return ''
+    days, hours, minutes = seconds // 86400, seconds // 3600 % 24, seconds // 60 % 60
+    return (f'{days}d ' if days else '') + f'{hours}h {minutes}m'
+
+
+def process_ticks():
+    """pid -> (name, user+system clock ticks) for every process still readable."""
+    ticks = {}
+    for stat in PROC.glob('[0-9]*/stat'):
+        head, _, tail = read(stat).rpartition(') ')
+        fields = tail.split()
+        if len(fields) > 12 and fields[11].isdigit() and fields[12].isdigit():
+            ticks[stat.parent.name] = (head.partition(' (')[2], int(fields[11]) + int(fields[12]))
+    return ticks
+
+
 def cpu_details():
     processors = []
     for block in read(PROC / 'cpuinfo').split('\n\n'):
@@ -331,56 +416,154 @@ def cpu_details():
     models = [p.get('model name') or p.get('hardware') or p.get('processor', '') for p in processors]
     model = next((name for name in models if name and not name.isdigit()), os.uname().machine)
     logical = sum(p.get('processor', '').isdigit() for p in processors) or os.cpu_count()
-    rows = [f'型号    {model}', f'逻辑处理器    {logical or "未提供"}']
+    rows = [f'Model    {model}', f'Logical CPUs    {logical or "n/a"}']
     cores = {(p.get('physical id', '0'), p['core id']) for p in processors if 'core id' in p}
     if cores:
-        rows.append(f'物理核心    {len(cores)}')
-    before = cpu_times()
+        rows.append(f'Physical cores    {len(cores)}')
+    for key, value in (('Frequency', cpu_frequency(processors)), ('Governor', cpu_governor()),
+                       ('Cache', cpu_caches())):
+        if value:
+            rows.append(f'{key}    {value}')
+    busy = []
+    before, tasks = cpu_times(), process_ticks()
     if before:
-        time.sleep(0.2)
-        after = cpu_times()
+        time.sleep(0.3)
+        after, tasks_after = cpu_times(), process_ticks()
         if after and after[0] > before[0]:
             percent = 100 * (1 - (after[1] - before[1]) / (after[0] - before[0]))
-            rows.append(f'当前占用    {max(0, min(100, percent)):.1f}%')
+            rows.append(f'Usage    {max(0, min(100, percent)):.1f}%')
+            per_core = (after[0] - before[0]) / (logical or 1)  # Ticks one CPU could run meanwhile.
+            busy = sorted(((spent - tasks[pid][1]) / per_core * 100, name, pid)
+                          for pid, (name, spent) in tasks_after.items()
+                          if pid in tasks and tasks[pid][0] == name and spent > tasks[pid][1]
+                          and pid != str(os.getpid()))[::-1][:5]
     temp = cpu_temperature()
-    rows.append('温度    ' + (temperature(temp) or '当前未提供读数'))
+    rows.append('Temperature    ' + (temperature(temp) or 'no reading'))
+    sensors = cpu_sensors()
+    if len(sensors) > 4:
+        values = [value for _, value in sensors]
+        rows.append(f'Sensors    max {temperature(max(values))} · min {temperature(min(values))}'
+                    f' ({len(sensors)} sensors)')
+    elif len(sensors) > 1:
+        rows.append('Sensors    ' + ' · '.join(f'{label} {temperature(value)}' for label, value in sensors))
     load = read(PROC / 'loadavg').split()
     if len(load) >= 3:
-        rows.append('系统负载（1 / 5 / 15 分钟）    ' + ' / '.join(load[:3]))
+        rows.append('Load (1/5/15 min)    ' + ' / '.join(load[:3]))
+    if len(load) >= 4 and '/' in load[3]:
+        rows.append('Threads (running / total)    ' + load[3].replace('/', ' / '))
+    for key, value in (('CPU pressure (10 s)', pressure('cpu', ('some',))), ('Uptime', uptime())):
+        if value:
+            rows.append(f'{key}    {value}')
+    if busy:
+        rows.append('▸ Top processes by CPU (one full core = 100%)')
+        rows += [f'{name} ({pid})    {share:.1f}%' for share, name, pid in busy]
     return rows
+
+
+def nvidia_details(bus):
+    """Extra nvidia-smi fields and CUDA/compute processes for one awake GPU."""
+    fields = ('driver_version', 'pstate', 'power.draw', 'power.limit', 'clocks.gr', 'clocks.max.gr',
+              'clocks.mem', 'fan.speed')
+    out = command(['nvidia-smi', '--id=' + bus, '--query-gpu=' + ','.join(fields),
+                   '--format=csv,noheader,nounits'])
+    row = next(csv.reader(out.splitlines(), skipinitialspace=True), [])
+    info = {key: value.strip() for key, value in zip(fields, row)
+            if value.strip() and 'N/A' not in value and not value.strip().startswith('[')}
+    apps = []
+    out = command(['nvidia-smi', '--id=' + bus, '--query-compute-apps=pid,process_name,used_memory',
+                   '--format=csv,noheader,nounits'])
+    for app in csv.reader(out.splitlines(), skipinitialspace=True):
+        if len(app) == 3 and app[2].strip().isdigit():
+            apps.append((int(app[2]) * 1048576, os.path.basename(app[1].strip()), app[0].strip()))
+    return info, sorted(apps, reverse=True)[:5]
+
+
+def link(device):
+    speed = read(device / 'current_link_speed').replace(' PCIe', '')
+    width, top = read(device / 'current_link_width'), read(device / 'max_link_speed').replace(' PCIe', '')
+    if not speed or not width or speed.startswith('Unknown'):
+        return ''
+    top_width = read(device / 'max_link_width')
+    best = f'{top} ×{top_width}' if top and top_width else ''
+    # GPUs drop to a slower link when idle, so the maximum is shown for comparison.
+    return f'{speed} ×{width}' + (f' (max {best})' if best and best != f'{speed} ×{width}' else '')
 
 
 def gpu_details():
     rows = []
     for index, gpu in enumerate(gpu_readings(), 1):
-        device = SYS / 'class/drm' / gpu['card'] / 'device'
+        card = SYS / 'class/drm' / gpu['card']
+        device = card / 'device'
         model = gpu.get('name')
-        if not model and not gpu['sleeping']:
+        if not model and not gpu['sleeping'] and gpu.get('bus'):
             # Optional pciutils lookup for AMD/Intel; never probe a sleeping GPU.
-            bus = device.resolve().name
-            if re.fullmatch(r'[\da-fA-F]{4}:[\da-fA-F]{2}:[\da-fA-F]{2}\.\d', bus):
-                try:
-                    fields = shlex.split(command(['lspci', '-mm', '-s', bus]))
-                except ValueError:
-                    fields = []
-                if len(fields) >= 4:
-                    model = ' '.join(fields[2:4])
-        rows.append(f"显卡 {index}    {model or gpu['vendor']} ({gpu['card']})")
-        rows.append('状态    ' + ('休眠' if gpu['sleeping'] else '活动'))
+            try:
+                fields = shlex.split(command(['lspci', '-mm', '-s', gpu['bus']]))
+            except ValueError:
+                fields = []
+            if len(fields) >= 4:
+                model = ' '.join(fields[2:4])
+        rows.append(f"{'▸ ' if index > 1 else ''}GPU {index}    {model or gpu['vendor']} ({gpu['card']})")
+        rows.append('State    ' + ('asleep' if gpu['sleeping'] else 'active'))
         if gpu['sleeping']:
             continue
+        info, apps = nvidia_details(gpu['bus']) if gpu['vendor'] == 'NVIDIA' and gpu.get('bus') else ({}, [])
         if (device / 'driver').exists():
-            rows.append('驱动    ' + (device / 'driver').resolve().name)
-        rows.append('温度    ' + (temperature(gpu.get('temperature')) or '当前未提供读数'))
+            version = info.get('driver_version') or read(device / 'driver/module/version')
+            rows.append('Driver    ' + (device / 'driver').resolve().name + (f' {version}' if version else ''))
+        rows.append('Temperature    ' + (temperature(gpu.get('temperature')) or 'no reading'))
         if gpu.get('percent') is not None:
-            rows.append(f"GPU 利用率    {gpu['percent']:.1f}%")
+            rows.append(f"Utilization    {gpu['percent']:.1f}%")
         else:
-            rows.append('GPU 利用率    当前驱动未提供')
+            rows.append('Utilization    not reported by the driver')
         used, total = gpu.get('memory_used'), gpu.get('memory_total')
         if used is not None and total:
-            rows.append(f'显存    {capacity(used * 1048576)} / {capacity(total * 1048576)}'
+            rows.append(f'VRAM    {capacity(used * 1048576)} / {capacity(total * 1048576)}'
                         f'  ({100 * used / total:.1f}%)')
-    return rows or ['未发现支持的显卡']
+        # nvidia-smi first; AMD/nouveau publish power, fan and clocks via hwmon, i915 via gt_*_freq_mhz.
+        hwmon = next(iter(sorted(device.glob('hwmon/hwmon*'))), device)
+        power = number(hwmon / 'power1_average') or number(hwmon / 'power1_input')
+        cap, fan = number(hwmon / 'power1_cap'), number(hwmon / 'fan1_input')
+        clock, memory_clock = number(hwmon / 'freq1_input'), number(hwmon / 'freq2_input')
+        extra = {'P-state': info.get('pstate', '')}
+        if 'power.draw' in info:
+            limit = f" / {info['power.limit']} W" if 'power.limit' in info else ''
+            extra['Power'] = f"{info['power.draw']} W{limit}"
+        elif power:
+            extra['Power'] = f'{power / 1e6:.1f} W' + (f' / {cap / 1e6:.0f} W' if cap else '')
+        if 'clocks.gr' in info:
+            peak = f" / {info['clocks.max.gr']}" if 'clocks.max.gr' in info else ''
+            extra['Core clock'] = f"{info['clocks.gr']}{peak} MHz"
+        elif clock:
+            extra['Core clock'] = f'{clock / 1e6:.0f} MHz'
+        elif number(card / 'gt_cur_freq_mhz'):
+            peak = number(card / 'gt_max_freq_mhz')
+            peak = f' / {peak:.0f}' if peak else ''
+            extra['Core clock'] = f"{number(card / 'gt_cur_freq_mhz'):.0f}{peak} MHz"
+        if 'clocks.mem' in info:
+            extra['Memory clock'] = info['clocks.mem'] + ' MHz'
+        elif memory_clock:
+            extra['Memory clock'] = f'{memory_clock / 1e6:.0f} MHz'
+        if 'fan.speed' in info:
+            extra['Fan'] = info['fan.speed'] + '%'
+        elif fan:
+            extra['Fan'] = f'{fan:.0f} RPM'
+        extra['PCIe'] = link(device)
+        rows += [f'{key}    {value}' for key, value in extra.items() if value]
+        if apps:
+            rows.append('▸ VRAM by process (CUDA / compute)')
+            rows += [f'{name} ({pid})    {capacity(size)}' for size, name, pid in apps]
+    return rows or ['No supported GPU found']
+
+
+def top_memory(limit=5):
+    usage = []
+    for status in PROC.glob('[0-9]*/status'):
+        fields = dict(re.findall(r'^(Name|VmRSS):\s*(.*)$', read(status), re.M))
+        rss = re.match(r'(\d+) kB', fields.get('VmRSS', ''))
+        if rss and int(rss[1]):
+            usage.append((int(rss[1]) * 1024, fields.get('Name', '?'), status.parent.name))
+    return sorted(usage, reverse=True)[:limit]
 
 
 def memory_details():
@@ -388,31 +571,253 @@ def memory_details():
               re.findall(r'^(\w+):\s+(\d+)\s+kB', read(PROC / 'meminfo'), re.M)}
     total = memory.get('MemTotal', 0)
     if not total:
-        return ['未读取到内存信息']
+        return ['Memory information unavailable']
     cached = memory.get('Buffers', 0) + memory.get('Cached', 0) + memory.get('SReclaimable', 0)
     # Same MemAvailable calculation as Polybar's internal/memory module.
     available = memory.get('MemAvailable', memory.get('MemFree', 0) + cached - memory.get('Shmem', 0))
     available = max(0, min(total, available))
     used = total - available
-    rows = [f'总容量    {capacity(total)}', f'已用    {capacity(used)}  ({100 * used / total:.1f}%)',
-            f'可用    {capacity(available)}', f'完全空闲    {capacity(memory.get("MemFree", 0))}',
-            f'缓存与缓冲    {capacity(cached)}', f'共享内存    {capacity(memory.get("Shmem", 0))}']
+    rows = [f'Total    {capacity(total)}', f'Used    {capacity(used)}  ({100 * used / total:.1f}%)',
+            f'Available    {capacity(available)}', f'Free    {capacity(memory.get("MemFree", 0))}',
+            f'Cache & buffers    {capacity(cached)}', f'Shared    {capacity(memory.get("Shmem", 0))}']
     swap = memory.get('SwapTotal', 0)
     if swap:
         swap_used = max(0, swap - memory.get('SwapFree', 0))
         rows.append(f'Swap    {capacity(swap_used)} / {capacity(swap)}  ({100 * swap_used / swap:.1f}%)')
+        for line in read(PROC / 'swaps').splitlines()[1:]:
+            fields = line.split()
+            if len(fields) >= 4 and fields[2].isdigit() and fields[3].isdigit():
+                name = re.sub(r'\\([0-7]{3})', lambda match: chr(int(match[1], 8)), fields[0])
+                rows.append(f'Swap device    {name} ({fields[1]}) '
+                            f'{capacity(int(fields[3]) * 1024)} / {capacity(int(fields[2]) * 1024)}')
     else:
-        rows.append('Swap    未启用')
+        rows.append('Swap    off')
+    if pressure('memory'):
+        rows.append('Memory pressure (10 s)    ' + pressure('memory'))
+    top = top_memory()
+    if top:
+        rows.append('▸ Top processes by memory (RSS, shared pages included)')
+        rows += [f'{name} ({pid})    {capacity(size)}' for size, name, pid in top]
     return rows
 
 
-def show_details(title, rows):
-    subprocess.run(['rofi', '-dmenu', '-i', '-p', title, '-no-custom', '-no-sort', '-no-markup-rows',
-                    '-no-show-icons', '-mesg', f'<b>{title}</b>',
-                    '-theme-str', 'window { width: 720px; } listview { lines: 12; } '
-                    'mode-switcher { enabled: false; } entry { placeholder: "筛选详情…"; }'],
-                   input='\n'.join(single_line(row) for row in rows), text=True,
-                   stdout=subprocess.DEVNULL)
+def network_details():
+    net = snapshot().get('network')
+    if not net:
+        return ['Not connected']
+    iface = net['iface']
+    path = SYS / 'class/net' / iface
+    wireless = (path / 'wireless').exists() or (path / 'phy80211').exists()
+    tunnel = (path / 'tun_flags').exists() or read(path / 'type') == '65534'
+    rows = [f"Interface    {iface} ({'Wi-Fi' if wireless else 'VPN / tunnel' if tunnel else 'wired'})"]
+    if wireless:
+        found = dict(re.findall(r'^\s*(SSID|signal|tx bitrate|rx bitrate|freq):\s*(.+)$',
+                                command(['iw', 'dev', iface, 'link']), re.M))
+        if 'SSID' in found:
+            rows.append('Wi-Fi    ' + found['SSID'])
+        if 'freq' in found:
+            band = found['freq']
+            rows.append('Band    ' + (f'{float(band) / 1000:.1f} GHz' if re.fullmatch(r'[\d.]+', band) else band))
+        if 'signal' in found:
+            rows.append('Signal    ' + found['signal'])
+        rates = [found[key].split(' MBit/s')[0] for key in ('rx bitrate', 'tx bitrate') if key in found]
+        if len(rates) == 2:
+            rows.append(f'Link rate (rx / tx)    {rates[0]} / {rates[1]} Mbit/s')
+    elif (number(path / 'speed') or 0) > 0:
+        rows.append(f"Link speed    {number(path / 'speed'):.0f} Mbit/s")
+    try:
+        addresses = json.loads(command(['ip', '-j', 'addr', 'show', 'dev', iface]) or '[]')
+    except ValueError:
+        addresses = []
+    for info in (addresses[0].get('addr_info', []) if addresses else []):
+        if info.get('scope') == 'global' and info.get('local'):
+            family = 'IPv4' if info.get('family') == 'inet' else 'IPv6'
+            rows.append(f"{family}    {info['local']}/{info.get('prefixlen', '')}")
+    try:
+        routes = json.loads(command(['ip', '-j', 'route', 'show', 'default', 'dev', iface]) or '[]')
+    except ValueError:
+        routes = []
+    gateways = [route['gateway'] for route in routes if route.get('gateway')]
+    if gateways:
+        rows.append('Gateway    ' + ' · '.join(gateways))
+    dns = re.findall(r'^nameserver\s+(\S+)', read(Path('/etc/resolv.conf')), re.M)
+    if dns:
+        rows.append('DNS    ' + ' · '.join(dns))
+    if read(path / 'address'):
+        rows.append('MAC    ' + read(path / 'address'))
+    rows.append(f"Throughput    ↓{speed(net['down'])}/s ↑{speed(net['up'])}/s")
+    if net.get('rx') is not None and net.get('tx') is not None:
+        rows.append(f"Since boot    ↓{capacity(net['rx'])} ↑{capacity(net['tx'])}")
+    return [single_line(row) for row in rows]
+
+
+def close_details(mode):
+    """Close an open card; True when this click should do nothing else.
+
+    Clicking outside rofi closes it, and Polybar may still deliver that same click,
+    so a click on the same module right after its card closed only closes it.
+    """
+    state = cache_dir() / 'details.json'
+    try:
+        last = json.loads(state.read_text())
+    except (OSError, ValueError):
+        last = {}
+    pid = last.get('pid')
+    if isinstance(pid, int) and read(PROC / str(pid) / 'comm') == 'rofi':
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            pass
+        for _ in range(20):  # rofi allows one instance, so wait until it is gone.
+            if read(PROC / str(pid) / 'comm') != 'rofi':
+                break
+            time.sleep(0.05)
+        return last.get('mode') == mode
+    return last.get('mode') == mode and 0 <= time.monotonic() - last.get('closed', -100) < 0.4
+
+
+# Nerd Font (Material Design) icons for the detail cards, keyed by row label.
+ICON = {name: chr(code) for name, code in {
+    'chip': 0xF061A, 'cpu': 0xF0EE0, 'layers': 0xF0F58, 'speed': 0xF04C5, 'speed2': 0xF0F85, 'tune': 0xF1542,
+    'cache': 0xF1632, 'gauge': 0xF029A, 'temp': 0xF050F, 'temps': 0xF0510, 'chart': 0xF0127,
+    'threads': 0xF027B, 'pulse': 0xF0430, 'timer': 0xF051B, 'gpu': 0xF08AE, 'ok': 0xF05E0, 'sleep': 0xF04B2,
+    'cog': 0xF08BB, 'memory': 0xF035B, 'trend': 0xF0535, 'flash': 0xF0241, 'fan': 0xF0210,
+    'link': 0xF0D3D, 'cube': 0xF01A7, 'swap': 0xF04E1, 'disk': 0xF02CA, 'lan': 0xF0317, 'wifi': 0xF05A9,
+    'band': 0xF0003, 'signal': 0xF0925, 'ip': 0xF0A5F, 'router': 0xF1087, 'dns': 0xF01D6, 'mac': 0xF0EFE,
+    'updown': 0xF04E2, 'sum': 0xF04A0, 'app': 0xF09DF, 'info': 0xF02FC, 'list': 0xF0279,
+}.items()}
+ROW_ICONS = {
+    'Model': 'chip', 'Logical CPUs': 'cpu', 'Physical cores': 'layers', 'Frequency': 'speed', 'Governor': 'tune',
+    'Cache': 'cache', 'Usage': 'gauge', 'Temperature': 'temp', 'Sensors': 'temps', 'Load (1/5/15 min)': 'chart',
+    'Threads (running / total)': 'threads', 'CPU pressure (10 s)': 'pulse', 'Uptime': 'timer', 'State': 'ok',
+    'Driver': 'cog', 'Utilization': 'gauge', 'VRAM': 'memory', 'P-state': 'trend', 'Power': 'flash',
+    'Core clock': 'speed', 'Memory clock': 'speed2', 'Fan': 'fan', 'PCIe': 'link', 'Total': 'memory',
+    'Used': 'gauge', 'Available': 'ok', 'Free': 'cube', 'Cache & buffers': 'cache', 'Shared': 'layers', 'Swap': 'swap',
+    'Swap device': 'disk', 'Memory pressure (10 s)': 'pulse', 'Interface': 'lan', 'Wi-Fi': 'wifi', 'Band': 'band',
+    'Signal': 'signal', 'Link rate (rx / tx)': 'speed', 'Link speed': 'speed', 'IPv4': 'ip', 'IPv6': 'ip',
+    'Gateway': 'router', 'DNS': 'dns', 'MAC': 'mac', 'Throughput': 'updown', 'Since boot': 'sum',
+}
+# Card title icon and accent: the same icon colours as the Polybar modules.
+MODE_STYLE = {'cpu-info': ('cpu', 'yellow'), 'gpu-info': ('gpu', 'green'),
+              'memory-info': ('memory', 'blue'), 'network-info': ('lan', 'cyan')}
+
+
+def palette():
+    """Theme colours from xrdb (written by bin/theme, also used by Polybar); Nord as the fallback."""
+    colors = {'foreground': '#D8DEE9', 'altwhite': '#ECEFF4', 'altblack': '#4C566A', 'red': '#BF616A',
+              'green': '#A3BE8C', 'yellow': '#EBCB8B', 'blue': '#81A1C1', 'cyan': '#88C0D0'}
+    colors.update(re.findall(r'^theme\.(\w+):\s*(#[0-9A-Fa-f]{6})\s*$', command(['xrdb', '-query']), re.M))
+    return colors
+
+
+def gauge(key, value):
+    """(0-100 fill, high is good) for rows worth a bar, else None."""
+    if key == 'Temperature' and (found := re.search(r'([\d.]+)°C', value)):
+        return float(found[1]), False  # Scale 0-100 °C.
+    if key == 'Signal' and (found := re.search(r'(-?\d+) dBm', value)):
+        return (int(found[1]) + 90) * 100 / 60, True  # -90 dBm unusable … -30 dBm excellent.
+    if key == 'Power' and (found := re.fullmatch(r'([\d.]+) W / ([\d.]+) W', value)) and float(found[2]):
+        return 100 * float(found[1]) / float(found[2]), False
+    if key in ('Usage', 'Utilization', 'VRAM', 'Used', 'Swap') or key.endswith('pressure (10 s)'):
+        found = re.search(r'([\d.]+)%', value)
+        return (float(found[1]), False) if found else None
+    return None
+
+
+def amount(value):
+    """Comparable size of a process row value: a percentage or a capacity."""
+    found = re.fullmatch(r'([\d.]+) ?(%|KiB|MiB|GiB|TiB)', value)
+    units = {'%': 1, 'KiB': 1, 'MiB': 2 ** 10, 'GiB': 2 ** 20, 'TiB': 2 ** 30}
+    return float(found[1]) * units[found[2]] if found else 0
+
+
+def bar(fill, color, track, cells=10):
+    # Hack's heavy line joins into a solid bar; at a large size its stroke is thick enough to read.
+    filled = round(max(0, min(100, fill)) * cells / 100) or (1 if fill > 0 else 0)
+    return (f'<span font="Hack Nerd Font 18" rise="-2pt"><span color="{color}">{"━" * filled}</span>'
+            f'<span color="{track}">{"━" * (cells - filled)}</span></span>')
+
+
+def styled_rows(mode, rows, colors):
+    """Pango markup for rofi: icon, dim label, value and an optional bar on fixed tab stops."""
+    escape = lambda text: html.escape(text, quote=False)
+    accent, dim, track = colors[MODE_STYLE[mode][1]], colors['foreground'], colors['altblack']
+    icon_span = lambda name, color=accent: f'<span font="Hack Nerd Font 12" color="{color}">{ICON[name]}</span>'
+    # Process rows get bars relative to the largest one in their section.
+    sections, current = [], None
+    for row in rows:
+        if row.startswith('▸ ') and '    ' not in row:
+            current = [] if 'process' in row else None
+        elif current is not None:
+            current.append(amount(row.split('    ', 1)[-1]))
+        sections.append(current)
+    styled = []
+    for row, section in zip(rows, sections):
+        if row.startswith('▸ ') and '    ' not in row:
+            styled.append(f'{icon_span("list")}  <span color="{accent}" weight="bold">{escape(row[2:])}</span>')
+            continue
+        key, _, value = row.removeprefix('▸ ').partition('    ')
+        if section is not None:  # Process: name, dim pid, value and a relative bar.
+            name, pid = re.fullmatch(r'(.*?)(?: \((\d+)\))?', key).groups()
+            label = escape(name) + (f' <span size="small" color="{track}">{pid}</span>' if pid else '')
+            scale = max(section) or 1
+            styled.append(f'{icon_span("app", dim)}  {label}\t<span weight="bold">{escape(value)}</span>'
+                          f'\t{bar(100 * amount(value) / scale, accent, track)}')
+            continue
+        name = ROW_ICONS.get(key) or ('gpu' if re.fullmatch(r'GPU \d+', key) else 'info')
+        if key == 'State' and value == 'asleep':
+            name = 'sleep'
+        label = (f'<span color="{accent}" weight="bold">{escape(key)}</span>' if row.startswith('▸ ')
+                 or re.fullmatch(r'GPU \d+', key) else f'<span color="{dim}">{escape(key)}</span>')
+        line = f'{icon_span(name)}  {label}\t<span weight="bold">{escape(value)}</span>'
+        reading = gauge(key, value)
+        if reading:
+            fill, good_high = reading
+            level = 100 - fill if good_high else fill
+            color = colors['red'] if level >= 85 else colors['yellow'] if level >= 70 else colors['green']
+            line += '\t' + bar(fill, color, track)
+        styled.append(line)
+    return styled
+
+
+def show_details(mode, title, rows):
+    rows = [single_line(row) for row in rows]
+    colors = palette()
+    icon, accent = MODE_STYLE[mode][0], colors[MODE_STYLE[mode][1]]
+    # Subtitle: the readings that have bars, e.g. "Usage 29.1%  ·  Temperature 72°C".
+    summary = []
+    for row in rows:
+        key, _, value = row.partition('    ')
+        found = gauge(key, value) and re.search(r'-?[\d.]+ ?(%|°C|dBm|W)', value)
+        if found and len(summary) < 3:
+            summary.append(f'{key.split(" (")[0]} {found[0]}')
+    message = (f'<span font="Hack Nerd Font 20" color="{accent}">{ICON[icon]}</span>   '
+               f'<span size="x-large" weight="bold" color="{colors["altwhite"]}">{title}</span>    '
+               f'<span color="{colors["foreground"]}">{html.escape("  ·  ".join(summary), quote=False)}</span>\n'
+               f'<span size="small" color="{colors["foreground"]}" alpha="55%">'
+               'Enter copies the selected value  ·  click the module again or Esc to close</span>')
+    command_line = ['rofi', '-dmenu', '-p', title, '-no-custom', '-no-sort', '-markup-rows', '-format', 'i',
+                    '-no-show-icons', '-mesg', message,
+                    # Rofi's default monitor is the one under the pointer, i.e. the clicked bar; pinning the
+                    # card below that bar keeps it fully on screen (-m -3 lets it run off the edge).
+                    '-theme-str', f'window {{ width: 800px; location: north; anchor: north; y-offset: 47px; }} '
+                    f'inputbar {{ enabled: false; }} listview {{ lines: {min(len(rows), 20)}; spacing: 2px; }} '
+                    'element { padding: 6px 12px; } message { padding: 12px 16px; } '
+                    'mode-switcher { enabled: false; } element-text { tab-stops: [250px, 520px]; }']
+    state = cache_dir() / 'details.json'
+    popup = subprocess.Popen(command_line, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    state.write_text(json.dumps({'mode': mode, 'pid': popup.pid}))
+    chosen, _ = popup.communicate('\n'.join(styled_rows(mode, rows, colors)))
+    state.write_text(json.dumps({'mode': mode, 'closed': time.monotonic()}))
+    index = chosen.strip()
+    if popup.returncode != 0 or not index.isdigit() or int(index) >= len(rows):
+        return
+    key, separator, value = rows[int(index)].partition('    ')
+    if separator and value.strip():  # Section headings have no value to copy.
+        try:
+            subprocess.run(['xclip', '-selection', 'clipboard'], input=value.strip(), text=True, timeout=3)
+        except (OSError, subprocess.SubprocessError):
+            pass  # Copying is a convenience; without xclip Enter just closes the card.
 
 
 def disk_label(disks):
@@ -428,10 +833,10 @@ def disk_label(disks):
 
 def disk_menu(disks):
     rows = [f"{single_line(d['mount'])}    {capacity(d['used'])} / {capacity(d['total'])}"
-            f"  ({d['percent']:.0f}%)    可用 {capacity(d['available'])}" for d in disks]
+            f"  ({d['percent']:.0f}%)    free {capacity(d['available'])}" for d in disks]
     if not rows:
         return
-    choice = subprocess.run(['rofi', '-dmenu', '-i', '-p', '磁盘用量', '-no-custom', '-format', 'i'],
+    choice = subprocess.run(['rofi', '-dmenu', '-i', '-p', 'Disk usage', '-no-custom', '-format', 'i'],
                             input='\n'.join(rows), text=True, capture_output=True)
     if choice.returncode == 0 and choice.stdout.strip().isdigit():
         index = int(choice.stdout.strip())
@@ -458,17 +863,16 @@ def labels(data):
 
 def main():
     mode = sys.argv[1] if len(sys.argv) > 1 else 'json'
-    details = {'cpu-info': ('CPU 详情', cpu_details), 'gpu-info': ('GPU 详情', gpu_details),
-               'memory-info': ('内存详情', memory_details)}
+    details = {'cpu-info': ('CPU', cpu_details), 'gpu-info': ('GPU', gpu_details),
+               'memory-info': ('Memory', memory_details), 'network-info': ('Network', network_details)}
     if mode in details:
         if sys.argv[2:] not in ([], ['--print']):
             sys.exit(__doc__)
         title, collect_details = details[mode]
-        rows = collect_details()
         if '--print' in sys.argv:
-            print('\n'.join(rows))
-        else:
-            show_details(title, rows)
+            print('\n'.join(collect_details()))
+        elif not close_details(mode):
+            show_details(mode, title, collect_details())
         return
     if mode == 'compositor-flag':
         print(compositor_flag())

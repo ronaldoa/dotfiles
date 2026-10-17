@@ -55,6 +55,13 @@ class HardwareTests(unittest.TestCase):
                    temp2_label='Tdie', temp2_input=55000)
         self.assertEqual(hw.cpu_temperature(), 55)
 
+    def test_cpu_driver_beats_motherboard_cputin(self):
+        self.files('class/hwmon/hwmon2', name='k10temp', temp1_label='Tctl', temp1_input=45000)
+        self.files('class/hwmon/hwmon3', name='nct6798', temp2_label='CPUTIN', temp2_input=127000)
+        self.assertEqual(hw.cpu_temperature(), 45)
+        (self.root / 'class/hwmon/hwmon2/temp1_input').unlink()
+        self.assertEqual(hw.cpu_temperature(), 127)  # Label match still serves boards without a CPU driver.
+
     def test_arm_thermal_and_no_sensor(self):
         self.files('class/thermal/thermal_zone4', type='gpu-thermal', temp=90000)
         self.assertIsNone(hw.cpu_temperature())
@@ -176,10 +183,18 @@ class DetailTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
-        self.proc = Path(self.temp.name)
-        patched = patch.object(hw, 'PROC', self.proc)
-        patched.start()
-        self.addCleanup(patched.stop)
+        self.proc, self.sys = Path(self.temp.name) / 'proc', Path(self.temp.name) / 'sys'
+        self.proc.mkdir()
+        for name, value in (('PROC', self.proc), ('SYS', self.sys)):
+            patched = patch.object(hw, name, value)
+            patched.start()
+            self.addCleanup(patched.stop)
+
+    def files(self, base, **values):
+        for name, value in values.items():
+            path = base / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(str(value))
 
     def test_cpu_topology_usage_and_guest_time(self):
         (self.proc / 'cpuinfo').write_text('processor: 0\nmodel name: Test CPU\nphysical id: 0\ncore id: 0\n\n'
@@ -189,29 +204,76 @@ class DetailTests(unittest.TestCase):
         with patch.object(hw, 'cpu_times', side_effect=[(100, 55), (200, 105)]), \
                 patch.object(hw.time, 'sleep'), patch.object(hw, 'cpu_temperature', return_value=42):
             rows = hw.cpu_details()
-        self.assertIn('型号    Test CPU', rows)
-        self.assertIn('逻辑处理器    2', rows)
-        self.assertIn('物理核心    1', rows)
-        self.assertIn('当前占用    50.0%', rows)
-        self.assertIn('温度    42°C', rows)
+        self.assertIn('Model    Test CPU', rows)
+        self.assertIn('Logical CPUs    2', rows)
+        self.assertIn('Physical cores    1', rows)
+        self.assertIn('Usage    50.0%', rows)
+        self.assertIn('Temperature    42°C', rows)
+
+    def test_cpu_frequency_cache_sensors_and_busiest_processes(self):
+        (self.proc / 'cpuinfo').write_text('processor: 0\nmodel name: Test CPU\n\nprocessor: 1\nmodel name: Test CPU\n')
+        cpus = self.sys / 'devices/system/cpu'
+        for cpu, current in (('cpu0', 1000000), ('cpu1', 3000000)):
+            self.files(cpus / cpu, **{'cpufreq/scaling_cur_freq': current, 'cpufreq/cpuinfo_max_freq': 5000000,
+                                      'cache/index2/level': 2, 'cache/index2/type': 'Unified',
+                                      'cache/index2/size': '512K', 'cache/index2/shared_cpu_list': cpu[-1],
+                                      'cache/index3/level': 3, 'cache/index3/type': 'Unified',
+                                      'cache/index3/size': '32768K', 'cache/index3/shared_cpu_list': '0-1'})
+        self.files(cpus / 'cpu0/cpufreq', scaling_governor='powersave', scaling_driver='amd-pstate-epp',
+                   energy_performance_preference='balance_performance')
+        self.files(self.sys / 'class/hwmon/hwmon2', name='k10temp', temp1_label='Tctl', temp1_input=70000,
+                   temp3_label='Tccd1', temp3_input=60000)
+        self.files(self.proc, loadavg='1.00 0.50 0.25 3/700 99', uptime='93784.5 1.0',
+                   **{'pressure/cpu': 'some avg10=1.25 avg60=0 avg300=0 total=1\n'})
+        line = '{pid} (my prog) S ' + ' '.join(['0'] * 10) + ' {ticks} 0 0'
+        ticks = [{'10': ('my prog', 100), '11': ('idle', 5)}, {'10': ('my prog', 150), '11': ('idle', 5)}]
+        self.assertEqual(hw.process_ticks(), {})
+        self.files(self.proc / '10', stat=line.format(pid=10, ticks=7))
+        self.assertEqual(hw.process_ticks(), {'10': ('my prog', 7)})  # Names may contain spaces.
+        with patch.object(hw, 'cpu_times', side_effect=[(100, 50), (200, 100)]), \
+                patch.object(hw, 'process_ticks', side_effect=ticks), patch.object(hw.time, 'sleep'):
+            rows = hw.cpu_details()
+        self.assertIn('Frequency    avg 2.00 GHz · max 3.00 GHz (limit 5.00 GHz)', rows)
+        self.assertIn('Governor    powersave · balance_performance (amd-pstate-epp)', rows)
+        self.assertIn('Cache    L2 1.0 MiB · L3 32.0 MiB', rows)  # The shared L3 is counted once.
+        self.assertIn('Sensors    Tctl 70°C · Tccd1 60°C', rows)
+        self.assertIn('Threads (running / total)    3 / 700', rows)
+        self.assertIn('CPU pressure (10 s)    some 1.2%', rows)
+        self.assertIn('Uptime    1d 2h 3m', rows)
+        # 50 ticks out of 50 per CPU in the interval = one full core; idle processes are left out.
+        self.assertEqual(rows[-2:], ['▸ Top processes by CPU (one full core = 100%)', 'my prog (10)    100.0%'])
 
     def test_memory_matches_available_and_reports_swap(self):
         (self.proc / 'meminfo').write_text('MemTotal: 1048576 kB\nMemAvailable: 786432 kB\n'
             'MemFree: 524288 kB\nBuffers: 65536 kB\nCached: 131072 kB\nSReclaimable: 65536 kB\n'
             'Shmem: 32768 kB\nSwapTotal: 524288 kB\nSwapFree: 393216 kB\n')
         rows = hw.memory_details()
-        self.assertIn('总容量    1.0 GiB', rows)
-        self.assertIn('已用    256.0 MiB  (25.0%)', rows)
-        self.assertIn('缓存与缓冲    256.0 MiB', rows)
+        self.assertIn('Total    1.0 GiB', rows)
+        self.assertIn('Used    256.0 MiB  (25.0%)', rows)
+        self.assertIn('Cache & buffers    256.0 MiB', rows)
         self.assertIn('Swap    128.0 MiB / 512.0 MiB  (25.0%)', rows)
 
+    def test_memory_swap_devices_pressure_and_largest_processes(self):
+        self.files(self.proc, meminfo='MemTotal: 1048576 kB\nMemAvailable: 524288 kB\nMemFree: 1 kB\n'
+                   'SwapTotal: 2048 kB\nSwapFree: 1024 kB\n',
+                   swaps='Filename Type Size Used Priority\n/swap\\040file file 2048 1024 -2\n',
+                   **{'pressure/memory': 'some avg10=2.50 avg60=0 avg300=0 total=1\n'
+                      'full avg10=0.50 avg60=0 avg300=0 total=1\n',
+                      '7/status': 'Name:\tbig\nVmRSS:\t  2048 kB\n', '8/status': 'Name:\tkthread\n',
+                      '9/status': 'Name:\tsmall\nVmRSS:\t1024 kB\n'})
+        rows = hw.memory_details()
+        self.assertIn('Swap device    /swap file (file) 1.0 MiB / 2.0 MiB', rows)
+        self.assertIn('Memory pressure (10 s)    some 2.5% · full 0.5%', rows)
+        self.assertEqual(rows[-3:], ['▸ Top processes by memory (RSS, shared pages included)',
+                                     'big (7)    2.0 MiB', 'small (9)    1.0 MiB'])
+
     def test_old_memory_kernel_and_unavailable_readings(self):
-        self.assertEqual(hw.memory_details(), ['未读取到内存信息'])
+        self.assertEqual(hw.memory_details(), ['Memory information unavailable'])
         (self.proc / 'meminfo').write_text('MemTotal: 1024 kB\nMemFree: 256 kB\nBuffers: 64 kB\n'
                                          'Cached: 128 kB\nSReclaimable: 128 kB\nShmem: 64 kB\n')
         rows = hw.memory_details()
-        self.assertIn('已用    512 KiB  (50.0%)', rows)
-        self.assertIn('Swap    未启用', rows)
+        self.assertIn('Used    512 KiB  (50.0%)', rows)
+        self.assertIn('Swap    off', rows)
 
     def test_gpu_details_keep_sleeping_cards_asleep(self):
         gpus = [{'card': 'card0', 'vendor': 'NVIDIA', 'name': 'GeForce Test', 'sleeping': False,
@@ -220,16 +282,129 @@ class DetailTests(unittest.TestCase):
         with patch.object(hw, 'gpu_readings', return_value=gpus), patch.object(hw, 'command') as query:
             rows = hw.gpu_details()
         query.assert_not_called()
-        self.assertIn('显卡 1    GeForce Test (card0)', rows)
-        self.assertIn('显卡 2    AMD (card1)', rows)
-        self.assertIn('状态    休眠', rows)
-        self.assertIn('显存    2.0 GiB / 8.0 GiB  (25.0%)', rows)
+        self.assertIn('GPU 1    GeForce Test (card0)', rows)
+        self.assertIn('▸ GPU 2    AMD (card1)', rows)
+        self.assertIn('State    asleep', rows)
+        self.assertIn('VRAM    2.0 GiB / 8.0 GiB  (25.0%)', rows)
 
-    def test_detail_card_esc_is_harmless_and_text_is_not_markup(self):
-        with patch.object(hw.subprocess, 'run', return_value=subprocess.CompletedProcess([], 1)) as popup:
-            hw.show_details('CPU 详情', ['型号    A<B>\nmodel', '温度    42°C'])
-        self.assertIn('-no-markup-rows', popup.call_args.args[0])
-        self.assertEqual(popup.call_args.kwargs['input'], '型号    A<B> model\n温度    42°C')
+    def test_nvidia_details_query_only_its_bus_and_skip_unsupported(self):
+        gpus = [{'card': 'card0', 'vendor': 'NVIDIA', 'bus': '0000:01:00.0', 'name': 'GeForce Test',
+                 'sleeping': False, 'temperature': 50}]
+        answers = {'--query-gpu': '550.1, P2, 90.5, 165.00, 2700, 3100, 8750, [N/A]',
+                   '--query-compute-apps': '42, /opt/bin/llama-server, 2048\n43, game, [N/A]'}
+
+        def smi(args):
+            self.assertIn('--id=0000:01:00.0', args)
+            return next(value for key, value in answers.items() if any(a.startswith(key) for a in args))
+        self.files(self.sys / 'devices/gpu', current_link_speed='2.5 GT/s PCIe', current_link_width=8,
+                   max_link_speed='16.0 GT/s PCIe', max_link_width=16)
+        (self.sys / 'class/drm/card0').mkdir(parents=True)
+        (self.sys / 'class/drm/card0/device').symlink_to(self.sys / 'devices/gpu')
+        with patch.object(hw, 'gpu_readings', return_value=gpus), patch.object(hw, 'command', side_effect=smi):
+            rows = hw.gpu_details()
+        for row in ('P-state    P2', 'Power    90.5 W / 165.00 W', 'Core clock    2700 / 3100 MHz',
+                    'Memory clock    8750 MHz', 'PCIe    2.5 GT/s ×8 (max 16.0 GT/s ×16)',
+                    'llama-server (42)    2.0 GiB'):
+            self.assertIn(row, rows)
+        self.assertFalse(any(row.startswith(('Fan', 'game')) for row in rows))
+
+    def test_amd_and_intel_details_from_sysfs(self):
+        device = self.sys / 'class/drm/card1/device'
+        self.files(device / 'hwmon/hwmon5', power1_average=45500000, power1_cap=200000000,
+                   freq1_input=2100000000, freq2_input=1000000000, fan1_input=1200)
+        self.files(self.sys / 'class/drm/card0', gt_cur_freq_mhz=350, gt_max_freq_mhz=1300)
+        gpus = [{'card': 'card0', 'vendor': 'Intel', 'sleeping': False},
+                {'card': 'card1', 'vendor': 'AMD', 'name': 'Radeon Test', 'sleeping': False}]
+        with patch.object(hw, 'gpu_readings', return_value=gpus), patch.object(hw, 'command') as query:
+            rows = hw.gpu_details()
+        query.assert_not_called()
+        for row in ('Core clock    350 / 1300 MHz', '▸ GPU 2    Radeon Test (card1)', 'Power    45.5 W / 200 W',
+                    'Core clock    2100 MHz', 'Memory clock    1000 MHz', 'Fan    1200 RPM'):
+            self.assertIn(row, rows)
+
+    def test_wifi_network_details(self):
+        net = {'iface': 'wlan0', 'ip': '10.0.0.5', 'rx': 2 ** 30, 'tx': 2 ** 20, 'down': 2048, 'up': None}
+        self.files(self.sys / 'class/net/wlan0', address='aa:bb:cc:dd:ee:ff', **{'wireless/x': ''})
+        outputs = {'iw': 'Connected to x\n\tSSID: Home\x1bNet\n\tfreq: 5180.0\n\tsignal: -50 dBm\n'
+                         '\trx bitrate: 400.0 MBit/s 80MHz\n\ttx bitrate: 300.0 MBit/s\n',
+                   'addr': json.dumps([{'addr_info': [{'family': 'inet', 'local': '10.0.0.5', 'prefixlen': 24,
+                                                       'scope': 'global'},
+                                                      {'family': 'inet6', 'local': 'fe80::1', 'scope': 'link'}]}]),
+                   'route': json.dumps([{'gateway': '10.0.0.1'}])}
+        with patch.object(hw, 'snapshot', return_value={'network': net}), \
+                patch.object(hw, 'command', side_effect=lambda args: outputs[args[0] if args[0] == 'iw' else args[2]]):
+            rows = hw.network_details()
+        for row in ('Interface    wlan0 (Wi-Fi)', 'Wi-Fi    Home Net', 'Band    5.2 GHz', 'Signal    -50 dBm',
+                    'Link rate (rx / tx)    400.0 / 300.0 Mbit/s', 'IPv4    10.0.0.5/24', 'Gateway    10.0.0.1',
+                    'MAC    aa:bb:cc:dd:ee:ff', 'Throughput    ↓2K/s ↑—/s', 'Since boot    ↓1.0 GiB ↑1.0 MiB'):
+            self.assertIn(row, rows)
+        self.assertFalse(any('fe80' in row for row in rows))
+        with patch.object(hw, 'snapshot', return_value={'network': None}):
+            self.assertEqual(hw.network_details(), ['Not connected'])
+
+    def popup(self, returncode, chosen=''):
+        process = SimpleNamespace(pid=4321, returncode=returncode)
+        process.communicate = lambda text: (process.__dict__.update(input=text), (chosen, None))[1]
+        return process
+
+    def test_detail_card_escapes_markup_and_copies_the_chosen_value(self):
+        rows = ['Model    A<B>&\nmodel', '▸ Processes', 'x (1)    5%']
+        with tempfile.TemporaryDirectory() as cache, patch.dict(os.environ, {'XDG_CACHE_HOME': cache}), \
+                patch.object(hw, 'command', return_value=''):
+            process = self.popup(1)
+            with patch.object(hw.subprocess, 'Popen', return_value=process) as popup, \
+                    patch.object(hw.subprocess, 'run') as copy:
+                hw.show_details('cpu-info', 'CPU', rows)
+            args = popup.call_args.args[0]
+            self.assertNotIn('-m', args)  # Rofi's default: the screen under the pointer, i.e. the clicked bar.
+            self.assertIn('location: north;', args[args.index('-theme-str') + 1])
+            self.assertIn('A&lt;B&gt;&amp; model', process.input)  # Device text never becomes markup.
+            self.assertNotIn('<B>', process.input)
+            self.assertEqual(len(process.input.splitlines()), 3)
+            copy.assert_not_called()  # Esc copies nothing.
+            for chosen, copied in (('0\n', 'A<B>& model'), ('1\n', None), ('9\n', None)):
+                with patch.object(hw.subprocess, 'Popen', return_value=self.popup(0, chosen)), \
+                        patch.object(hw.subprocess, 'run') as copy:
+                    hw.show_details('cpu-info', 'CPU', rows)
+                self.assertEqual(copy.call_args.kwargs['input'] if copy.called else None, copied)
+
+    def test_gauges_colour_by_load_and_process_bars_are_relative(self):
+        self.assertEqual(hw.gauge('Temperature', '72°C'), (72, False))
+        self.assertEqual(hw.gauge('Signal', '-60 dBm'), (50, True))
+        self.assertEqual(hw.gauge('Power', '50 W / 200 W'), (25, False))
+        self.assertEqual(hw.gauge('VRAM', '15.3 GiB / 16.0 GiB  (95.7%)'), (95.7, False))
+        self.assertIsNone(hw.gauge('Model', 'CPU 100%'))
+        with patch.object(hw, 'command', return_value='theme.red:\t#FF0000\ntheme.green: #00FF00\n'):
+            colors = hw.palette()
+        self.assertEqual((colors['red'], colors['green'], colors['blue']), ('#FF0000', '#00FF00', '#81A1C1'))
+        styled = hw.styled_rows('memory-info', ['Used    1 GiB  (95.0%)', 'Swap    0 KiB / 1 GiB  (10.0%)',
+                                                '▸ Top processes by memory', 'big (7)    2.0 GiB', 'small (8)    512.0 MiB'],
+                                colors)
+        self.assertIn('#FF0000', styled[0])  # 95% used is red, 10% swap is green.
+        self.assertIn('#00FF00', styled[1])
+        self.assertEqual([row.count('━') for row in styled[3:]], [10, 10])
+        filled = [row.split(f'<span color="{colors["blue"]}">')[-1].split('<')[0].count('━') for row in styled[3:]]
+        self.assertEqual(filled, [10, 2])  # 512 MiB is a quarter of the largest process.
+
+    def test_second_click_closes_the_card_and_another_module_replaces_it(self):
+        with tempfile.TemporaryDirectory() as cache, patch.dict(os.environ, {'XDG_CACHE_HOME': cache}):
+            state = Path(cache) / 'i3-hardware/details.json'
+            self.assertFalse(hw.close_details('cpu-info'))
+            self.files(self.proc, **{'4321/comm': 'rofi'})
+            state.write_text(json.dumps({'mode': 'cpu-info', 'pid': 4321}))
+            killed = lambda pid, sig: (self.proc / '4321/comm').write_text('zombie')
+            with patch.object(hw.os, 'kill', side_effect=killed) as kill:
+                self.assertTrue(hw.close_details('cpu-info'))
+            kill.assert_called_once_with(4321, hw.signal.SIGTERM)
+            (self.proc / '4321/comm').write_text('rofi')
+            with patch.object(hw.os, 'kill', side_effect=killed):
+                self.assertFalse(hw.close_details('gpu-info'))  # Close the CPU card, then open GPU.
+            # The click that closed rofi from outside reaches Polybar too: don't reopen at once.
+            state.write_text(json.dumps({'mode': 'cpu-info', 'closed': time.monotonic()}))
+            self.assertTrue(hw.close_details('cpu-info'))
+            self.assertFalse(hw.close_details('memory-info'))
+            state.write_text(json.dumps({'mode': 'cpu-info', 'closed': time.monotonic() - 5}))
+            self.assertFalse(hw.close_details('cpu-info'))
 
 
 class DiskTests(unittest.TestCase):

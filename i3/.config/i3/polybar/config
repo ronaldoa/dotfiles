@@ -145,10 +145,8 @@ interval = 0.5
 ;   <ramp-load>
 ;   <ramp-coreload>
 ;;format = <label> <ramp-coreload>
-format = <label>
-format-prefix = 󰻠
-format-prefix-font = 0
-format-prefix-foreground = ${color.YELLOW}
+; Wrap prefix and value together, so either opens the details.
+format = %{A1:~/.config/i3/bin/hardware cpu-info:}%{F${color.YELLOW}}󰻠%{F-}<label>%{A}
 format-background = ${color.BACKGROUND}
 
 ; Available tokens:
@@ -491,6 +489,7 @@ type = custom/script
 exec = ~/.config/i3/bin/hardware network
 interval = 3
 format-foreground = ${color.CYAN}
+click-left = ~/.config/i3/bin/hardware network-info
 
 [module/cpu_temp]
 type = custom/script
@@ -524,6 +523,7 @@ type = custom/script
 exec = ~/.config/i3/bin/hardware gpu
 interval = 5
 format-foreground = ${color.GREEN}
+click-left = ~/.config/i3/bin/hardware gpu-info
 
 [module/focus]
 type = custom/script
