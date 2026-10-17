@@ -6,8 +6,17 @@
 
 dir="$HOME/Videos/wallpapers"
 
-if pkill -x xwinwrap; then
-    [ -z "$1" ] && exit 0
+if [ "${1:-}" = stop ]; then
+    pkill -u "$UID" -x xwinwrap || true
+    nitrogen --restore
+    exit 0
+fi
+
+if pkill -u "$UID" -x xwinwrap; then
+    if [ -z "$1" ]; then
+        nitrogen --restore
+        exit 0
+    fi
 fi
 
 if [ -n "$1" ]; then
@@ -25,5 +34,5 @@ fi
 # -ni: ignore input, -b: below everything, -ov: override-redirect, -fs: fullscreen
 xwinwrap -ni -b -ov -fs -nf -un -s -st -sp -- \
     mpv -wid WID --loop --no-audio --no-osc --no-osd-bar --no-input-default-bindings \
-    --panscan=1.0 --hwdec=auto --really-quiet "$video" &
+    --panscan=1.0 --hwdec=auto --really-quiet "$video" >/dev/null 2>&1 &
 disown

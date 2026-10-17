@@ -1,0 +1,104 @@
+#!/usr/bin/python3
+"""Toggle meeting/focus mode; restore only the components that were active on entry.
+
+focus-mode status prints FOCUS while active (used by Polybar).
+State lives in the login session's runtime directory and survives i3 reload/restart.
+"""
+import fcntl
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+BIN = Path(__file__).resolve().parent
+STATE = Path(os.environ.get('XDG_RUNTIME_DIR', '/tmp')) / f'dotfiles-i3-focus-{os.getuid()}.json'
+
+
+def run(args, check=False):
+    return subprocess.run([str(a) for a in args], capture_output=True, text=True,
+                          timeout=15, check=check)
+
+
+def instances():
+    tree = json.loads(run(['i3-msg', '-t', 'get_tree'], check=True).stdout)
+    found, stack = set(), [tree]
+    while stack:
+        node = stack.pop()
+        instance = (node.get('window_properties') or {}).get('instance')
+        if instance:
+            found.add(instance)
+        stack.extend(node.get('nodes', []) + node.get('floating_nodes', []))
+    return found
+
+
+def wallpaper():
+    # The xwinwrap argv ends with the exact video filename, including spaces.
+    for proc in Path('/proc').glob('[0-9]*'):
+        try:
+            if proc.stat().st_uid == os.getuid() and (proc / 'comm').read_text().strip() == 'xwinwrap':
+                argv = (proc / 'cmdline').read_bytes().rstrip(b'\0').split(b'\0')
+                if len(argv) > 1:
+                    return os.fsdecode(argv[-1])
+        except OSError:
+            continue
+    return None
+
+
+def enter():
+    windows = instances()
+    paused = run(['dunstctl', 'is-paused'], check=True).stdout.strip()
+    if paused not in ('true', 'false'):
+        raise RuntimeError('Cannot read notification state')
+    state = {'paused': paused, 'widgets': run([BIN / 'widgets', 'status']).returncode == 0,
+             'video': wallpaper(), 'cava': 'cava' in windows, 'lyrics': 'lyrics' in windows}
+    # Save before changing anything, so another toggle can restore after an interruption.
+    with open(STATE, 'w', opener=lambda p, f: os.open(p, f, 0o600)) as f:
+        json.dump(state, f)
+    run(['dunstctl', 'set-paused', 'true'], check=True)
+    if state['widgets']:
+        run([BIN / 'widgets', 'stop'], check=True)
+    if state['video']:
+        run([BIN / 'livewall', 'stop'], check=True)
+    if state['cava']:
+        run([BIN / 'cava-toggle', 'stop'], check=True)
+    if state['lyrics']:
+        run([BIN / 'lyrics', 'toggle'], check=True)
+
+
+def leave():
+    state = json.loads(STATE.read_text())
+    if state['widgets']:
+        run([BIN / 'widgets', 'start'], check=True)
+    if state['video'] and wallpaper() != state['video']:
+        run([BIN / 'livewall', state['video']], check=True)
+    if state['cava']:
+        run([BIN / 'cava-toggle', 'start'], check=True)
+    if state['lyrics'] and 'lyrics' not in instances():
+        run([BIN / 'lyrics', 'toggle'], check=True)
+    run(['dunstctl', 'set-paused', state['paused']], check=True)
+    STATE.unlink()
+
+
+def main():
+    if len(sys.argv) > 1:
+        if sys.argv[1:] != ['status']:
+            sys.exit(__doc__)
+        print('FOCUS' if STATE.exists() else '')
+        return
+    with STATE.with_suffix('.lock').open('w') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if STATE.exists():
+            leave()
+        else:
+            enter()
+        # The bar drops music, lyrics and its spectrum while focus mode is active.
+        run([BIN / 'i3bar'], check=True)
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+        print(f'focus-mode: {error}', file=sys.stderr)
+        sys.exit(1)

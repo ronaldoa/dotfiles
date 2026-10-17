@@ -53,8 +53,6 @@ smart_gaps on
 # screen before suspend. Use loginctl lock-session to lock your screen.
 exec --no-startup-id xset s 300 300
 exec --no-startup-id xss-lock --transfer-sleep-lock -- ~/.config/i3/bin/lock
-# Each connected monitor at its preferred resolution and highest refresh rate (bin/display)
-exec --no-startup-id $HOME/.config/i3/bin/display
 
 # Polkit agent: password prompt for GUI apps that need root (pamac, gparted, ...)
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
@@ -70,10 +68,9 @@ exec --no-startup-id fcitx5
 exec --no-startup-id xsettingsd
 exec --no-startup-id xfce4-power-manager
 exec --no-startup-id copyq
-exec --no-startup-id picom -b
-# Colour theme (Nord or pywal); before polybar so it starts with the right colours
-exec --no-startup-id $HOME/.config/i3/bin/theme restore
-exec --no-startup-id $HOME/.config/i3/bin/i3bar
+exec --no-startup-id $HOME/.config/i3/bin/compositor -b
+# Set displays, then restore colours, then start one bar per screen (in this order).
+exec --no-startup-id sh -c "$HOME/.config/i3/bin/display --no-bar; $HOME/.config/i3/bin/theme restore; $HOME/.config/i3/bin/i3bar"
 # Workspace names show an icon per app (re-run on i3 restart, it replaces any old copy)
 exec_always --no-startup-id $HOME/.config/i3/bin/ws-icons
 # Desktop widget (clock, weather, system, now playing)
@@ -95,8 +92,9 @@ bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT
 bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
 bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
 
-# Brightness differs per machine (DDC/CI for an external monitor vs. `light` on a laptop panel)
-# -> bound in hosts/<hostname>/.config/dotfiles-host/i3.conf
+# Detect the laptop backlight device; otherwise use DDC/CI for external displays.
+bindsym XF86MonBrightnessUp exec --no-startup-id $HOME/.config/i3/bin/brightness up
+bindsym XF86MonBrightnessDown exec --no-startup-id $HOME/.config/i3/bin/brightness down
 
 # Use Mouse+$mod to drag floating windows to their wanted position
 floating_modifier $mod
@@ -184,10 +182,24 @@ bindsym $mod+Shift+p sticky toggle
 
 # Search open windows and jump to one
 bindsym $mod+o exec --no-startup-id rofi -show window
+# Jump to the most recent window requesting attention
+bindsym $mod+u [urgent=latest] focus
 
 # Mark a window with a letter, then jump to it from anywhere
 bindsym $mod+m exec --no-startup-id i3-input -F 'mark --toggle %s' -l 1 -P 'Mark: '
 bindsym $mod+apostrophe exec --no-startup-id i3-input -F '[con_mark="%s"] focus' -l 1 -P 'Go to mark: '
+# Swap the focused window with a marked window (enter its one-letter mark)
+bindsym $mod+Shift+apostrophe exec --no-startup-id i3-input -F 'swap container with mark %s' -l 1 -P 'Swap with mark: '
+
+# Re-detect displays and rebuild their bars after plugging/unplugging a monitor
+bindsym $mod1+p exec --no-startup-id $HOME/.config/i3/bin/display
+# Focus another monitor / move the entire workspace to it
+bindsym $mod1+Left focus output left
+bindsym $mod1+Right focus output right
+bindsym $mod1+Shift+Left move workspace to output left
+bindsym $mod1+Shift+Right move workspace to output right
+# Meeting/focus mode: pause notifications and hide visual extras; restore on exit
+bindsym $mod+control+f exec --no-startup-id $HOME/.config/i3/bin/focus-mode
 
 # Media keys: any MPRIS player via playerctl, falling back to mpd
 bindsym XF86AudioPlay exec --no-startup-id playerctl play-pause || mpc toggle

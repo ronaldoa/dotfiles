@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Internal panel: detect its sysfs name; external monitor: DDC/CI, no fixed bus number.
+set -euo pipefail
+case ${1:-} in
+    up) sign=+; light_arg=-A ;;
+    down) sign=-; light_arg=-U ;;
+    *) echo 'usage: brightness up|down' >&2; exit 2 ;;
+esac
+panel=$("$(dirname "$0")/hardware" backlight-device)
+if [ -n "$panel" ]; then
+    if command -v brightnessctl >/dev/null; then
+        [ "$sign" = + ] && amount=5%+ || amount=5%-
+        exec brightnessctl --device="$panel" set "$amount"
+    elif command -v light >/dev/null; then
+        exec light -s "sysfs/backlight/$panel" "$light_arg" 5
+    fi
+    notify-send '亮度' '需要 brightnessctl 或 light 才能调节屏幕背光'
+elif command -v ddcutil >/dev/null; then
+    exec ddcutil --noverify setvcp 10 "$sign" 5
+else
+    notify-send '亮度' '未发现内置背光；外接显示器需要 ddcutil 和 DDC/CI 支持'
+fi

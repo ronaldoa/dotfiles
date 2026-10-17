@@ -3,7 +3,17 @@
 # Prints an empty line while nothing is playing, so the module disappears.
 
 bars="▁▂▃▄▅▆▇█"
-conf="${XDG_RUNTIME_DIR:-/tmp}/polybar-cava.conf"
+work=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/polybar-cava.XXXXXX") || exit 1
+conf="$work/config"
+cava_pid= filter_pid=
+cleanup() {
+    [ -z "$cava_pid" ] || kill "$cava_pid" 2>/dev/null
+    [ -z "$filter_pid" ] || kill "$filter_pid" 2>/dev/null
+    rm -f "$conf" "$work/frames"
+    rmdir "$work"
+}
+trap cleanup EXIT
+trap 'exit 0' HUP INT TERM
 
 cat > "$conf" <<CONF
 [general]
@@ -25,5 +35,9 @@ for i in {0..7}; do
     dict+="s/$i/${bars:$i:1}/g;"
 done
 
-pkill -f -- "cava -p $conf"
-exec cava -p "$conf" | sed -u "$dict"
+mkfifo "$work/frames"
+cava -p "$conf" >"$work/frames" &
+cava_pid=$!
+sed -u "$dict" <"$work/frames" &
+filter_pid=$!
+wait "$filter_pid"

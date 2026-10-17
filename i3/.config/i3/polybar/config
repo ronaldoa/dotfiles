@@ -22,8 +22,8 @@ margin-top = 0
 include-file = ~/.config/i3/polybar/colors
 
 [bar/main]
-monitor =
-monitor-strict = false
+monitor = ${env:MONITOR:}
+monitor-strict = true
 override-redirect = false
 
 bottom = false
@@ -80,9 +80,10 @@ font-4 = Noto Sans CJK SC:size=12
 scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
 
-modules-left = i3 cpu cpu_temp memory wlan
-modules-center = mpd cava lyrics
-modules-right = weather volume date systray powermenu
+modules-left = i3 cpu cpu_temp memory gpu network
+; An empty env value uses the fallback too: keep that empty for focus/secondary bars.
+modules-center = ${env:BAR_CENTER:}
+modules-right = ${env:BAR_RIGHT:weather backlight battery volume date systray focus powermenu}
 
 separator =
 spacing = 0
@@ -290,72 +291,18 @@ ramp-headphones-1 = 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
 [module/backlight]
-type = internal/backlight
-
-card = intel_backlight
-
-format = <ramp> <label>
-
-label = %percentage%%
-
-ramp-0 = 
-ramp-1 = 
-ramp-2 = 
-ramp-3 = 
-ramp-4 = 
-ramp-5 = 
-ramp-6 = 
-ramp-7 = 
-ramp-8 = 
-ramp-9 = 
-ramp-font = 2
-ramp-foreground = ${color.MAGENTA}
-
-;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+type = custom/script
+exec = ~/.config/i3/bin/hardware backlight
+interval = 3
+format-foreground = ${color.MAGENTA}
+scroll-up = ~/.config/i3/bin/brightness up
+scroll-down = ~/.config/i3/bin/brightness down
 
 [module/battery]
-type = internal/battery
-
-full-at = 99
-
-battery = BAT0
-adapter = AC
-
-poll-interval = 2
-time-format = %H:%M:%S
-
-format-charging = <animation-charging> <label-charging>
-format-charging-prefix =
-
-format-discharging = <ramp-capacity> <label-discharging>
-
-format-full = <label-full>
-format-full-prefix = "  "
-format-full-prefix-font = 2
-format-full-prefix-foreground = ${color.RED}
-
-label-charging = %percentage%%
-label-discharging = %percentage%%
-label-full = %percentage%%
-
-ramp-capacity-0 = 
-ramp-capacity-1 = 
-ramp-capacity-2 = 
-ramp-capacity-3 = 
-ramp-capacity-4 = 
-ramp-capacity-font = 2
-ramp-capacity-foreground = ${color.YELLOW}
-
-animation-charging-0 = 
-animation-charging-1 = 
-animation-charging-2 = 
-animation-charging-3 = 
-animation-charging-4 = 
-animation-charging-font = 2
-animation-charging-foreground = ${color.GREEN}
-animation-charging-framerate = 750
-
-;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+type = custom/script
+exec = ~/.config/i3/bin/hardware battery
+interval = 5
+format-foreground = ${color.YELLOW}
 
 [module/i3]
 type = internal/i3
@@ -535,50 +482,31 @@ label-maxlen = 60
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
-[module/wlan]
-type = internal/network
-; First wireless interface, whatever it is called on this machine
-interface-type = wireless
-
-interval = 1.0
-
-;;ping-interval = 3
-;;udspeed-minwidth = 5
-
-accumulate-stats = true
-unknown-as-up = true
-
-
-#format-connected = <ramp-signal> <label-signal> <label-connected>
-
-format-disconnected = <label-disconnected>
-format-disconnected-prefix = "󰤭 "
-format-disconnected-prefix-font = 2
-format-disconnected-prefix-foreground = ${color.RED}
-
-format-connected = <ramp-signal> <label-connected>
-label-connected = "%signal%%  %downspeed%"
-
-#label-connected = " %downspeed%"
-
-label-disconnected = Disconnected
-
-label-signal = %signal%%
-
-ramp-signal-1 = 󰤟
-ramp-signal-2 = 󰤢
-ramp-signal-3 = 󰤥
-ramp-signal-4 = 󰤨
-ramp-signal-0 = 󰤭
-ramp-signal-font = 2
-ramp-signal-foreground = ${color.CYAN}
-
+[module/network]
+type = custom/script
+; Follow the route actually used (Ethernet, Wi-Fi or VPN), including IPv6-only hosts.
+exec = ~/.config/i3/bin/hardware network
+interval = 3
+format-foreground = ${color.CYAN}
 
 [module/cpu_temp]
 type = custom/script
-exec = sensors | grep 'Tctl:' | awk '{print $2}'
+exec = ~/.config/i3/bin/hardware cpu-temp
 interval = 5
-label = " %output%"
+format-foreground = ${color.YELLOW}
+
+[module/gpu]
+type = custom/script
+exec = ~/.config/i3/bin/hardware gpu
+interval = 5
+format-foreground = ${color.GREEN}
+
+[module/focus]
+type = custom/script
+exec = ~/.config/i3/bin/focus-mode status
+interval = 2
+format-foreground = ${color.YELLOW}
+click-left = ~/.config/i3/bin/focus-mode
 
 [module/powermenu]
 type = custom/text

@@ -70,7 +70,7 @@ fi
 checks=(
   i3:i3-wm polybar picom rofi rofimoji dunst conky i3lock:i3lock-color xss-lock autotiling
   nitrogen udiskie xsettingsd copyq flameshot xfce4-power-manager nm-applet:network-manager-applet
-  blueman-applet:blueman redshift playerctl notify-send:libnotify sensors:lm_sensors
+  blueman-applet:blueman redshift playerctl notify-send:libnotify flock:util-linux
   xrandr:xorg-xrandr xset:xorg-xset xrdb:xorg-xrdb setxkbmap:xorg-setxkbmap xkill:xorg-xkill
   killall:psmisc ip:iproute2 jq curl
   cava xwinwrap:xwinwrap-git mpv wal:python-pywal16
@@ -82,6 +82,14 @@ for entry in "${checks[@]}"; do
   cmd=${entry%%:*} pkg=${entry#*:}
   command -v "$cmd" >/dev/null || missing+=("$pkg")
 done
+# Brightness backend is selected from the current hardware, not the hostname.
+if [ "$(uname)" = Linux ]; then
+  if [ -n "$("$DOTFILES/i3/.config/i3/bin/hardware" backlight-device)" ]; then
+    command -v brightnessctl >/dev/null || command -v light >/dev/null || missing+=(brightnessctl)
+  else
+    command -v ddcutil >/dev/null || missing+=(ddcutil)
+  fi
+fi
 [ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ] || missing+=(polkit-gnome)
 # Python modules for the i3 scripts (they run /usr/bin/python3, not a conda python)
 /usr/bin/python3 -c 'import i3ipc' 2>/dev/null || missing+=(python-i3ipc)

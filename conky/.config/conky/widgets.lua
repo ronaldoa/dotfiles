@@ -14,6 +14,15 @@ local MUSIC_H = 96
 
 local cr
 
+-- Same detector and 3-second cache as Polybar; no fixed sensor names or network devices.
+local function hardware()
+    local data = {}
+    for key, value in cached('~/.config/i3/bin/hardware conky', 3):gmatch('([^=\n]+)=([^\n]*)') do
+        data[key] = value
+    end
+    return data
+end
+
 -- ---------------------------------------------------------------- data
 
 local function weather()
@@ -73,27 +82,33 @@ local function system_card(x, y)
     text(x + PAD, y + PAD + 12, 'SYSTEM', FONT_BOLD, 12, GREEN)
     text(right, y + PAD + 12, 'up ' .. conky_parse('${uptime_short}'), FONT, 11, DIM, 'right')
 
-    local temp = cached("sensors | awk '/Tctl:/ {print $2}'", 5):gsub('^%+', '')
+    local hw = hardware()
+    local temp = hw.cpu_temp or ''
     local rows = {
         {'CPU', conky_parse('${cpu cpu0}') .. '%' .. (temp ~= '' and '  ' .. temp or ''), num(conky_parse('${cpu cpu0}')) / 100, GREEN},
         {'RAM', conky_parse('${mem}'), num(conky_parse('${memperc}')) / 100, BLUE},
         {'DISK', conky_parse('${fs_used /}') .. ' / ' .. conky_parse('${fs_size /}'), num(conky_parse('${fs_used_perc /}')) / 100, PURPLE},
     }
+    if hw.gpu and hw.gpu ~= '' then
+        rows[#rows + 1] = {'GPU', hw.gpu, nil, ORANGE}
+    end
+    if hw.battery and hw.battery ~= '' then
+        rows[#rows + 1] = {'BAT', hw.battery, nil, YELLOW}
+    end
+    local spacing = 108 / #rows
     for i, r in ipairs(rows) do
-        local ry = y + 30 + i * 36
+        local ry = y + 30 + i * spacing
         text(x + PAD, ry, r[1], FONT_BOLD, 11, DIM)
-        text(right, ry, r[2], FONT, 11, TEXT, 'right')
-        bar(x + PAD, ry + 7, inner, 5, r[3], r[4])
+        text(right, ry, r[2], FONT, 11, TEXT, 'right', inner - 30)
+        if r[3] then bar(x + PAD, ry + 7, inner, 5, r[3], r[4]) end
     end
 end
 
 local function network_card(x, y)
     card(x, y, CARD, CARD)
-    -- Interface of the default route (wired or wireless), so nothing is hard-coded
-    local iface = cached("ip route show default | awk '{print $5; exit}'", 30)
-    if iface == '' then iface = 'lo' end
-    local down = num(conky_parse('${downspeedf ' .. iface .. '}'))   -- KiB/s
-    local up = num(conky_parse('${upspeedf ' .. iface .. '}'))
+    local hw = hardware()
+    local iface = hw.network_iface or ''
+    local down, up = num(hw.network_down), num(hw.network_up) -- KiB/s
     table.insert(history, down)
     if #history > HISTORY_LEN then table.remove(history, 1) end
 
@@ -103,7 +118,7 @@ local function network_card(x, y)
     end
 
     text(x + PAD, y + PAD + 12, 'NETWORK', FONT_BOLD, 12, BLUE)
-    text(x + CARD - PAD, y + PAD + 12, conky_parse('${addr ' .. iface .. '}'), FONT, 10, DIM, 'right')
+    text(x + CARD - PAD, y + PAD + 12, iface ~= '' and (hw.network_ip or iface) or 'Offline', FONT, 10, DIM, 'right', CARD - 2 * PAD - 55)
     text(x + PAD, y + 62, utf8.char(0xf063) .. ' ', ICONS, 13, BLUE)
     text(x + PAD + 16, y + 62, speed(down), FONT_BOLD, 17, TEXT)
     text(x + PAD, y + 86, utf8.char(0xf062) .. ' ', ICONS, 13, ORANGE)

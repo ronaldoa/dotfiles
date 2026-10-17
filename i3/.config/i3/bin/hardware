@@ -1,0 +1,283 @@
+#!/usr/bin/python3
+"""Shared, cached hardware readings for Polybar and Conky; no machine-specific IDs.
+
+hardware json|conky|cpu-temp|gpu|battery|network|backlight|backlight-device|compositor-flag
+Missing metrics stay absent. NVIDIA GPUs in runtime suspend are never queried.
+"""
+import csv
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import time
+
+SYS = Path('/sys')
+
+
+def read(path):
+    try:
+        return path.read_text().strip()
+    except OSError:
+        return ''
+
+
+def number(path):
+    try:
+        return float(read(path))
+    except ValueError:
+        return None
+
+
+def command(args):
+    try:
+        p = subprocess.run(args, capture_output=True, text=True, timeout=3)
+        return p.stdout.strip() if p.returncode == 0 else ''
+    except (OSError, subprocess.SubprocessError):
+        return ''
+
+
+def cpu_temperature():
+    candidates = []
+    drivers = {'coretemp', 'k10temp', 'k8temp', 'zenpower', 'cpu_thermal', 'cpu_thermal_zone'}
+    for chip in (SYS / 'class/hwmon').glob('hwmon*'):
+        name = read(chip / 'name').lower()
+        for sensor in chip.glob('temp*_input'):
+            label = read(sensor.with_name(sensor.name.replace('_input', '_label'))).lower()
+            cpu_label = re.search(r'^(cpu|package|tdie|tctl|core\s*\d)', label)
+            if name not in drivers and not cpu_label:
+                continue
+            value = number(sensor)
+            if value is not None and -20000 < value < 150000:
+                rank = 0 if label.startswith(('package', 'tdie', 'cpu')) else 1 if label == 'tctl' else 2
+                candidates.append((rank, value / 1000))
+    if candidates:
+        rank = min(r for r, _ in candidates)
+        return max(v for r, v in candidates if r == rank)
+    values = []
+    for zone in (SYS / 'class/thermal').glob('thermal_zone*'):
+        if re.search(r'cpu|soc|pkg', read(zone / 'type'), re.I):
+            value = number(zone / 'temp')
+            if value is not None and -20000 < value < 150000:
+                values.append(value / 1000)
+    return max(values) if values else None
+
+
+def gpu_readings():
+    gpus, nvidia = [], []
+    for card in sorted((SYS / 'class/drm').glob('card[0-9]*')):
+        if not re.fullmatch(r'card\d+', card.name):
+            continue
+        device = card / 'device'
+        vendor = read(device / 'vendor').lower()
+        name = {'0x10de': 'NVIDIA', '0x1002': 'AMD', '0x8086': 'Intel'}.get(vendor)
+        if not name:
+            continue
+        sleeping = read(device / 'power/runtime_status') in ('suspended', 'suspending')
+        gpu = {'card': card.name, 'vendor': name, 'sleeping': sleeping}
+        gpus.append(gpu)
+        if sleeping:
+            continue
+        gpu['percent'] = number(device / 'gpu_busy_percent')
+        temps = [number(p) for p in device.glob('hwmon/hwmon*/temp1_input')]
+        gpu['temperature'] = next((v / 1000 for v in temps if v is not None), None)
+        used, total = number(device / 'mem_info_vram_used'), number(device / 'mem_info_vram_total')
+        if used is not None and total:
+            gpu.update(memory_used=used / 1048576, memory_total=total / 1048576)
+        if name == 'NVIDIA':
+            bus = device.resolve().name
+            if re.fullmatch(r'[\da-fA-F]{4}:[\da-fA-F]{2}:[\da-fA-F]{2}\.\d', bus):
+                nvidia.append((bus, gpu))
+    if nvidia:
+        # Explicit bus IDs keep a sleeping secondary NVIDIA GPU out of the query.
+        out = command(['nvidia-smi', '--id=' + ','.join(bus for bus, _ in nvidia),
+                       '--query-gpu=pci.bus_id,utilization.gpu,temperature.gpu,memory.used,memory.total',
+                       '--format=csv,noheader,nounits'])
+        by_bus = {bus.lower().split(':', 1)[1]: gpu for bus, gpu in nvidia}
+        for row in csv.reader(out.splitlines(), skipinitialspace=True):
+            if len(row) != 5:
+                continue
+            gpu = by_bus.get(':'.join(row[0].strip().lower().split(':')[-2:]))
+            if gpu is None:
+                continue
+            for key, value in zip(('percent', 'temperature', 'memory_used', 'memory_total'), row[1:]):
+                try:
+                    gpu[key] = float(value)
+                except ValueError:
+                    pass  # N/A / Not Supported: never turn an unknown reading into zero.
+    return gpus
+
+
+def battery_reading():
+    packs, online = [], False
+    for supply in (SYS / 'class/power_supply').glob('*'):
+        kind = read(supply / 'type')
+        if kind != 'Battery':
+            online |= read(supply / 'online') == '1'
+            continue
+        if read(supply / 'present') == '0' or read(supply / 'scope') == 'Device':
+            continue  # Exclude absent packs and mouse/headset batteries.
+        now, full = number(supply / 'energy_now'), number(supply / 'energy_full')
+        if now is None or not full:
+            charge, charge_full = number(supply / 'charge_now'), number(supply / 'charge_full')
+            voltage = number(supply / 'voltage_min_design') or number(supply / 'voltage_now')
+            if charge is not None and charge_full and voltage:
+                now, full = charge * voltage / 1e6, charge_full * voltage / 1e6
+        pct = 100 * now / full if now is not None and full else number(supply / 'capacity')
+        if pct is not None:
+            packs.append({'percent': pct, 'now': now, 'full': full, 'status': read(supply / 'status')})
+    if not packs:
+        return None
+    if all(p['now'] is not None and p['full'] for p in packs):
+        pct = 100 * sum(p['now'] for p in packs) / sum(p['full'] for p in packs)
+    else:
+        pct = sum(p['percent'] for p in packs) / len(packs)
+    charging = any(p['status'] == 'Charging' for p in packs)
+    return {'percent': max(0, min(100, pct)), 'charging': charging, 'online': online,
+            'count': len(packs)}
+
+
+def backlight_reading():
+    panels = []
+    for panel in (SYS / 'class/backlight').glob('*'):
+        maximum = number(panel / 'max_brightness')
+        current = number(panel / 'brightness')
+        if maximum and current is not None:
+            panels.append(({'raw': 0, 'platform': 1, 'firmware': 2}.get(read(panel / 'type'), 3),
+                           panel.name, 100 * current / maximum))
+    if not panels:
+        return None
+    _, name, percent = min(panels)
+    return {'device': name, 'percent': percent}
+
+
+def compositor_flag():
+    # Keep the existing NVIDIA repaint workaround only where NVIDIA drives a screen.
+    for connector in (SYS / 'class/drm').glob('card*-*'):
+        if read(connector / 'status') != 'connected':
+            continue
+        card = connector.name.split('-', 1)[0]
+        if (SYS / 'class/drm' / card / 'device/driver').resolve().name == 'nvidia':
+            return '--no-use-damage'
+    return '--use-damage'
+
+
+def network_reading(previous, now):
+    route = []
+    for args in (['ip', '-j', 'route', 'get', '1.1.1.1'],
+                 ['ip', '-j', '-6', 'route', 'get', '2606:4700:4700::1111']):
+        try:
+            route = json.loads(command(args) or '[]')
+        except ValueError:
+            route = []
+        if route and route[0].get('dev') != 'lo' and route[0].get('dev'):
+            break
+    if not route or not route[0].get('dev') or route[0]['dev'] == 'lo':
+        return None
+    iface = route[0]['dev']
+    net = SYS / 'class/net' / iface
+    rx, tx = number(net / 'statistics/rx_bytes'), number(net / 'statistics/tx_bytes')
+    data = {'iface': iface, 'ip': route[0].get('prefsrc', route[0].get('src', '')),
+            'rx': rx, 'tx': tx, 'down': None, 'up': None}
+    old = previous.get('network') or {}
+    elapsed = now - previous.get('at', now)
+    if old.get('iface') == iface and elapsed > 0:
+        for counter, speed in (('rx', 'down'), ('tx', 'up')):
+            if data[counter] is not None and old.get(counter) is not None and data[counter] >= old[counter]:
+                data[speed] = (data[counter] - old[counter]) / elapsed
+    return data
+
+
+def collect(previous=None):
+    previous = previous or {}
+    temp, gpus = cpu_temperature(), gpu_readings()
+    battery, backlight = battery_reading(), backlight_reading()
+    now = time.monotonic()
+    return {'at': now, 'cpu_temperature': temp, 'gpus': gpus,
+            'battery': battery, 'backlight': backlight,
+            'network': network_reading(previous, now)}
+
+
+def snapshot():
+    # One sample per 3 seconds, shared by all bars and Conky; flock prevents duplicate GPU queries.
+    cache = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home() / '.cache'))) / 'i3-hardware'
+    cache.mkdir(parents=True, exist_ok=True)
+    with (cache / 'lock').open('w') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        try:
+            old = json.loads((cache / 'sample.json').read_text())
+        except (OSError, ValueError):
+            old = {}
+        if 0 <= time.monotonic() - old.get('at', -100) < 3:
+            return old
+        data = collect(old)
+        temp = cache / f'sample.{os.getpid()}.tmp'
+        temp.write_text(json.dumps(data))
+        temp.replace(cache / 'sample.json')
+        return data
+
+
+def temperature(value):
+    return f'{value:.0f}°C' if value is not None else ''
+
+
+def gpu_text(gpu):
+    if gpu['sleeping']:
+        return gpu['vendor'] + ' sleep'
+    parts = [gpu['vendor']]
+    if gpu.get('percent') is not None:
+        parts.append(f"{gpu['percent']:.0f}%")
+    if gpu.get('temperature') is not None:
+        parts.append(temperature(gpu['temperature']))
+    return ' '.join(parts)
+
+
+def speed(value):
+    if value is None:
+        return '—'
+    return f'{value / 1048576:.1f}M' if value >= 1048576 else f'{value / 1024:.0f}K'
+
+
+def labels(data):
+    battery, net, light = data['battery'], data['network'], data['backlight']
+    return {
+        'cpu-temp': temperature(data['cpu_temperature']),
+        'gpu': ' · '.join(gpu_text(g) for g in data['gpus']),
+        'battery': (('AC ' if battery['online'] or battery['charging'] else 'BAT ')
+                    + f"{battery['percent']:.0f}%") if battery else '',
+        'backlight': f"☀ {light['percent']:.0f}%" if light else '',
+        'network': f"{net['iface']} ↓{speed(net['down'])} ↑{speed(net['up'])}" if net else 'Disconnected',
+    }
+
+
+def main():
+    mode = sys.argv[1] if len(sys.argv) > 1 else 'json'
+    if mode == 'compositor-flag':
+        print(compositor_flag())
+        return
+    if mode == 'backlight-device':
+        panel = backlight_reading()
+        print(panel['device'] if panel else '')
+        return
+    data = snapshot()
+    if mode == 'json':
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+    elif mode == 'conky':
+        # A small key=value protocol avoids adding a JSON dependency to Conky's Lua.
+        values = labels(data)
+        net = data['network'] or {}
+        for key, value in {'cpu_temp': values['cpu-temp'], 'gpu': values['gpu'],
+                           'battery': values['battery'], 'network_iface': net.get('iface', ''),
+                           'network_ip': net.get('ip', ''), 'network_down': (net.get('down') or 0) / 1024,
+                           'network_up': (net.get('up') or 0) / 1024}.items():
+            print(f'{key}={value}')
+    elif mode in labels(data):
+        print(labels(data)[mode])
+    else:
+        sys.exit(__doc__)
+
+
+if __name__ == '__main__':
+    main()

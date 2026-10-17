@@ -1,10 +1,48 @@
 #!/usr/bin/env bash
+# One bar per distinct screen area. Media and the tray appear on the primary screen only.
+set -euo pipefail
+runtime="${XDG_RUNTIME_DIR:-/tmp}"
+exec 9>"$runtime/dotfiles-i3bar-$UID.lock"
+flock -x 9
 
-# Terminate already running bar instances
-killall -q polybar
+# Query before stopping the old bars, so a failed display query leaves them intact.
+mapfile -t screens < <(polybar --list-all-monitors)
+((${#screens[@]})) || exit 1
+primary=${screens[0]%%:*}
+for screen in "${screens[@]}"; do
+    [[ "$screen" = *'(primary)'* ]] && primary=${screen%%:*}
+done
 
-# Wait until the processes have been shut down
-while pgrep -u $UID -x polybar >/dev/null; do sleep 1; done
+pkill -u "$UID" -x polybar || true
+for _ in {1..50}; do
+    pgrep -u "$UID" -x polybar >/dev/null || break
+    sleep 0.1
+done
+if pgrep -u "$UID" -x polybar >/dev/null; then
+    echo 'polybar did not stop; leaving it alone' >&2
+    exit 1
+fi
 
-# Launch polybar
-polybar main -c ~/.config/i3/polybar/config &
+log_dir="${XDG_CACHE_HOME:-$HOME/.cache}/polybar"
+mkdir -p "$log_dir"
+declare -A seen=()
+# Prefer the primary output if two outputs mirror the same screen area.
+ordered=()
+for screen in "${screens[@]}"; do
+    [ "${screen%%:*}" = "$primary" ] && ordered=("$screen" "${ordered[@]}") || ordered+=("$screen")
+done
+for screen in "${ordered[@]}"; do
+    monitor=${screen%%:*}
+    geometry=${screen#*: }; geometry=${geometry%% *}
+    [ -n "${seen[$geometry]:-}" ] && continue
+    seen[$geometry]=1
+    center='' right='weather backlight battery volume date focus powermenu'
+    if [ "$monitor" = "$primary" ]; then
+        center='mpd cava lyrics'
+        right='weather backlight battery volume date systray focus powermenu'
+    fi
+    [ -f "$runtime/dotfiles-i3-focus-$UID.json" ] && center=''
+    MONITOR="$monitor" BAR_CENTER="$center" BAR_RIGHT="$right" \
+        polybar main -c "$HOME/.config/i3/polybar/config" \
+        >"$log_dir/${monitor//\//_}.log" 2>&1 9>&- &
+done

@@ -26,12 +26,12 @@ sudo pacman -S --needed \
 yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git visual-studio-code-bin
 ```
 
-只有某一台机器需要的，按机器另装（见 `hosts/<主机名>/` 里的设置）：
+亮度脚本会自动选择后端，按硬件需要安装：
 
-| 机器 | 包 | 用途 |
+| 硬件 | 包 | 用途 |
 |---|---|---|
-| 台式机 ronaldo-ms7c94（外接显示器） | ddcutil | 亮度键通过 DDC/CI 调显示器亮度 |
-| ThinkPad ronaldo-20fwa023cd | light（AUR） | 亮度键调笔记本屏幕背光 |
+| 外接显示器，无内置背光 | ddcutil | 亮度键通过 DDC/CI 调显示器亮度，显示器需支持 DDC/CI |
+| 有内置背光的笔记本 | brightnessctl（或已有的 light） | 自动识别背光设备，按键和状态栏滚轮调节亮度 |
 
 装完运行一次 `bin/dotfiles-bootstrap`（见第三节），最后会列出这台机器上还缺哪些包。
 
@@ -64,7 +64,7 @@ yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git visual-s
 | redshift | 色温（`Super+R`） |
 | playerctl | 媒体键控制浏览器等播放器 |
 | libnotify | `notify-send`，脚本发通知用 |
-| lm_sensors | CPU 温度（状态栏和桌面组件） |
+| lm_sensors | 可选的硬件传感器诊断；状态栏和桌面组件直接自动检测 sysfs |
 | xorg-xrandr、xorg-xset、xorg-xrdb、xorg-setxkbmap、xorg-xkill | 设分辨率、屏保时间、配色资源、Caps/Ctrl 互换、`Super+Q` 强制关窗口 |
 
 ### 脚本依赖
@@ -77,8 +77,16 @@ yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git visual-s
 | jq | 天气、配色切换、下拉终端等脚本解析 JSON |
 | curl | 天气脚本 |
 | psmisc | `killall`，重启 polybar 用（一般系统自带） |
-| iproute2 | `ip`，桌面组件识别当前网卡（一般系统自带） |
+| iproute2 | `ip`，共享硬件采集器识别实际 IPv4/IPv6 路由和网卡（一般系统自带） |
+| util-linux | `flock`，串行重建多屏状态栏（一般系统自带） |
 | stow | `bin/dotfiles-bootstrap` 用它建立配置链接 |
+
+硬件采集不需要按主机配置 CPU/GPU、传感器、电池或背光设备名。
+NVIDIA 的利用率、温度和显存需要驱动配套的 `nvidia-smi`；AMD 使用内核接口；
+Intel 等未提供的指标自动省略。采集器不会查询 runtime suspend 的独显。
+
+修改后的桌面逻辑可离线验证：`python3 -m unittest discover -s bin/tests -v`，
+测试使用模拟硬件和命令，不改变当前桌面状态。
 
 ### 特效
 

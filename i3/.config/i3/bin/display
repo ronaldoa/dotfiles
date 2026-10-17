@@ -1,30 +1,71 @@
-#!/usr/bin/env bash
-# Set up every connected monitor at its preferred resolution with the highest refresh rate that
-# resolution supports (e.g. 2560x1440 @ 99.95 Hz instead of the 59.95 Hz the monitor prefers).
-# Several monitors are placed left to right in xrandr's order. Run at login from the i3 config.
-#   display          apply
-#   display --dry    print the xrandr command instead of running it
+#!/usr/bin/python3
+"""Re-detect monitors, apply preferred modes at their highest refresh rate, rebuild bars.
 
-args=()
-prev=
-while read -r output mode rate; do
-    args+=(--output "$output" --mode "$mode" --rate "$rate")
-    [ -n "$prev" ] && args+=(--right-of "$prev")
-    prev=$output
-done < <(xrandr | awk '
-    / connected/ { output = $1; next }
-    / disconnected/ { output = ""; next }
-    # The preferred mode is the one marked "+"; take the highest rate listed on its line
-    output != "" && /\+/ {
-        best = 0
-        for (i = 2; i <= NF; i++) { r = $i; gsub(/[*+]/, "", r); if (r + 0 > best + 0) best = r }
-        print output, $1, best
-        output = ""
-    }')
+display --dry prints the command; --no-bar applies modes only (used at login).
+Connected outputs without a preferred mode use the active mode, then the first mode.
+"""
+from pathlib import Path
+import re
+import shlex
+import subprocess
+import sys
 
-((${#args[@]})) || exit 0
-if [ "$1" = --dry ]; then
-    echo xrandr "${args[@]}"
-else
-    xrandr "${args[@]}"
-fi
+
+def display_args(query):
+    outputs, current = [], None
+    for line in query.splitlines():
+        match = re.match(r'^(\S+) (connected|disconnected)\b(.*)', line)
+        if match:
+            current = {'name': match[1], 'connected': match[2] == 'connected',
+                       'primary': bool(re.search(r'\bprimary\b', match[3])), 'modes': []}
+            outputs.append(current)
+        elif current and current['connected']:
+            mode = re.match(r'^\s+(\S+)\s+([\d.].*)$', line)
+            if not mode:
+                continue
+            rates = re.findall(r'(\d+(?:\.\d+)?)([*+]*)', mode[2])
+            if rates:
+                current['modes'].append((mode[1], max(float(r) for r, _ in rates),
+                                         '+' in mode[2], '*' in mode[2]))
+    active = [o for o in outputs if o['connected'] and o['modes']]
+    if not active:
+        return []
+    primary = next((o['name'] for o in active if o['primary']), None)
+    if primary is None:
+        primary = next((o['name'] for o in active if o['name'].startswith(('eDP', 'LVDS', 'DSI'))), active[0]['name'])
+    args, previous = [], None
+    for output in outputs:
+        if not output['connected']:
+            args += ['--output', output['name'], '--off']
+            continue
+        if not output['modes']:
+            continue
+        mode = max(output['modes'], key=lambda m: (m[2], m[3]))
+        args += ['--output', output['name'], '--mode', mode[0], '--rate', str(mode[1])]
+        if output['name'] == primary:
+            args.append('--primary')
+        if previous:
+            args += ['--right-of', previous]
+        else:
+            args += ['--pos', '0x0']
+        previous = output['name']
+    return args
+
+
+def main():
+    if any(arg not in ('--dry', '--no-bar') for arg in sys.argv[1:]):
+        sys.exit(__doc__)
+    query = subprocess.check_output(['xrandr', '--query'], text=True)
+    args = display_args(query)
+    if not args:
+        sys.exit('No usable connected display found; keeping the current layout.')
+    if '--dry' in sys.argv:
+        print(shlex.join(['xrandr', *args]))
+        return
+    subprocess.run(['xrandr', *args], check=True)
+    if '--no-bar' not in sys.argv:
+        subprocess.run([str(Path(__file__).resolve().with_name('i3bar'))], check=True)
+
+
+if __name__ == '__main__':
+    main()

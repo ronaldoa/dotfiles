@@ -1,19 +1,19 @@
 # Per-machine overrides
 
-The packages at the repo root (`i3/`, `alacritty/`, …) hold the config that is
-the same everywhere. Anything that depends on the actual hardware — monitor
-layout, brightness control, font size, audio device — lives here instead, under
-a directory named after the machine's `hostname`.
+The packages at the repo root (`i3/`, `alacritty/`, …) detect hardware at runtime:
+monitor modes, CPU/GPU sensors, batteries, backlights and the active network route.
+This directory is for preferences detection cannot infer — for example terminal
+font size or a preferred monitor arrangement — under the machine's `hostname`.
 
 ```
 hosts/
   ronaldo-20fwa023cd/          # ThinkPad T460p, eDP-1 1920x1080
     .config/dotfiles-host/
-      i3.conf                  # brightness via `light`
+      i3.conf                  # optional i3 preferences
       alacritty.toml           # font size 10
   ronaldo-ms7c94/              # desktop, HDMI-0 2560x1440
     .config/dotfiles-host/
-      i3.conf                  # brightness via ddcutil (DDC/CI)
+      i3.conf                  # optional i3 preferences
       alacritty.toml           # font size 14
 ```
 
@@ -54,12 +54,15 @@ later `bindsym` replace an earlier one, so a host can rebind any key. What a
 host cannot do is *remove* an `exec` line — so the generic config only runs things
 that are right (or harmless) everywhere: `bin/display` picks each monitor's preferred
 mode at its highest refresh rate, and `edid-check` exits silently without the
-pinned-EDID xorg file. Truly machine-specific bindings like the desktop's `ddcutil`
-brightness keys live in `hosts/<hostname>/`.
+pinned-EDID xorg file. Brightness keys use the generic `bin/brightness`: an
+automatically detected internal panel via brightnessctl/light, otherwise DDC/CI.
 
-polybar deliberately has no hook: it aborts on a missing `include-file`, and its
-config already auto-adapts (`monitor =` empty picks the primary output,
-`card = intel_backlight`, `battery = BAT0`).
+Polybar deliberately has no host include: it aborts on a missing `include-file`.
+`bin/i3bar` starts it for every distinct active screen area, with media and the
+tray on the primary output. `bin/hardware` supplies a shared, cached snapshot to
+all bars and Conky. There are no fixed battery, adapter, network or backlight IDs.
+Unsupported readings disappear; sleeping GPUs are not queried. No host package
+is needed when moving these configs to another CPU/GPU or laptop.
 
 ## Adding a machine
 

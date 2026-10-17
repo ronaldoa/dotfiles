@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# NVIDIA scanout gets the existing repaint workaround; other GPUs use damage tracking.
+set -euo pipefail
+flag=$("$(dirname "$0")/hardware" compositor-flag)
+exec picom "$flag" "$@"

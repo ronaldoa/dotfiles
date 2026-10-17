@@ -1,12 +1,21 @@
 #!/usr/bin/env bash
-# Toggle the conky desktop widget (Super+D); `widgets start` only starts it if it isn't running.
+# Toggle the conky desktop widget (Super+D); start/stop/status are idempotent.
 # conky is an override-redirect window that starts on top of the stack, so push it below every window.
 # Matched by config path: other conky instances (the weather popup) are left alone
 conf="$HOME/.config/conky/conky.conf"
-if pgrep -f "conky -d -c $conf" >/dev/null; then
-    [ "$1" = start ] || pkill -f "conky -d -c $conf"
-    exit 0
+running() { pgrep -u "$UID" -f "conky -d -c $conf" >/dev/null; }
+[ "${1:-}" = status ] && { running; exit $?; }
+if running; then
+    [ "${1:-}" = start ] && exit 0
+    pkill -u "$UID" -f "conky -d -c $conf" || true
+    for _ in {1..30}; do
+        running || exit 0
+        sleep 0.1
+    done
+    echo 'desktop widgets did not stop' >&2
+    exit 1
 fi
+[ "${1:-}" = stop ] && exit 0
 
 conky -d -c "$conf" >/dev/null 2>&1
 ~/.config/i3/bin/xstack conky below

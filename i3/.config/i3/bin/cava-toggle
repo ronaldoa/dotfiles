@@ -4,20 +4,25 @@
 
 height=220
 
-if i3-msg -t get_tree | grep -q '"instance":"cava"'; then
+running() { i3-msg -t get_tree | jq -e '.. | objects | select(.window_properties?.instance == "cava")' >/dev/null; }
+[ "${1:-}" = status ] && { running; exit $?; }
+if running; then
+    [ "${1:-}" = start ] && exit 0
     i3-msg -q '[instance="cava"] kill'
     exit 0
 fi
+[ "${1:-}" = stop ] && exit 0
 
 alacritty --class cava --title cava \
     -o window.opacity=0 -o window.padding.x=0 -o window.padding.y=0 -o font.size=8 \
-    -e cava &
+    -e cava >/dev/null 2>&1 &
 
 # Put it at the bottom of the screen once i3 has mapped it (the for_window rule makes it floating)
-bottom=$(i3-msg -t get_workspaces | jq '.[] | select(.focused).rect | .y + .height')
+read -r x y width area_height < <(i3-msg -t get_workspaces | jq -r '.[] | select(.focused).rect | "\(.x) \(.y) \(.width) \(.height)"')
+height=$((area_height < height ? area_height : height))
 for _ in $(seq 30); do
     if i3-msg -t get_tree | grep -q '"instance":"cava"'; then
-        i3-msg -q "[instance=\"cava\"] resize set 100 ppt $height px, move absolute position 0 px $((bottom - height)) px"
+        i3-msg -q "[instance=\"cava\"] resize set $width px $height px, move absolute position $x px $((y + area_height - height)) px"
         break
     fi
     sleep 0.1

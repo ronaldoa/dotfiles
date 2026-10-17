@@ -10,7 +10,11 @@ i3 4.25（自带 gaps），Nord 配色，状态栏用 polybar。
 ```
 config              i3 主配置
 bin/
-  i3bar             (重)启动 polybar
+  i3bar             每个独立屏幕区域启动一个 polybar（镜像屏幕不重复）
+  hardware          共享硬件采集：CPU/GPU、温度、电池、背光、当前网络路由
+  brightness        自动识别内置背光，或使用外接显示器 DDC/CI
+  compositor        按驱动选择 picom 的 NVIDIA 重绘兼容参数
+  focus-mode        会议／专注模式，记录并恢复通知和视觉组件状态
   lock              锁屏：随机背景图 + 时钟 + 输入动画圈（i3lock-color）
   keyhelp           快捷键速查（Alt+/）
   lyrics            mpd 当前歌曲的同步歌词：状态栏单行 / 浮动歌词窗口
@@ -26,7 +30,7 @@ bin/
   theme             配色切换：Nord ⇄ pywal（从壁纸取色）
   appimage          启动 /mnt/data/Tools 里某个程序最新版本的 AppImage
   popup-pos         算出弹出卡片的位置：鼠标正下方、状态栏下面
-  display           按显示器实际支持的分辨率和最高刷新率设置屏幕
+  display           重新检测显示器，设置分辨率和最高刷新率，重建状态栏
 themes/
   nord.Xresources   Nord 配色（theme 脚本用）
 polybar/
@@ -44,7 +48,7 @@ polybar/
 | `bin/theme restore` | 恢复上次选的配色（Nord / pywal） |
 | `bin/ws-icons` | 工作区图标（i3 重启时自动换新的一份） |
 | `bin/widgets start` | conky 桌面组件 |
-| `bin/display` | 每个已连接的显示器用它的首选分辨率，并选这个分辨率支持的最高刷新率（现在这台是 2560x1440 @ 99.95Hz）；多台显示器从左到右排 |
+| `bin/display --no-bar` | 每个已连接的显示器用首选分辨率及其最高刷新率；没有首选模式时选当前模式，再退回第一个可用模式；多屏从左到右排，断开的输出关闭 |
 | polkit-gnome | 图形程序要 root 时弹出密码框（pamac、gparted 等） |
 | nitrogen --restore | 恢复壁纸（先运行一次 `nitrogen` 选好壁纸） |
 | udiskie | U 盘自动挂载，带托盘图标 |
@@ -104,7 +108,8 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | 失焦变暗 | 没聚焦的窗口暗 20%，浏览器、mpv、Zathura、画中画、歌词窗口不变暗 |
 | 毛玻璃 | 半透明的窗口背后会模糊：rofi（92%，18px 圆角）、所有浮动窗口（92%）。通知、桌面组件、弹出卡片自己画圆角，所以不加模糊和阴影 |
 
-想调整的话：动画快慢改 `duration`（秒），变暗程度改 `dim`，圆角改 `corner-radius`，透明度改各条规则里的 `opacity`。改完执行 `pkill picom; picom -b` 生效。
+想调整的话：动画快慢改 `duration`（秒），变暗程度改 `dim`，圆角改 `corner-radius`，透明度改各条规则里的 `opacity`。改完执行 `pkill picom; ~/.config/i3/bin/compositor -b` 生效。
+启动脚本只在 NVIDIA 驱动连接中的显示器时关闭 damage tracking，保留原来的防闪烁处理；其他显卡按变化区域重绘。
 
 ### 下拉终端 —— `Super+Enter`
 
@@ -133,7 +138,7 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 |---|---|
 | Clock | 星期、时间、日期、第几周 / 一年中第几天 |
 | Weather | 城市、天气图标、温度、天气、最高 / 最低温、湿度、风速（读 polybar 天气模块的缓存，10 分钟更新一次） |
-| System | 开机时长；CPU 占用和温度、内存、根分区，各带一条进度条 |
+| System | 开机时长；CPU 占用和温度、内存、根分区；自动加入可用的 GPU 和电池数据 |
 | Network | IP、下载 / 上传速度、最近 40 秒的下载速度曲线 |
 | Now Playing | mpd 当前歌曲、歌手、播放进度；暂停时显示 PAUSED，没在放时显示 Not Playing |
 
@@ -165,10 +170,12 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | `Alt+h/j/k/l` 或方向键 | 切换焦点 |
 | `Alt+Shift+h/j/k/l` 或方向键 | 移动窗口 |
 | `Alt+o` | rofi 搜索已打开的窗口并跳转 |
+| `Alt+u` | 跳到最近请求关注（urgent）的窗口；需要应用设置 urgent 提示 |
 | `Alt+a` / `Alt+x` | 聚焦父容器 / 子容器 |
 | `Alt+Space` | 在平铺和浮动窗口之间切换焦点 |
 | `Alt+m` | 给窗口打一个字母 mark（再按一次取消） |
 | `Alt+'` | 跳到指定 mark 的窗口 |
+| `Alt+Shift+'` | 输入一个字母 mark，把当前窗口与标记窗口交换位置 |
 | `Alt+q` | 关闭窗口 |
 | `Super+q`（松开时） | xkill，点击强制杀掉一个窗口 |
 
@@ -196,6 +203,9 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | `Alt+Ctrl+数字` | 把窗口移到该工作区，并跟过去 |
 | `` Alt+` `` | 回到上一个工作区 |
 | `Alt+[` / `Alt+]` | 上一个 / 下一个工作区 |
+| `Super+←/→` | 聚焦左边 / 右边的显示器 |
+| `Super+Shift+←/→` | 把整个工作区移到左边 / 右边的显示器 |
+| `Super+p` | 重新检测显示器并重建各屏幕状态栏 |
 
 ### Scratchpad
 
@@ -245,7 +255,7 @@ Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都�
 | `Alt+Ctrl+←/→` | mpd 上一首 / 下一首 |
 | `Super+l` | 开关浮动歌词窗口 |
 | 音量键 / 静音键 / 麦克风静音键 | pactl 调音量（每次 2%） |
-| 亮度键 | 每台机器不同，在 `hosts/<主机名>/.config/dotfiles-host/i3.conf` 里：台式机通过 DDC/CI 调外接显示器（ddcutil），ThinkPad 调屏幕背光（light） |
+| 亮度键 | 自动检测内置背光设备，用 brightnessctl 或 light 调节；没有内置背光时用 ddcutil 调外接显示器 |
 
 ### 剪贴板、emoji、通知
 
@@ -278,6 +288,15 @@ Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都�
 | `Alt+Shift+r` | 原地重启 i3（保留布局） |
 | `Alt+Shift+Esc` | 退出 i3（会先确认） |
 | `Alt+/` | 快捷键速查 |
+| `Alt+Ctrl+f` | 进入 / 退出会议／专注模式 |
+
+### 会议／专注模式
+
+进入时暂停 dunst 通知，关闭桌面组件、动态壁纸、浮动频谱和歌词窗口，
+状态栏隐藏音乐、歌词和频谱，显示 `FOCUS`。再次按快捷键或点击 `FOCUS` 退出。
+退出时只恢复进入前运行的组件，动态壁纸继续使用原视频；如果之前已经暂停通知，
+退出后仍保持暂停。运行状态保存在当前登录会话的运行目录，重新加载或重启 i3 不会丢失。
+锁屏和休眠保护照常生效。
 
 ## 窗口规则
 
@@ -306,9 +325,32 @@ Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都�
 
 ## 状态栏（polybar）
 
-左：工作区（带程序图标）、CPU、CPU 温度、内存、Wi-Fi
+左：工作区（带程序图标）、CPU、CPU 温度、内存、GPU、当前网络
 中：mpd 当前歌曲、音乐频谱、单行歌词
-右：天气、音量、日期、托盘、电源菜单
+右：天气、背光、电池、音量、日期、托盘、专注模式、电源菜单
+
+每个独立屏幕区域有一条状态栏，托盘和中间的音乐模块只出现在主屏；
+镜像输出不会叠放两条状态栏。内置背光、电池、温度等不存在时对应模块自动隐藏。
+
+### 硬件自动适配
+
+Polybar 和 Conky 共用 `bin/hardware`，所有实例共享 3 秒缓存，避免反复查询同一设备。
+CPU 使用率和内存仍使用程序自带的通用采集器；硬件相关的数据按实际设备识别：
+
+- CPU 温度：识别 Intel coretemp、AMD k10temp/zenpower、CPU 标签及 CPU/SoC thermal zone；
+  优先封装／Tdie 温度，多个封装取最高值，不把 NVMe 或显卡温度当 CPU 温度。
+- GPU：枚举 DRM 显卡；NVIDIA 使用 `nvidia-smi`，AMD 使用内核提供的 busy、温度和显存接口，
+  Intel 读取驱动提供的温度。驱动未提供的利用率／温度保持缺失，不显示成 0；
+  runtime suspend 的独显显示 sleep，不主动查询唤醒。显存数据可通过 `hardware json` 查看。
+- 电池：按类型发现系统电池和电源，不依赖 BAT0/AC；双电池在能统一为能量时按容量加权，
+  否则使用电量百分比平均值；排除鼠标等设备电池和不存在的电池。
+- 网络：跟随实际 IPv4/IPv6 路由选择网卡，支持有线、Wi-Fi 和 VPN；
+  切换接口或计数器归零时重新计算速率，断网显示 Disconnected。
+- 背光：枚举有效的 sysfs 背光设备，不依赖 intel_backlight；
+  亮度键优先调内置屏幕，没有内置屏幕背光时自动用 DDC/CI。
+
+诊断：`~/.config/i3/bin/hardware json`。没有传感器或驱动不支持的指标会自动省略，
+无需给每台机器写传感器编号。
 
 - 点击歌名：rofi 搜索曲库选歌；右键歌名：重新扫描曲库，把缺的歌补回播放队列
 - 点击频谱：开关屏幕底部的大频谱窗口
@@ -322,13 +364,13 @@ Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都�
 
 和屏幕有关的设置都是按实际情况算出来的，换一台显示器（比如 24 寸 1080p）不用改配置：
 
-- 分辨率和刷新率：`bin/display` 登录时自动选
+- 分辨率和刷新率：登录时自动选，插拔显示器后按 `Super+p` 重新检测；`display --dry` 只预览命令
 - 状态栏占满宽度；下拉终端、频谱窗口、天气和日历卡片都按当前屏幕的可用区域定位
 - 锁屏图片自动缩放铺满
 - 桌面组件和弹出卡片：conky 会按屏幕 DPI 调整窗口大小；窗口比卡片小时，卡片整体等比缩小，不会被裁掉
-- 网卡名自动识别（polybar 取第一个无线网卡，桌面组件取默认路由的网卡）
+- 网络、CPU/GPU 温度、电池和背光统一自动识别，Polybar 和桌面组件读同一份硬件快照
 
-每台机器确实不一样的设置（终端字号、亮度键等）放在仓库的 `hosts/<主机名>/` 里，由 `bin/dotfiles-bootstrap` 链接到 `~/.config/dotfiles-host/`，i3 配置最后用 `include` 读进来，见 `hosts/README.md`。快捷键速查（`Alt+/`）也会列出这些机器自己的快捷键。
+每台机器的偏好设置（终端字号、自定义屏幕排列等）放在仓库的 `hosts/<主机名>/` 里，由 `bin/dotfiles-bootstrap` 链接到 `~/.config/dotfiles-host/`，i3 配置最后用 `include` 读进来，见 `hosts/README.md`。快捷键速查（`Alt+/`）也会列出这些机器自己的快捷键。硬件采集和亮度键不需要主机专属配置。
 
 唯一和这台显示器绑定的是 `bin/edid-check`：它检查 `/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf` 里固定的 EDID（用来解决 HDMI 显示器断电后黑屏）。换显示器后登录会弹通知提醒，那时要按通知里的提示重新生成那个文件，或者删掉它。
 
