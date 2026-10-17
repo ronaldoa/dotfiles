@@ -13,7 +13,8 @@ set -euo pipefail
 
 DOTFILES="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 HOST="${DOTFILES_HOST:-$(hostname)}"
-STOW_FLAGS=(--target="$HOME")
+# Untracked editor state can sit inside any package (e.g. mpd/.vscode); never link it into $HOME
+STOW_FLAGS=(--target="$HOME" --ignore='\.history' --ignore='\.vscode' --ignore='\.idea')
 ACTION="--stow"
 
 while getopts ':nRDh' opt; do
@@ -29,10 +30,16 @@ done
 command -v stow >/dev/null || { echo "GNU stow is not installed" >&2; exit 1; }
 
 # Generic packages = every top-level directory that is not infrastructure.
+# Hidden directories are skipped too: .git, and untracked editor state such as
+# .history (VS Code local history) or .vscode, which would otherwise be stowed into $HOME.
 mapfile -t PACKAGES < <(
-  find "$DOTFILES" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
-    | grep -vxE '\.git|hosts|bin' | sort
+  find "$DOTFILES" -mindepth 1 -maxdepth 1 -type d -not -name '.*' -printf '%f\n' \
+    | grep -vxE 'hosts|bin' | sort
 )
+# Mac-only packages are skipped elsewhere
+if [ "$(uname)" != Darwin ]; then
+  mapfile -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | grep -vxE 'aerospace')
+fi
 [ ${#PACKAGES[@]} -gt 0 ] || { echo "no packages found in $DOTFILES" >&2; exit 1; }
 
 echo "dotfiles : $DOTFILES"
@@ -57,14 +64,38 @@ fi
 
 [ "$ACTION" = "--delete" ] && exit 0
 
-# Report anything the generic i3 config launches that is not installed here.
+# Report anything the configs and scripts use that is not installed here, as package names
+# (command:package, or just the command when the package has the same name). Keep in sync
+# with INSTALL.md.
+checks=(
+  i3:i3-wm polybar picom rofi rofimoji dunst conky i3lock:i3lock-color xss-lock autotiling
+  nitrogen udiskie xsettingsd copyq flameshot xfce4-power-manager nm-applet:network-manager-applet
+  blueman-applet:blueman redshift playerctl notify-send:libnotify sensors:lm_sensors
+  xrandr:xorg-xrandr xset:xorg-xset xrdb:xorg-xrdb setxkbmap:xorg-setxkbmap xkill:xorg-xkill
+  killall:psmisc ip:iproute2 jq curl
+  cava xwinwrap:xwinwrap-git mpv wal:python-pywal16
+  mpd mpc ncmpcpp pactl:libpulse fcitx5
+  alacritty nvim:neovim tmux ranger zsh
+)
 missing=()
-for c in i3 polybar picom dunst rofi ranger ncmpcpp mpd alacritty nvim tmux \
-         autotiling playerctl xss-lock nitrogen udiskie copyq fcitx5 flameshot conky; do
-  command -v "$c" >/dev/null || missing+=("$c")
+for entry in "${checks[@]}"; do
+  cmd=${entry%%:*} pkg=${entry#*:}
+  command -v "$cmd" >/dev/null || missing+=("$pkg")
 done
+[ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ] || missing+=(polkit-gnome)
+# Python modules for the i3 scripts (they run /usr/bin/python3, not a conda python)
+/usr/bin/python3 -c 'import i3ipc' 2>/dev/null || missing+=(python-i3ipc)
+/usr/bin/python3 -c 'import Xlib' 2>/dev/null || missing+=(python-xlib)
+# Commands this host's i3 overrides launch (e.g. ddcutil on the desktop, light on the ThinkPad)
+host_i3="$DOTFILES/hosts/$HOST/.config/dotfiles-host/i3.conf"
+if [ -r "$host_i3" ]; then
+  while read -r cmd; do
+    command -v "$cmd" >/dev/null || missing+=("$cmd")
+  done < <(grep -oE '^[^#]*exec (--no-startup-id )?[^ "]+' "$host_i3" | awk '{print $NF}' | sort -u)
+fi
+
 if [ ${#missing[@]} -gt 0 ]; then
   echo
   echo "not installed on this machine: ${missing[*]}"
-  echo "  (the configs degrade gracefully, but those features stay dead)"
+  echo "  (the configs degrade gracefully, but those features stay dead; see INSTALL.md)"
 fi

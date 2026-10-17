@@ -1,10 +1,29 @@
 #!/usr/bin/env bash
 # Show all i3 key bindings in rofi (searchable). Bound to $mod+slash.
 # keyhelp --print writes the list to stdout instead.
-# Reads the config i3 has actually loaded, so it always matches the current bindings.
+# Reads the config i3 has actually loaded (including included files), so it always matches the current bindings.
 # A comment line right above a bindsym is used as its description.
 
-rows=$(i3-msg -t get_config | python3 -c '
+# The loaded config plus every file it includes (e.g. ~/.config/dotfiles-host/i3.conf), in load order.
+# `i3-msg -t get_config` only prints the main file, so ask the IPC socket for the full reply.
+config() {
+    /usr/bin/python3 -c '
+import json, os, socket, struct, subprocess
+path = os.environ.get("I3SOCK") or subprocess.check_output(["i3", "--get-socketpath"], text=True).strip()
+s = socket.socket(socket.AF_UNIX)
+s.connect(path)
+s.sendall(b"i3-ipc" + struct.pack("<II", 0, 9))  # 9 = GET_CONFIG
+size = struct.unpack("<II", s.recv(14)[6:])[0]
+reply = b""
+while len(reply) < size:
+    reply += s.recv(size - len(reply))
+reply = json.loads(reply)
+for inc in reply.get("included_configs") or [{"raw_contents": reply["config"]}]:
+    print(inc["raw_contents"])
+'
+}
+
+rows=$(config | /usr/bin/python3 -c '
 import re, sys
 
 conf = sys.stdin.read()

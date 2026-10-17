@@ -245,7 +245,7 @@ Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都�
 | `Alt+Ctrl+←/→` | mpd 上一首 / 下一首 |
 | `Super+l` | 开关浮动歌词窗口 |
 | 音量键 / 静音键 / 麦克风静音键 | pactl 调音量（每次 2%） |
-| 亮度键 | 通过 DDC/CI 调外接显示器亮度（ddcutil） |
+| 亮度键 | 每台机器不同，在 `hosts/<主机名>/.config/dotfiles-host/i3.conf` 里：台式机通过 DDC/CI 调外接显示器（ddcutil），ThinkPad 调屏幕背光（light） |
 
 ### 剪贴板、emoji、通知
 
@@ -327,6 +327,8 @@ Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都�
 - 锁屏图片自动缩放铺满
 - 桌面组件和弹出卡片：conky 会按屏幕 DPI 调整窗口大小；窗口比卡片小时，卡片整体等比缩小，不会被裁掉
 - 网卡名自动识别（polybar 取第一个无线网卡，桌面组件取默认路由的网卡）
+
+每台机器确实不一样的设置（终端字号、亮度键等）放在仓库的 `hosts/<主机名>/` 里，由 `bin/dotfiles-bootstrap` 链接到 `~/.config/dotfiles-host/`，i3 配置最后用 `include` 读进来，见 `hosts/README.md`。快捷键速查（`Alt+/`）也会列出这些机器自己的快捷键。
 
 唯一和这台显示器绑定的是 `bin/edid-check`：它检查 `/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf` 里固定的 EDID（用来解决 HDMI 显示器断电后黑屏）。换显示器后登录会弹通知提醒，那时要按通知里的提示重新生成那个文件，或者删掉它。
 
