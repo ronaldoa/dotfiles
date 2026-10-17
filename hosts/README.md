@@ -32,6 +32,15 @@ Everything a host can override is funnelled through one directory,
 | `alacritty/…/alacritty.toml` | last entry of `general.import` | silently skipped |
 | `mpd/.config/mpd/mpd.conf` | `include_optional "…/mpd.conf"` | silently skipped (needs mpd ≥ 0.22) |
 | `zsh/.zshrc` | `[[ -r … ]] && source` | silently skipped |
+| `i3/.config/i3/bin/i3bar` | sources `~/.config/dotfiles-host/bar.env` | silently skipped; built-in `BAR_LEFT` default applies |
+
+`bar.env` is a shell fragment, not a Polybar config: Polybar aborts on a missing
+`include-file`, so the bar is customised through the environment instead.
+`modules-left/center/right` all read `${env:BAR_*:default}`, and `bin/i3bar`
+exports them. A host sets `BAR_LEFT` there to change the left-hand modules --
+the ThinkPad swaps `gpu_temp` for `gpu`, because its Skylake iGPU has no hwmon
+directory, so `hardware gpu-temp` prints nothing, Polybar renders no module, and
+the click target that opens the GPU card disappears with it.
 
 ### The alacritty trap
 

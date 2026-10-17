@@ -81,7 +81,7 @@ scroll-up = i3wm-wsnext
 scroll-down = i3wm-wsprev
 
 ; Compact hardware summary: CPU/GPU temperature and memory usage.
-modules-left = i3 cpu_temp gpu_temp memory
+modules-left = ${env:BAR_LEFT:i3 cpu_temp gpu_temp memory}
 ; Optional full layout: comment the line above and uncomment this one to restore.
 ; modules-left = i3 cpu cpu_temp memory gpu network disks
 ; An empty env value uses the fallback too: keep that empty for focus/secondary bars.

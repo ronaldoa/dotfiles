@@ -5,6 +5,17 @@ runtime="${XDG_RUNTIME_DIR:-/tmp}"
 exec 9>"$runtime/dotfiles-i3bar-$UID.lock"
 flock -x 9
 
+# Left-hand modules differ per machine, so they come from the hosts/ layer rather than
+# being probed here: the ThinkPad's iGPU exposes no hwmon sensor, so `hardware gpu-temp`
+# is empty there and Polybar drops the module entirely -- taking its click target, and
+# with it the only way to open the GPU card, along with it. That host shows the GPU name
+# instead. bar.env is optional; without it the default below applies.
+BAR_LEFT='i3 cpu_temp gpu_temp memory'
+host_bar="$HOME/.config/dotfiles-host/bar.env"
+if [ -r "$host_bar" ]; then
+    . "$host_bar"
+fi
+
 # Query before stopping the old bars, so a failed display query leaves them intact.
 mapfile -t screens < <(polybar --list-all-monitors)
 ((${#screens[@]})) || exit 1
@@ -42,7 +53,7 @@ for screen in "${ordered[@]}"; do
         right='weather backlight battery volume date systray focus powermenu'
     fi
     [ -f "$runtime/dotfiles-i3-focus-$UID.json" ] && center=''
-    MONITOR="$monitor" BAR_CENTER="$center" BAR_RIGHT="$right" \
+    MONITOR="$monitor" BAR_LEFT="$BAR_LEFT" BAR_CENTER="$center" BAR_RIGHT="$right" \
         polybar main -c "$HOME/.config/i3/polybar/config" \
         >"$log_dir/${monitor//\//_}.log" 2>&1 9>&- &
 done
