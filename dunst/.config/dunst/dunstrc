@@ -6,7 +6,7 @@
     follow = none
     origin = top-right
     # Just below polybar
-    offset = (16, 52)
+    offset = (16, 62)
     width = (300, 420)
     height = (0, 240)
     notification_limit = 5
