@@ -11,9 +11,10 @@ hosts/
     .config/dotfiles-host/
       i3.conf                  # brightness via `light`
       alacritty.toml           # font size 10
-  desktop-hdmi/                # rename to that machine's hostname
+  ronaldo-ms7c94/              # desktop, HDMI-0 2560x1440
     .config/dotfiles-host/
-      i3.conf                  # xrandr HDMI-0 2560x1440, ddcutil, edid-check
+      i3.conf                  # brightness via ddcutil (DDC/CI)
+      alacritty.toml           # font size 14
 ```
 
 ## How it works
@@ -50,9 +51,11 @@ from the generic config alone — the overrides are purely additive.
 
 The i3 include sits at the very **end** of the config on purpose: i3 lets a
 later `bindsym` replace an earlier one, so a host can rebind any key. What a
-host cannot do is *remove* an `exec` line — that is why the desktop's `xrandr`,
-`edid-check` and `ddcutil` lines were moved out of the generic config into
-`hosts/desktop-hdmi/` rather than being overridden in place.
+host cannot do is *remove* an `exec` line — so the generic config only runs things
+that are right (or harmless) everywhere: `bin/display` picks each monitor's preferred
+mode at its highest refresh rate, and `edid-check` exits silently without the
+pinned-EDID xorg file. Truly machine-specific bindings like the desktop's `ddcutil`
+brightness keys live in `hosts/<hostname>/`.
 
 polybar deliberately has no hook: it aborts on a missing `include-file`, and its
 config already auto-adapts (`monitor =` empty picks the primary output,

@@ -12,7 +12,7 @@ sudo pacman -S --needed \
     copyq flameshot xfce4-power-manager network-manager-applet blueman redshift ddcutil \
     playerctl rofimoji libnotify lm_sensors \
     xorg-xrandr xorg-xset xorg-xrdb xorg-setxkbmap xorg-xkill \
-    python python-i3ipc python-xlib jq curl \
+    python python-i3ipc python-xlib jq curl psmisc iproute2 stow \
     cava xwinwrap-git mpv \
     mpd mpc ncmpcpp pipewire-pulse \
     fcitx5 fcitx5-chinese-addons fcitx5-gtk fcitx5-qt fcitx5-configtool \
@@ -20,11 +20,20 @@ sudo pacman -S --needed \
     ttf-hack-nerd noto-fonts-cjk noto-fonts-emoji otf-font-awesome \
     alacritty wezterm zsh tmux neovim git lazygit fzf zoxide ripgrep fd nodejs npm \
     ranger ueberzugpp trash-cli bat ffmpegthumbnailer poppler 7zip unzip w3m \
-    firefox thunderbird thunar zathura zathura-pdf-mupdf chromium
+    firefox thunderbird thunar zathura zathura-pdf-mupdf chromium obsidian
 
 # AUR
-yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git
+yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git visual-studio-code-bin
 ```
+
+只有某一台机器需要的，按机器另装（见 `hosts/<主机名>/` 里的设置）：
+
+| 机器 | 包 | 用途 |
+|---|---|---|
+| 台式机 ronaldo-ms7c94（外接显示器） | ddcutil | 亮度键通过 DDC/CI 调显示器亮度 |
+| ThinkPad ronaldo-20fwa023cd | light（AUR） | 亮度键调笔记本屏幕背光 |
+
+装完运行一次 `bin/dotfiles-bootstrap`（见第三节），最后会列出这台机器上还缺哪些包。
 
 `i3lock-color` 会替换掉 `i3lock`，安装时提示冲突选「是」。
 
@@ -53,7 +62,6 @@ yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git
 | xfce4-power-manager | 电源管理 |
 | network-manager-applet、blueman | 网络 / 蓝牙托盘图标 |
 | redshift | 色温（`Super+R`） |
-| ddcutil | 用亮度键调外接显示器亮度 |
 | playerctl | 媒体键控制浏览器等播放器 |
 | libnotify | `notify-send`，脚本发通知用 |
 | lm_sensors | CPU 温度（状态栏和桌面组件） |
@@ -68,6 +76,9 @@ yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git
 | python-xlib | 弹出卡片定位、conky 窗口层级（`bin/popup-pos`、`bin/xstack`） |
 | jq | 天气、配色切换、下拉终端等脚本解析 JSON |
 | curl | 天气脚本 |
+| psmisc | `killall`，重启 polybar 用（一般系统自带） |
+| iproute2 | `ip`，桌面组件识别当前网卡（一般系统自带） |
+| stow | `bin/dotfiles-bootstrap` 用它建立配置链接 |
 
 ### 特效
 
@@ -113,34 +124,24 @@ fcitx5、fcitx5-chinese-addons（拼音）、fcitx5-gtk、fcitx5-qt、fcitx5-con
 
 ### 常用程序（快捷键会打开它们）
 
-firefox、thunderbird、thunar、zathura + zathura-pdf-mupdf（zathura 不装插件打不开 PDF）、chromium（ChatGPT 窗口）。
+firefox、thunderbird、thunar、zathura + zathura-pdf-mupdf（zathura 不装插件打不开 PDF）、chromium（ChatGPT 窗口）、obsidian（`Alt+Ctrl+O`）、visual-studio-code-bin（AUR，`Super+C`）。
 
 Noi、LM Studio、Cursor、哔哩哔哩、Teams、Double Commander、微信是 AppImage，放在 `/mnt/data/Tools`，不用装。
 
 ## 三、链接配置
 
-dotfiles 放在 `/mnt/data/dotfiles`。按下面建立链接（`~/.config/i3` 和 `gtk-3.0` 是逐个文件链接，因为里面还有不在仓库里的东西）：
+用仓库自带的脚本，它会用 stow 把所有配置链接进家目录，再叠加这台机器自己的设置（`hosts/<主机名>/`）：
 
 ```sh
-D=/mnt/data/dotfiles
-mkdir -p ~/.config/i3 ~/.config/gtk-3.0 ~/.config/gtk-4.0 ~/.config/flameshot ~/.icons
-
-for d in alacritty cava conky dunst mpd ncmpcpp nvim picom ranger rofi wezterm; do
-    ln -s $D/$d/.config/$d ~/.config/$d
-done
-for f in bin config polybar themes; do
-    ln -s $D/i3/.config/i3/$f ~/.config/i3/$f
-done
-ln -s $D/gtk/.config/xsettingsd ~/.config/xsettingsd
-ln -s $D/gtk/.config/gtk-3.0/settings.ini ~/.config/gtk-3.0/settings.ini
-ln -s $D/gtk/.config/gtk-4.0/settings.ini ~/.config/gtk-4.0/settings.ini
-ln -s $D/gtk/.gtkrc-2.0 ~/.gtkrc-2.0
-ln -s $D/gtk/.icons/default ~/.icons/default
-ln -s $D/flameshot/.config/flameshot/flameshot.ini ~/.config/flameshot/flameshot.ini
-ln -s $D/zsh/.zshrc ~/.zshrc
-ln -s $D/zsh/.p10k.zsh ~/.p10k.zsh
-ln -s $D/tmux/.tmux.conf.local ~/.tmux.conf.local
+cd /mnt/data/dotfiles
+bin/dotfiles-bootstrap -n    # 先模拟一遍，看会建哪些链接、有没有冲突
+bin/dotfiles-bootstrap       # 正式建立
+bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
 ```
+
+脚本最后会列出这台机器上还没装的包。
+
+**每台机器不一样的设置**放在 `hosts/<主机名>/.config/dotfiles-host/` 里（字号、亮度键、声卡等），通用配置会在最后读取它们，文件不存在就跳过。新机器先 `mkdir -p hosts/$(hostname)/.config/dotfiles-host`，具体规则见 `hosts/README.md`。
 
 ## 四、装完还要做的
 

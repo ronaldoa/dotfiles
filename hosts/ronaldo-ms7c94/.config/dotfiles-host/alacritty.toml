@@ -1,0 +1,8 @@
+# Desktop (hostname: ronaldo-ms7c94) -- 27" 2560x1440 monitor.
+#
+# This applies because the generic alacritty.toml deliberately sets no `size`:
+# a key set in the importing file beats the import, so font size can only be
+# overridden from here if the generic config stays silent about it.
+
+[font]
+size = 14
