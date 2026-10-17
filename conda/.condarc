@@ -1,0 +1,6 @@
+# Do not activate base in every shell. Activating base prepends the conda
+# install's bin to PATH, which shadows the system python3 -- the i3 scripts
+# (ws-icons, lyrics, xstack, popup-pos) need the distro python so they can
+# import python-i3ipc / python-xlib.
+# Enter an environment explicitly instead:  conda activate <env>
+auto_activate_base: false

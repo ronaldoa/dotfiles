@@ -143,22 +143,33 @@ setopt HIST_IGNORE_ALL_DUPS
 setopt SHARE_HISTORY
 
 
-# conda, without putting it on PATH.
+# conda / mamba, without putting either on PATH.
 #
-# This replaces the `conda init` / `mamba shell init` blocks that used to live
-# here: they pointed at ~/miniforge3, which no longer exists, so the hook failed
-# every time and the fallback branch appended a non-existent directory to PATH.
+# Replaces the `conda init` + `mamba shell init` blocks that used to be here.
+# Those hardcoded ~/miniforge3, so on a machine where that path is absent the
+# hook failed on every shell and the fallback branch appended a non-existent
+# directory to PATH. The loop below works on whichever install a machine has.
 #
-# Sourcing conda.sh (~4 ms) only defines the `conda` shell function -- verified
-# that it leaves PATH untouched, so `python3` keeps resolving to the system
-# 3.14 and distro packages (python-i3ipc, python-xlib, ...) stay importable.
-# It is `conda activate` that prepends anaconda's bin, which is what we want:
-# opt in per shell, rather than on every shell.
+# Sourcing conda.sh costs ~4 ms. It defines the `conda` shell function and
+# prepends <root>/condabin -- which holds the `conda` launcher and nothing else,
+# no python. So `python3` still resolves to the system one and the distro
+# packages the i3 scripts need (python-i3ipc, python-xlib) stay importable.
+# It is `conda activate` that prepends <root>/bin, the directory that does carry
+# a python; that stays opt-in per shell rather than happening in every shell:
 #   conda activate <env>   enter an env      conda deactivate   leave it
-# `conda init` would undo this, so don't run it.
-if [[ -r "$HOME/anaconda3/etc/profile.d/conda.sh" ]]; then
-  source "$HOME/anaconda3/etc/profile.d/conda.sh"
-fi
+#
+# ~/.condarc sets auto_activate_base: false; without it base is activated
+# automatically and shadows the system python again. Re-running `conda init`
+# would restore the old behaviour, so don't.
+for __conda_root in "$HOME/miniforge3" "$HOME/mambaforge" "$HOME/anaconda3" \
+                    "$HOME/miniconda3" /opt/miniforge3 /opt/anaconda3; do
+  [[ -r "$__conda_root/etc/profile.d/conda.sh" ]] || continue
+  source "$__conda_root/etc/profile.d/conda.sh"
+  # miniforge/mambaforge ship mamba alongside conda; anaconda does not.
+  [[ -r "$__conda_root/etc/profile.d/mamba.sh" ]] && source "$__conda_root/etc/profile.d/mamba.sh"
+  break
+done
+unset __conda_root
 
 export CUDA_HOME=/opt/cuda
 export PATH=$CUDA_HOME/bin:$PATH
