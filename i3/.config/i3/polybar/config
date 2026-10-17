@@ -122,6 +122,8 @@ compositing-border = over
 type = internal/tray
 format = <tray>
 tray-size = 16
+; A little space between tray icons
+tray-spacing = 4px
 tray-padding = 0
 tray-background = ${color.BACKGROUND}
 
