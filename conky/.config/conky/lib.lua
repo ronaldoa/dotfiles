@@ -1,4 +1,4 @@
--- Shared helpers for the Cairo-drawn conky widgets (widgets.lua, weather-popup.lua):
+-- Shared helpers for the Cairo-drawn conky widgets (widgets.lua, weather-popup.lua, calendar-popup.lua):
 -- palette, fonts, cached shell commands and rounded-card drawing.
 -- Usage: local L = dofile(os.getenv('HOME') .. '/.config/conky/lib.lua')
 --        L.begin(); ...draw...; L.finish()   -- inside the conky_* draw hook
@@ -26,6 +26,7 @@ local BLUE    = {0.506, 0.631, 0.757, 1}
 local GREEN   = {0.639, 0.745, 0.549, 1}
 local YELLOW  = {0.922, 0.796, 0.545, 1}
 local ORANGE  = {0.816, 0.529, 0.439, 1}
+local RED     = {0.749, 0.380, 0.416, 1}
 local PURPLE  = {0.706, 0.557, 0.678, 1}
 
 local WEATHER_ICONS = {
@@ -37,7 +38,7 @@ local WEATHER_ICONS = {
 
 L.FONT, L.FONT_LIGHT, L.FONT_BOLD, L.ICONS = FONT, FONT_LIGHT, FONT_BOLD, ICONS
 L.BG, L.EDGE, L.TEXT, L.DIM, L.TRACK = BG, EDGE, TEXT, DIM, TRACK
-L.CYAN, L.BLUE, L.GREEN, L.YELLOW, L.ORANGE, L.PURPLE = CYAN, BLUE, GREEN, YELLOW, ORANGE, PURPLE
+L.CYAN, L.BLUE, L.GREEN, L.YELLOW, L.ORANGE, L.PURPLE, L.RED = CYAN, BLUE, GREEN, YELLOW, ORANGE, PURPLE, RED
 
 -- OpenWeatherMap icon code ("04d") -> Nerd Font weather glyph
 function L.weather_icon(code)
