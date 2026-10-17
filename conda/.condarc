@@ -3,4 +3,11 @@
 # (ws-icons, lyrics, xstack, popup-pos) need the distro python so they can
 # import python-i3ipc / python-xlib.
 # Enter an environment explicitly instead:  conda activate <env>
+#
+# auto_activate_base is the old name of `auto_activate`; conda 25.x still accepts
+# it, and older conda only knows this one. Don't add both: conda then refuses the
+# file with MultipleKeysError.
 auto_activate_base: false
+
+channels:
+  - conda-forge

@@ -87,13 +87,23 @@ def safe(name):
     return name.replace("/", "／").strip()
 
 
+# Bracketed words that mark a version of a song rather than its title
+VERSION_TAG = re.compile(r"live|remix|remaster|demo|acoustic|instrumental|cover|feat|edit|version|现场|伴奏|版", re.I)
+
+
 def filename_metadata(path):
-    """Extract a useful title/artist from numbered collection filenames."""
+    """Guess (title, artist) from a file name, for songs without tags.
+
+    "01 大城小爱 - 王力宏", "01. 吻别 - 张学友"  -> title - artist (track number dropped)
+    "12、经典老歌（吻别）张学友"                 -> collection (title) artist
+    "晴天 (Live) - 周杰伦"                       -> ("晴天 (Live)", "周杰伦"): version tags stay in the title
+    """
     stem = os.path.splitext(os.path.basename(path))[0]
-    stem = re.sub(r"^\d+[.、]\s*", "", stem).strip()
-    match = re.match(r"^.*?[（(]([^（）()]+)[）)]\s*(?:-\s*)?(.*)$", stem)
-    if match:
-        return match.group(1).strip(), match.group(2).strip()
+    # Track number: "01. ", "01、" or "01 " (but not the "1979" in "1979 - 朴树")
+    stem = re.sub(r"^\d+(?:[.、]\s*|\s+(?!-))", "", stem).strip()
+    match = re.match(r"^(.+?)\s*[（(]([^（）()]+)[）)]\s*(?:-\s*)?(.+)$", stem)
+    if match and not VERSION_TAG.search(match.group(2)):
+        return match.group(2).strip(), match.group(3).strip()
     title, separator, artist = stem.rpartition("-")
     return (title.strip(), artist.strip()) if separator else (stem, "")
 
