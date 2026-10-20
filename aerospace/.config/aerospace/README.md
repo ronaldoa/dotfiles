@@ -9,7 +9,7 @@
 ```sh
 brew install --cask nikitabobko/tap/aerospace
 brew install FelixKratz/formulae/borders     # 焦点窗口边框，相当于 i3 的彩色边框
-brew install mpc                             # 可选：Alt+Ctrl+P 等 mpd 快捷键要用
+brew install mpc                             # 可选：Ctrl+Cmd+M 等 mpd 快捷键要用
 
 # 链接配置（假设 dotfiles 在 ~/dotfiles）
 mkdir -p ~/.config
@@ -54,8 +54,8 @@ ln -s ~/dotfiles/aerospace/.config/aerospace ~/.config/aerospace
 | `Alt+C` / `Alt+T` | Firefox / Thunderbird |
 | `Alt+Shift+N` | 在 Finder 里打开主目录 |
 | `Alt+Ctrl+O/N/B/T/L/C/G/W` | Obsidian / Noi / 哔哩哔哩 / Teams / LM Studio / VS Code / ChatGPT / 微信 |
-| `Alt+Shift+S` | 框选截图到剪贴板 |
-| `Alt+Ctrl+P`、`Alt+Ctrl+←/→` | mpd 播放暂停、上一首 / 下一首 |
+| `Ctrl+Cmd+S` | 框选截图到剪贴板（i3 上是 `Super+S`） |
+| `Ctrl+Cmd+M`、`Ctrl+Cmd+[ / ]` | mpd 播放暂停、上一首 / 下一首（i3 上是 `Super+M`、`Super+[ / ]`；Mac 上单独的 `Cmd+M`、`Cmd+[ / ]` 是最小化和后退 / 前进，所以多加一个 `Ctrl`） |
 
 意思一样、但做法不同的：
 

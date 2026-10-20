@@ -149,13 +149,14 @@ alt-ctrl-c = 'exec-and-forget open -a "Visual Studio Code"'
 alt-ctrl-g = 'exec-and-forget open -a ChatGPT'
 alt-ctrl-w = 'exec-and-forget open -a WeChat'
 
-# Screenshot: pick an area, copied to the clipboard (i3: flameshot gui)
-alt-shift-s = 'exec-and-forget screencapture -ic'
+# Screenshot: pick an area, copied to the clipboard (i3: Super+S, flameshot gui)
+ctrl-cmd-s = 'exec-and-forget screencapture -ic'
 
-# mpd
-alt-ctrl-p = 'exec-and-forget mpc toggle'
-alt-ctrl-right = 'exec-and-forget mpc next'
-alt-ctrl-left = 'exec-and-forget mpc prev'
+# mpd: play/pause, previous / next song (i3: Super+M, Super+[ / ]).
+# Ctrl+Cmd rather than Cmd alone: Cmd+M minimizes and Cmd+[ / ] are back / forward in every app.
+ctrl-cmd-m = 'exec-and-forget mpc toggle'
+ctrl-cmd-leftSquareBracket = 'exec-and-forget mpc prev'
+ctrl-cmd-rightSquareBracket = 'exec-and-forget mpc next'
 
 # ---------------------------------------------------------------- AeroSpace itself
 

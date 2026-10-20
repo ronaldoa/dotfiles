@@ -26,4 +26,5 @@ GNU stow 管理的 dotfiles：每个顶层目录是一个包，`bin/dotfiles-boo
 3. 同步更新 `i3/.config/i3/README.md` 的快捷键表格；脚本注释里写了按键的（如 `rofi/bin/powermenu`）也要改。
 4. `i3 -C -c ~/.config/i3/config` 检查语法，再 `i3-msg reload`。
 
-macOS 的 `aerospace/` 有自己的一套按键，不受这张表约束。
+macOS 的 `aerospace/` 有自己的一套按键，不受这张表约束。要和 i3 的 `Super` 组对应时用 `Ctrl+Cmd`，不要用单独的 `Cmd`：
+`Cmd+字母` 是 macOS 和各个程序自己的快捷键（如 `Cmd+M` 最小化、`Cmd+[ / ]` 后退 / 前进），aerospace 全局抓键会让它们失效。
