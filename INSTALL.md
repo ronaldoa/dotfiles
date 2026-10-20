@@ -158,7 +158,7 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
 - **通知**：屏蔽 xfce 自带的通知服务，免得它抢在 dunst 前面：`systemctl --user mask xfce4-notifyd.service`（只有装了 xfce 才需要）。
 - **天气**：把 OpenWeatherMap 的 API key 写到 `~/.config/openweathermap/key`（不在仓库里）。
 - **壁纸**：运行一次 `nitrogen`，选好壁纸，显示方式选 Zoomed Fill。
-- **锁屏图片**（可选）：放进 `~/Pictures/lockscreen`（PNG，任何分辨率）；没有图片时用当前桌面的模糊截图。
+- **锁屏图片**（可选）：放进 `~/Pictures/lockscreen`（PNG，任何分辨率）；没有图片时用 nitrogen 当前的桌面壁纸。
 - **动态壁纸**（可选）：视频放进 `~/Videos/wallpapers`。
 - **音乐**：歌放在 `~/Music`，然后 `mpc update`。
 - **显示器**：`bin/edid-check` 只对现在这台显示器有效，新机器上会提醒你处理 `/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf`（没有这个文件就什么都不做）。
