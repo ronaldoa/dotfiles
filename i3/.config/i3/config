@@ -213,7 +213,7 @@ bindsym $mod+Return exec --no-startup-id alacritty
 #bindsym $mod+shift+Return exec --no-startup-id kitty -e fish
 
 
-# AppImages: bin/appimage starts the newest /mnt/data/Tools/<prefix>*.AppImage, so updates need no edits here
+# AppImages: bin/appimage starts the newest <prefix>*.AppImage in /mnt/data/Tools (or the host's APPIMAGE_DIR), so updates need no edits here
 bindsym $mod+control+n exec --no-startup-id $HOME/.config/i3/bin/appimage Noi-
 bindsym $mod+control+o exec --no-startup-id obsidian
 bindsym $mod+control+b exec --no-startup-id $HOME/.config/i3/bin/appimage bilibili-

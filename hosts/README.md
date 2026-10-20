@@ -11,6 +11,7 @@ hosts/
     .config/dotfiles-host/
       i3.conf                  # optional i3 preferences
       alacritty.toml           # font size 10
+      appimage.env             # AppImages in ~/Tools (no /mnt/data disk)
   ronaldo-ms7c94/              # desktop, HDMI-0 2560x1440
     .config/dotfiles-host/
       i3.conf                  # optional i3 preferences
@@ -33,6 +34,13 @@ Everything a host can override is funnelled through one directory,
 | `mpd/.config/mpd/mpd.conf` | `include_optional "…/mpd.conf"` | silently skipped (needs mpd ≥ 0.22) |
 | `zsh/.zshrc` | `[[ -r … ]] && source` | silently skipped |
 | `i3/.config/i3/bin/i3bar` | sources `~/.config/dotfiles-host/bar.env` | silently skipped; built-in `BAR_LEFT` default applies |
+| `i3/.config/i3/bin/appimage` | sources `~/.config/dotfiles-host/appimage.env` | silently skipped; `APPIMAGE_DIR` defaults to `/mnt/data/Tools` |
+
+`appimage.env` works the same way: it sets `APPIMAGE_DIR`, the directory that
+`bin/appimage` searches for the `Alt+Ctrl+…` AppImage key bindings. The desktop keeps
+its AppImages on `/mnt/data/Tools` and has no `appimage.env`; the ThinkPad has no
+`/mnt/data` disk and points it at `$HOME/Tools`. Use this rather than rebinding
+the keys in a host `i3.conf`, so the bindings themselves stay in one place.
 
 `bar.env` is a shell fragment, not a Polybar config: Polybar aborts on a missing
 `include-file`, so the bar is customised through the environment instead.

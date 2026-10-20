@@ -29,7 +29,7 @@ bin/
   conky-drag        Alt+拖动桌面组件，记住位置（widgets 自动启动）
   livewall          视频动态壁纸
   theme             配色切换：Nord ⇄ pywal（从壁纸取色）
-  appimage          启动 /mnt/data/Tools 里某个程序最新版本的 AppImage
+  appimage          启动 AppImage 目录里某个程序最新版本的 AppImage（默认 /mnt/data/Tools，可按机器改）
   popup-pos         算出弹出卡片的位置：鼠标正下方、状态栏下面
   display           重新检测显示器，设置分辨率和最高刷新率，重建状态栏
 themes/
@@ -239,7 +239,9 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | `Alt+Ctrl+d` | Double Commander |
 | `Alt+Ctrl+w` | 微信（先杀掉旧进程再重新打开） |
 
-Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都是 `/mnt/data/Tools` 里的 AppImage，由 `bin/appimage` 按文件名前缀找版本号最大的那个来启动。下载新版本后直接放进去就行，不用改配置；旧版本可以删掉，也可以留着。
+Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都是 AppImage，由 `bin/appimage` 按文件名前缀（不区分大小写，`Cursor-` 也能匹配 `cursor-…`）找版本号最大的那个来启动。下载新版本后直接放进去就行，不用改配置；旧版本可以删掉，也可以留着。
+
+AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hosts/<hostname>/.config/dotfiles-host/appimage.env` 里写 `APPIMAGE_DIR=...` 就能换，比如笔记本用的是 `$HOME/Tools`。没有这个文件的机器照旧用默认目录，互不影响。某台机器上没有对应的 AppImage 时，按快捷键只会弹一条通知。
 
 ### 截图（flameshot）
 
