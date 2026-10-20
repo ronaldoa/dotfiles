@@ -134,7 +134,7 @@ fcitx5、fcitx5-chinese-addons（拼音）、fcitx5-gtk、fcitx5-qt、fcitx5-con
 
 firefox、thunderbird、thunar、zathura + zathura-pdf-mupdf（zathura 不装插件打不开 PDF）、chromium（ChatGPT 窗口）、obsidian（`Alt+Ctrl+O`）、visual-studio-code-bin（AUR，`Super+C`）。
 
-Noi、LM Studio、Cursor、哔哩哔哩、Teams、Double Commander、微信是 AppImage，放在 `/mnt/data/Tools`，不用装。放在别的目录的机器，在 `hosts/<hostname>/.config/dotfiles-host/appimage.env` 里设置 `APPIMAGE_DIR`（见 `hosts/README.md`）。i3 启动时 `bin/appimage-menu` 会给它们生成菜单项，不需要 AppImageLauncher。
+Noi、LM Studio、Cursor、哔哩哔哩、Teams、Double Commander、微信是 AppImage，放在 `/mnt/data/Tools`，不用装。Double Commander 也可以用 pacman 装（`doublecmd-qt5` 或 `doublecmd-qt6`），装了以后 `Alt+Ctrl+D` 优先用它。放在别的目录的机器，在 `hosts/<hostname>/.config/dotfiles-host/appimage.env` 里设置 `APPIMAGE_DIR`（见 `hosts/README.md`）。i3 启动时 `bin/appimage-menu` 会给它们生成菜单项，不需要 AppImageLauncher。
 
 ## 三、链接配置
 

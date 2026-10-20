@@ -238,7 +238,7 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | `Alt+Ctrl+t` | Teams |
 | `Alt+Ctrl+l` | LM Studio |
 | `Alt+Ctrl+c` | Cursor |
-| `Alt+Ctrl+d` | Double Commander |
+| `Alt+Ctrl+d` | Double Commander（装了 `doublecmd` 包就用包，否则用 AppImage） |
 | `Alt+Ctrl+w` | 微信（先杀掉旧进程再重新打开） |
 
 Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都是 AppImage，由 `bin/appimage` 按文件名前缀（不区分大小写，`Cursor-` 也能匹配 `cursor-…`）找版本号最大的那个来启动。下载新版本后直接放进去就行，不用改配置；旧版本可以删掉，也可以留着。

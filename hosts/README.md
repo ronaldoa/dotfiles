@@ -40,7 +40,7 @@ Everything a host can override is funnelled through one directory,
 `bin/appimage` searches for the `Alt+Ctrl+…` AppImage key bindings. The desktop keeps
 its AppImages on `/mnt/data/Tools` and has no `appimage.env`; the ThinkPad has no
 `/mnt/data` disk and points it at `$HOME/Tools`. Use this rather than rebinding
-the keys in a host `i3.conf`, so the bindings themselves stay in one place.
+the keys in a host `i3.conf` (which i3 would reject as duplicates, see below).
 
 `bar.env` is a shell fragment, not a Polybar config: Polybar aborts on a missing
 `include-file`, so the bar is customised through the environment instead.
@@ -66,9 +66,15 @@ font size.
 So a machine with no `hosts/` directory of its own still gets a working setup
 from the generic config alone — the overrides are purely additive.
 
-The i3 include sits at the very **end** of the config on purpose: i3 lets a
-later `bindsym` replace an earlier one, so a host can rebind any key. What a
-host cannot do is *remove* an `exec` line — so the generic config only runs things
+The i3 include sits at the very **end** of the config, but a host **cannot rebind** a
+key the generic config already binds: i3 does not let a later `bindsym` replace an
+earlier one, it reports a duplicate keybinding as a config error (`i3 -C` prints
+`ERROR: Duplicate keybinding`, verified on 4.25.1) and shows the error bar. So a
+host `i3.conf` may only bind keys that are free in the generic config. When a key
+has to behave differently per machine, decide at run time inside the generic binding
+instead — e.g. `Alt+Ctrl+D` runs `doublecmd` when the package is installed and falls
+back to the AppImage otherwise, and the AppImage keys read the host's `appimage.env`.
+Nor can a host *remove* an `exec` line — so the generic config only runs things
 that are right (or harmless) everywhere: `bin/display` picks each monitor's preferred
 mode at its highest refresh rate, and `edid-check` exits silently without the
 pinned-EDID xorg file. Brightness keys use the generic `bin/brightness`: an

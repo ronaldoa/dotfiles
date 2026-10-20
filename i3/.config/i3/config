@@ -228,8 +228,8 @@ bindsym $mod+control+g exec --no-startup-id $HOME/.config/i3/bin/chatgpt-toggle
 bindsym $mod+control+w exec --no-startup-id "pkill -9 -i wechat; sleep 1; $HOME/.config/i3/bin/appimage WeChatLinux"
 # Power menu
 bindsym $mod+control+z exec --no-startup-id $HOME/.config/rofi/bin/powermenu
-# Double Commander
-bindsym $mod+control+d exec --no-startup-id $HOME/.config/i3/bin/appimage doublecmd-gtk
+# Double Commander: the installed package if there is one, otherwise the AppImage
+bindsym $mod+control+d exec --no-startup-id "command -v doublecmd >/dev/null && exec doublecmd || exec $HOME/.config/i3/bin/appimage doublecmd-gtk"
 
 # Control mpd
 bindsym $mod+control+p exec mpc toggle
@@ -451,7 +451,8 @@ bindsym $mod+r mode "resize"
 
 # ---------------------------------------------------------------------------
 # Per-machine overrides. Stowed from hosts/<hostname>/ by bin/dotfiles-bootstrap.
-# Comes last on purpose: a later bindsym wins, so a host can rebind any key above.
+# A host may only bind keys that are free above: binding one of them again is a
+# duplicate-keybinding error in i3, not an override (see hosts/README.md).
 # A missing file is silently skipped by i3 (verified on 4.25), so this is safe
 # on a machine that has no host package yet.
 # ---------------------------------------------------------------------------
