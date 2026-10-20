@@ -53,7 +53,8 @@ brew install stow
 | `Alt+Enter` | Alacritty |
 | `Alt+C` / `Alt+T` | Firefox / Thunderbird |
 | `Alt+Shift+N` | 在 Finder 里打开主目录 |
-| `Alt+Ctrl+O/N/B/T/L/C/G/W` | Obsidian / Noi / 哔哩哔哩 / Teams / LM Studio / VS Code / ChatGPT / 微信 |
+| `Alt+Ctrl+O/B/T/L/C/G` | Obsidian / 哔哩哔哩 / Teams / LM Studio / VS Code / ChatGPT |
+| `Alt+Ctrl+N` / `Alt+Ctrl+W` | 呼出 / 隐藏 Noi / 微信主窗口（模拟 scratchpad，见下面） |
 | `Ctrl+Cmd+S` | 框选截图到剪贴板（i3 上是 `Super+S`） |
 | `Ctrl+Cmd+M`、`Ctrl+Cmd+[ / ]` | mpd 播放暂停、上一首 / 下一首（i3 上是 `Super+M`、`Super+[ / ]`；Mac 上单独的 `Cmd+M`、`Cmd+[ / ]` 是最小化和后退 / 前进，所以多加一个 `Ctrl`） |
 
@@ -74,7 +75,20 @@ brew install stow
 
 ## 窗口规则
 
-工作区分配和 i3 一样：1 LibreOffice，2 JetBrains 全家，3 Firefox / Edge Dev / Noi，4 哔哩哔哩 / 网易云音乐，5 Steam / 微信，6 VirtualBox 虚拟机，8 Thunderbird / QQ / Telegram / Obsidian。
+工作区分配和 i3 一样：1 LibreOffice，2 JetBrains 全家，3 Firefox / Edge Dev，4 哔哩哔哩 / 网易云音乐，5 Steam，6 VirtualBox 虚拟机，8 Thunderbird / QQ / Telegram / Obsidian。
+Noi 和微信不固定工作区，浮动在当前工作区上（和 i3 一样放在 scratchpad 里）。
+
+## 模拟 scratchpad
+
+AeroSpace 没有 scratchpad，`bin/scratchpad` 用一个不会切过去的工作区 `S` 代替：
+
+- 窗口在前台：挪到 `S`，看起来就是藏起来了
+- 窗口在 `S` 或别的工作区：设成浮动，挪到当前工作区并聚焦
+- 程序没开 / 主窗口关掉了：`open -a` 打开
+
+微信有好几个窗口（单独打开的聊天、看图），只有标题是「微信 / WeChat / Weixin」的主窗口会被藏起来。
+和 i3 不同的地方：AeroSpace 不能用命令移动和缩放浮动窗口，所以呼出时窗口保持上次的位置和大小，不会自动居中；也没有滑入动画。
+`S` 会出现在 `aerospace list-workspaces` 里，不要往里放别的窗口。
 
 浮动：Steam、QQ、VirtualBox 管理器、计算器、系统设置、copyq、Raycast、画中画视频。系统对话框（打开 / 保存文件等）AeroSpace 默认就会浮动。
 
@@ -84,7 +98,7 @@ brew install stow
 
 AeroSpace 没有对应功能，或者 Mac 上交给别的工具：
 
-- scratchpad（`Alt+-`）、sticky、mark 跳转、聚焦父 / 子容器、平铺和浮动之间切换焦点
+- 通用的 scratchpad（`Alt+-` / `Alt+Shift+-`；只有 Noi 和微信用 `bin/scratchpad` 模拟了）、sticky、mark 跳转、聚焦父 / 子容器、平铺和浮动之间切换焦点
 - 窗口间距开关（`Alt+G`）、`smart_gaps`（只有一个窗口时也保留间距）
 - 下拉终端：用 WezTerm 或 iTerm2 的「热键窗口」
 - 状态栏（polybar）：可以用 SketchyBar 做

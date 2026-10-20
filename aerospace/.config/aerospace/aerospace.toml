@@ -141,13 +141,14 @@ alt-t = 'exec-and-forget open -a Thunderbird'
 alt-shift-n = 'exec-and-forget open ~'
 
 alt-ctrl-o = 'exec-and-forget open -a Obsidian'
-alt-ctrl-n = 'exec-and-forget open -a Noi'
+# Noi and WeChat's main window live in a scratchpad: one key summons / hides them (bin/scratchpad)
+alt-ctrl-n = 'exec-and-forget ~/.config/aerospace/bin/scratchpad com.electron.noi Noi'
 alt-ctrl-b = 'exec-and-forget open -a bilibili'
 alt-ctrl-t = 'exec-and-forget open -a "Microsoft Teams"'
 alt-ctrl-l = 'exec-and-forget open -a "LM Studio"'
 alt-ctrl-c = 'exec-and-forget open -a "Visual Studio Code"'
 alt-ctrl-g = 'exec-and-forget open -a ChatGPT'
-alt-ctrl-w = 'exec-and-forget open -a WeChat'
+alt-ctrl-w = 'exec-and-forget ~/.config/aerospace/bin/scratchpad com.tencent.xinWeChat WeChat "^(微信|WeChat|Weixin)$"'
 
 # Screenshot: pick an area, copied to the clipboard (i3: Super+S, flameshot gui)
 ctrl-cmd-s = 'exec-and-forget screencapture -ic'
@@ -203,7 +204,7 @@ if.app-name-regex-substring = 'intellij|goland|pycharm|clion|datagrip|webstorm|j
 run = 'move-node-to-workspace 2'
 
 [[on-window-detected]]
-if.app-name-regex-substring = 'firefox|edge dev|noi'
+if.app-name-regex-substring = 'firefox|edge dev'
 run = 'move-node-to-workspace 3'
 
 [[on-window-detected]]
@@ -215,9 +216,11 @@ run = 'move-node-to-workspace 4'
 if.app-name-regex-substring = 'steam'
 run = ['layout floating', 'move-node-to-workspace 5']
 
+# Noi and WeChat float on whatever workspace is focused (Alt+Ctrl+N / Alt+Ctrl+W hide and
+# summon them); WeChat's other windows (chats, image viewer) float there too
 [[on-window-detected]]
-if.app-name-regex-substring = 'wechat|微信'
-run = 'move-node-to-workspace 5'
+if.app-name-regex-substring = '^noi$|wechat|微信'
+run = 'layout floating'
 
 # VirtualBox: the manager floats, VMs go to 6
 [[on-window-detected]]

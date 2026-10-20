@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Scratchpad for AeroSpace, which has none (i3: noi-toggle / wechat-toggle).
+#   scratchpad BUNDLE_ID APP [TITLE_REGEX]
+# The window is hidden on workspace "S", which is never shown:
+#   focused             -> move it to S (hide)
+#   anywhere else       -> float it, move it to the focused workspace and focus it (summon)
+#   no window           -> open -a APP (also brings back a main window closed to the menu bar)
+# TITLE_REGEX picks the main window when the app has several (WeChat's popped-out chats,
+# image viewer...); without it the app's first window is used.
+set -u
+bundle=$1 app=$2 title=${3:-}
+as=aerospace
+
+win=
+# --all can't be combined with --app-bundle-id; --monitor all is the same set of windows
+while IFS='|' read -r id name; do
+  if [ -z "$title" ] || [[ $name =~ $title ]]; then win=$id; break; fi
+done < <($as list-windows --monitor all --app-bundle-id "$bundle" --format '%{window-id}|%{window-title}')
+
+[ -n "$win" ] || { open -a "$app"; exit; }
+
+if [ "$win" = "$($as list-windows --focused --format '%{window-id}' 2>/dev/null)" ]; then
+  $as move-node-to-workspace --window-id "$win" S
+else
+  $as layout --window-id "$win" floating
+  $as move-node-to-workspace --window-id "$win" "$($as list-workspaces --focused)"
+  $as focus --window-id "$win"
+fi
