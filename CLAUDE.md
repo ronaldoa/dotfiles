@@ -11,12 +11,12 @@ GNU stow 管理的 dotfiles：每个顶层目录是一个包，`bin/dotfiles-boo
 |---|---|---|
 | `Alt` | i3 窗口操作，加上最常用的几个程序 | `h/j/k/l` 焦点、`f` 全屏、`q` 关窗口、`Enter` 终端、`d` rofi、`c` Firefox |
 | `Alt+Shift` | `Alt` 那个操作的"加强版"，以及 i3 自身 | `h/j/k/l` 移动窗口、`数字` 把窗口移到工作区、`c` / `r` 重载 / 重启 i3 |
-| `Alt+Ctrl` | 只用来打开程序，字母取程序名首字母（被占了就取一个相关的字母） | `o` Obsidian、`b` 哔哩哔哩、`t` Teams、`g` ChatGPT、`r` OBS（record） |
+| `Alt+Ctrl` | 只用来打开程序，字母取程序名首字母（被占了就取一个相关的字母） | `o` Obsidian、`b` 哔哩哔哩、`t` Teams、`g` ChatGPT、`c` VS Code（Code）、`r` OBS（record） |
 | `Super` | 桌面功能（不是某个程序） | 截图、录屏、音乐、通知、歌词、频谱、组件、壁纸、配色、护眼、锁屏 |
 | `Super+Shift` / `Super+Ctrl` / `Super+Alt` | `Super` 那个功能的变体 | `s` 框选截图 → `Shift+s` 全屏 / `Ctrl+s` 延时 / `Alt+s` 到剪贴板；`Esc` 锁屏 → `Shift+Esc` 电源菜单 |
 
 - 两组相同的按键表示同一个意思：`[` / `]` 是上一个 / 下一个（`Alt` 换工作区，`Super` 换歌）。
-- 历史遗留的例外，不要照着学，也不要顺手改：VS Code（`Super+c`）、Thunar（`Alt+Shift+n`）、
+- 历史遗留的例外，不要照着学，也不要顺手改：Thunar（`Alt+Shift+n`）、
   copyq（`Alt+Shift+v`）、`Alt+Tab` 是"运行命令"、`Alt+Shift+q` 是切换分割方向。
 - 这台键盘没有 `Print` 键，截图不要绑到 `Print` 上。
 

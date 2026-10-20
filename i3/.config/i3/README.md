@@ -2,7 +2,7 @@
 
 i3 4.25（自带 gaps），Nord 配色，状态栏用 polybar。
 
-- `Alt` = `$mod`（主修饰键，大部分快捷键用它），`Super`（Win 键）= `$mod1`（特效类快捷键用它）。比如 `Alt+T` 是 Thunderbird，`Super+T` 是配色切换
+- `Alt` = `$mod`（主修饰键，大部分快捷键用它），`Super`（Win 键）= `$mod1`（桌面功能用它，分组规则见「快捷键」一节）。比如 `Alt+T` 是 Thunderbird，`Super+T` 是配色切换
 - 按 `Alt+/` 可以在 rofi 里搜索所有快捷键（`bin/keyhelp`，直接读取 i3 当前加载的配置，所以永远和实际一致）
 
 ## 目录结构
@@ -30,7 +30,7 @@ bin/
   widgets           开关 conky 桌面组件
   conky-drag        Alt+拖动桌面组件，记住位置（widgets 自动启动）
   livewall          视频动态壁纸
-  theme             配色切换：Nord ⇄ pywal（从壁纸取色）
+  theme             配色切换：Nord → 经典黑色 → pywal（从壁纸取色）轮换
   appimage          启动 AppImage 目录里某个程序最新版本的 AppImage（默认 /mnt/data/Tools，可按机器改）
   appimage-menu     给 AppImage 目录里的每个程序生成一个菜单项（名字、图标取自 AppImage 内部）
   popup-pos         算出弹出卡片的位置：鼠标正下方、状态栏下面
@@ -49,7 +49,7 @@ polybar/
 | 程序 | 作用 |
 |---|---|
 | xss-lock + `bin/lock` | 5 分钟无操作或休眠前锁屏 |
-| `bin/theme restore` | 恢复上次选的配色（Nord / pywal） |
+| `bin/theme restore` | 恢复上次选的配色（Nord / 经典黑色 / pywal） |
 | `bin/ws-icons` | 工作区图标（i3 重启时自动换新的一份） |
 | `bin/widgets start` | conky 桌面组件 |
 | `bin/display --no-bar` | 每个已连接的显示器用首选分辨率及其最高刷新率；没有首选模式时选当前模式，再退回第一个可用模式；多屏从左到右排，断开的输出关闭 |
@@ -162,12 +162,13 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 
 ### 配色切换 —— `Super+T`
 
-在两套配色之间切换，影响 i3 边框、polybar、rofi 和 alacritty：
+每按一次换一套，按 Nord → 经典黑色 → pywal → Nord 的顺序轮换，没装 pywal 时跳过 pywal：
 
-- **Nord**：默认配色
-- **pywal**：从当前 nitrogen 壁纸里提取颜色生成一套配色
+- **Nord**：默认配色，影响 i3 边框、polybar、rofi、alacritty、tmux 和 p10k 提示符
+- **经典黑色**：以前的样子，终端接近纯黑、用 Tango 配色，tmux 状态栏是亮色；i3、polybar 和 rofi 仍然是 Nord
+- **pywal**：从当前 nitrogen 壁纸里提取颜色生成一套配色，范围和 Nord 一样
 
-换了壁纸以后想让配色跟上，执行 `~/.config/i3/bin/theme wal`。也可以用 `theme nord` / `theme wal` 直接指定。选择会记住，下次登录自动恢复。rofi 的启动器和电源菜单都跟着变；conky 卡片、通知、GTK 程序不跟着变。
+换了壁纸以后想让配色跟上，执行 `~/.config/i3/bin/theme wal`。也可以用 `theme nord` / `theme classic` / `theme wal` 直接指定。选择会记住，下次登录自动恢复。p10k 提示符只在之后新开的终端里变色，已经打开的终端不变。rofi 的启动器和电源菜单都跟着变；conky 卡片、通知、GTK 程序不跟着变。
 
 ## 快捷键
 
@@ -179,13 +180,13 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 |---|---|---|
 | `Alt` | i3 窗口操作，加上最常用的几个程序 | `h/j/k/l` 焦点、`f` 全屏、`q` 关窗口、`Enter` 终端、`d` rofi、`c` Firefox |
 | `Alt+Shift` | `Alt` 那个操作的"加强版"，以及 i3 自身 | `h/j/k/l` 移动窗口、`数字` 把窗口移到工作区、`c` / `r` 重载 / 重启 i3 |
-| `Alt+Ctrl` | 只用来打开程序，字母取程序名首字母（被占了就取一个相关的字母） | `o` Obsidian、`b` 哔哩哔哩、`t` Teams、`g` ChatGPT、`r` OBS（record） |
+| `Alt+Ctrl` | 只用来打开程序，字母取程序名首字母（被占了就取一个相关的字母） | `o` Obsidian、`b` 哔哩哔哩、`t` Teams、`g` ChatGPT、`c` VS Code（Code）、`r` OBS（record） |
 | `Super` | 桌面功能（不是某个程序） | 截图、录屏、音乐、通知、歌词、频谱、组件、壁纸、配色、护眼、锁屏 |
 | `Super+Shift` / `Super+Ctrl` / `Super+Alt` | `Super` 那个功能的变体 | `s` 框选截图 → `Shift+s` 全屏 / `Ctrl+s` 延时 / `Alt+s` 到剪贴板；`Esc` 锁屏 → `Shift+Esc` 电源菜单 |
 
 两组相同的按键表示同一个意思：`[` / `]` 是上一个 / 下一个（`Alt` 换工作区，`Super` 换歌）。
 
-历史遗留、暂时不动的例外：VS Code（`Super+c`）、Thunar（`Alt+Shift+n`）、copyq（`Alt+Shift+v`）、
+历史遗留、暂时不动的例外：Thunar（`Alt+Shift+n`）、copyq（`Alt+Shift+v`）、
 `Alt+Tab` 是"运行命令"而不是切换窗口（切换窗口用 `Alt+o`）、`Alt+Shift+q` 是切换分割方向。
 
 ### 窗口焦点与移动
@@ -247,21 +248,21 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | `Alt+Enter` | alacritty |
 | `Alt+d` | rofi 启动器（应用 + 命令） |
 | `Alt+Tab` | rofi 运行命令 |
-| `Alt+c` / `Super+c` | Firefox / VS Code |
+| `Alt+c` | Firefox |
 | `Alt+t` | Thunderbird |
 | `Alt+z` | Zathura |
 | `Alt+Shift+n` | Thunar |
 | `Alt+Ctrl+o` | Obsidian |
+| `Alt+Ctrl+c` | VS Code |
 | `Alt+Ctrl+r` | OBS Studio（录屏 / 直播；只是快速录屏用 `Super+Shift+R`） |
 | `Alt+Ctrl+n` | Noi |
 | `Alt+Ctrl+b` | 哔哩哔哩 |
 | `Alt+Ctrl+t` | Teams |
 | `Alt+Ctrl+l` | LM Studio |
-| `Alt+Ctrl+c` | Cursor |
 | `Alt+Ctrl+d` | Double Commander（装了 `doublecmd` 包就用包，否则用 AppImage） |
 | `Alt+Ctrl+w` | 微信（先杀掉旧进程再重新打开） |
 
-Noi、哔哩哔哩、Teams、LM Studio、Cursor、Double Commander、微信都是 AppImage，由 `bin/appimage` 按文件名前缀（不区分大小写，`Cursor-` 也能匹配 `cursor-…`）找版本号最大的那个来启动。下载新版本后直接放进去就行，不用改配置；旧版本可以删掉，也可以留着。
+Noi、哔哩哔哩、Teams、LM Studio、Double Commander、微信都是 AppImage，由 `bin/appimage` 按文件名前缀（不区分大小写，`Noi-` 也能匹配 `noi-…`）找版本号最大的那个来启动。下载新版本后直接放进去就行，不用改配置；旧版本可以删掉，也可以留着。
 
 AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hosts/<hostname>/.config/dotfiles-host/appimage.env` 里写 `APPIMAGE_DIR=...` 就能换，比如笔记本用的是 `$HOME/Tools`。没有这个文件的机器照旧用默认目录，互不影响。某台机器上没有对应的 AppImage 时，按快捷键只会弹一条通知。
 
@@ -313,7 +314,7 @@ AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hos
 | `Super+V` | 屏幕底部的音乐频谱 |
 | `Super+D` | 桌面组件开关 |
 | `Super+W` | 动态壁纸开关 |
-| `Super+T` | 配色切换：Nord ⇄ pywal |
+| `Super+T` | 配色切换：Nord → 经典黑色 → pywal 轮换 |
 
 ### 系统
 

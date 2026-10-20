@@ -53,7 +53,7 @@ ln -s ~/dotfiles/aerospace/.config/aerospace ~/.config/aerospace
 | `Alt+Enter` | Alacritty |
 | `Alt+C` / `Alt+T` | Firefox / Thunderbird |
 | `Alt+Shift+N` | 在 Finder 里打开主目录 |
-| `Alt+Ctrl+O/N/B/T/L/C/G/W` | Obsidian / Noi / 哔哩哔哩 / Teams / LM Studio / Cursor / ChatGPT / 微信 |
+| `Alt+Ctrl+O/N/B/T/L/C/G/W` | Obsidian / Noi / 哔哩哔哩 / Teams / LM Studio / VS Code / ChatGPT / 微信 |
 | `Alt+Shift+S` | 框选截图到剪贴板 |
 | `Alt+Ctrl+P`、`Alt+Ctrl+←/→` | mpd 播放暂停、上一首 / 下一首 |
 

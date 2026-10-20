@@ -145,7 +145,7 @@ alt-ctrl-n = 'exec-and-forget open -a Noi'
 alt-ctrl-b = 'exec-and-forget open -a bilibili'
 alt-ctrl-t = 'exec-and-forget open -a "Microsoft Teams"'
 alt-ctrl-l = 'exec-and-forget open -a "LM Studio"'
-alt-ctrl-c = 'exec-and-forget open -a Cursor'
+alt-ctrl-c = 'exec-and-forget open -a "Visual Studio Code"'
 alt-ctrl-g = 'exec-and-forget open -a ChatGPT'
 alt-ctrl-w = 'exec-and-forget open -a WeChat'
 
