@@ -5,6 +5,7 @@
 #   :dual                toggle a Double Commander-like left/right view (two tabs side by side)
 #   :to_other copy|move  copy/move the selection into the other pane's directory (F5/F6)
 import os
+import shutil
 import subprocess
 
 from ranger.api.commands import Command
@@ -13,8 +14,9 @@ from ranger.api.commands import Command
 class trash(Command):
     """:trash
 
-    Move the marked files (or the current file) to the freedesktop trash with trash-put,
-    so they can be restored with trash-restore (dR). Asks first for several files or a
+    Move the marked files (or the current file) to the trash: the freedesktop one with
+    trash-put on Linux (restore with trash-restore, dR), the macOS Trash with /usr/bin/trash
+    on the Mac (restore with Finder's "Put Back"). Asks first for several files or a
     non-empty directory. ranger 1.9.4's own :trash crashes ('str' object has no attribute 'path').
     """
 
@@ -37,14 +39,21 @@ class trash(Command):
             self._trash(paths)
 
     def _trash(self, paths):
-        proc = subprocess.run(["trash-put", "--", *paths], capture_output=True, text=True)
+        if shutil.which("trash-put"):
+            cmd, restore = ["trash-put", "--", *paths], "dR 恢复"
+        elif os.access("/usr/bin/trash", os.X_OK):
+            cmd, restore = ["/usr/bin/trash", "-s", *paths], "Finder 废纸篓里可放回原处"
+        else:
+            self.fm.notify("没有 trash-put(装 trash-cli)", bad=True)
+            return
+        proc = subprocess.run(cmd, capture_output=True, text=True)
         if self.fm.thisdir:
             self.fm.thisdir.mark_all(False)
         self.fm.reload_cwd()
         if proc.returncode:
-            self.fm.notify("trash-put: " + (proc.stderr.strip() or "失败"), bad=True)
+            self.fm.notify(os.path.basename(cmd[0]) + ": " + (proc.stderr.strip() or "失败"), bad=True)
         else:
-            self.fm.notify("已移到回收站: {} 个 (dR 恢复)".format(len(paths)))
+            self.fm.notify("已移到回收站: {} 个 ({})".format(len(paths), restore))
 
 
 class fzf_select(Command):
