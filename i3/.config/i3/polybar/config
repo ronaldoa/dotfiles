@@ -43,13 +43,9 @@ radius-bottom = 0.0
 line-size = 3
 line-color = ${color.BLUE}
 
-; Full width, 3px from the top of the screen, and a 10px gap below to the windows (same as i3's inner gaps).
-; i3 places dock windows itself (offset-x/y are ignored), so the gaps are a fully transparent border.
-border-top-size = 3
-border-left-size = 0
-border-right-size = 0
-border-bottom-size = 10
-border-color = #00000000
+; Flush with the top of the screen and no transparent border: a see-through strip shows the wallpaper as a stray line.
+; i3's inner gaps already put 10px between the bar and the windows when a workspace has more than one.
+border-size = 0
 
 padding = 2
 module-margin-left = 1
@@ -125,9 +121,9 @@ compositing-border = over
 [module/systray]
 type = internal/tray
 format = <tray>
-tray-size = 16
+tray-size = 22
 ; A little space between tray icons
-tray-spacing = 4px
+tray-spacing = 10px
 tray-padding = 0
 tray-background = ${color.BACKGROUND}
 
