@@ -18,6 +18,11 @@ hosts/
       i3.conf                  # optional i3 preferences
       alacritty.toml           # font size 14
       mpd.conf                 # pulse audio output
+  QingyuZhoudeMacBook-Pro/     # MacBook Pro 14", Retina
+    .config/dotfiles-host/
+      alacritty.toml           # font size 18, Cmd+key -> tmux prefix bindings
+      mpd.conf                 # osx (Core Audio) output
+      zshrc                    # Homebrew gcc/libpq/mysql, uv env, zf (z + fzf, Ctrl+G)
 ```
 
 ## How it works

@@ -1,0 +1,57 @@
+# MacBook Pro (hostname: QingyuZhoudeMacBook-Pro) -- sourced at the end of zsh/.zshrc.
+
+# Homebrew's gcc; the system `gcc` is clang
+alias gcc=gcc-15
+alias g++=g++-15
+
+# uv's installer puts it in ~/.local/bin and adds that to PATH via this snippet
+[[ -r "$HOME/.local/bin/env" ]] && . "$HOME/.local/bin/env"
+
+# keg-only Homebrew formulae: psql, mysql
+export PATH="/opt/homebrew/opt/libpq/bin:$PATH"
+export PATH="/opt/homebrew/opt/mysql-client/bin:$PATH"
+
+# z + fzf: 模糊搜索历史目录并跳转
+# 用法：zf         -> 从所有历史目录中模糊选
+#      zf foo bar -> 先用 z 过滤 foo bar，再在结果里模糊选
+zf() {
+  emulate -L zsh
+  setopt pipefail
+
+  # 如果 z 不可用就提示
+  if ! command -v z >/dev/null 2>&1; then
+    echo "z 命令不存在：请启用 Oh-My-Zsh 的 z 插件，或 source ~/.z/z.sh"
+    return 1
+  fi
+
+  local query list picked
+  query=("$@")
+
+  # z -l 输出格式通常为：<score><space><path>，第一行可能是标题，去掉分数与首行
+  if [[ ${#query[@]} -gt 0 ]]; then
+    list=$(z -l "${query[@]}" 2>/dev/null | sed '1d;s/^[0-9.]*[[:space:]]\+//')
+  else
+    list=$(z -l               2>/dev/null | sed '1d;s/^[0-9.]*[[:space:]]\+//')
+  fi
+
+  # 没有候选直接返回
+  [[ -z "$list" ]] && { echo "没有匹配的目录"; return 1; }
+
+  # fzf 里显示目录并右侧预览该目录下文件列表
+  picked=$(print -r -- "$list" | fzf \
+            --height=40% --reverse --tac --no-sort \
+            --prompt="z> " \
+            --preview 'ls -la {}' \
+            --preview-window=right:60%)
+
+  [[ -n "$picked" ]] && cd -- "$picked"
+}
+
+# 可选：绑定一个热键（Ctrl-g）一键打开 zf
+z_fzf_widget() {
+  zle -I
+  BUFFER="zf\n"
+  zle accept-line
+}
+zle -N z_fzf_widget
+bindkey '^g' z_fzf_widget  # 按 Ctrl-g 呼出 zf
