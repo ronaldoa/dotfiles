@@ -406,7 +406,18 @@ set -g mode-keys vi
 # alacritty 实现了 DECSET 2026(实机 DECRQM 回 `CSI ?2026;2$y`)和 Smulx,但它的 terminfo
 # 里没有 Sync,而 TERM 又被 alacritty.toml 改写成 xterm-256color ⇒ tmux 两个都检测不到
 # (实测 tmux info: Sync/Smulx 皆 [missing])。alacritty 不答 XTVERSION,所以只能手动申报。
-set -as terminal-features ",xterm-256color:sync:usstyle"
+# 同样的原因,真彩色 / 扩展按键 / 超链接 / 删除线 / 上划线 / osc7(当前目录)也一起申报。
+# 改完用 tmux display -p '#{client_termfeatures}' 验证。
+set -as terminal-features ",xterm-256color:RGB:sync:usstyle:extkeys:hyperlinks:strikethrough:overline:osc7"
+
+# Ctrl+Shift 系组合键能传进 tmux(oh-my-tmux 的 %if 只认 mintty/iTerm,不认 Alacritty)
+set -s extended-keys on
+
+# 允许 DCS 透传,图片协议 / 部分 OSC 序列才能穿过 tmux
+set -g allow-passthrough on
+
+# 状态栏每 30 秒刷新一次(默认 10 秒)
+set -g status-interval 30
 
 # replace C-b by C-a instead of using both prefixes
 # set -gu prefix2
