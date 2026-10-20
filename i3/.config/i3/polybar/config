@@ -37,15 +37,20 @@ offset-y = 0
 background = ${color.BACKGROUND}
 foreground = ${color.FOREGROUND}
 
-radius-top = 0.0
-radius-bottom = 0.0
+radius = 10
 
 line-size = 3
 line-color = ${color.BLUE}
 
-; Flush with the top of the screen and no transparent border: a see-through strip shows the wallpaper as a stray line.
-; i3's inner gaps already put 10px between the bar and the windows when a workspace has more than one.
-border-size = 0
+; A floating, rounded bar: a fully transparent border leaves 5px above it and 10px on the sides, matching
+; i3's gaps (smart_gaps is off, so the windows keep theirs too). i3 places dock windows itself, so
+; offset-x/y would be ignored; the border is how the gap is made. i3's inner gap already supplies the
+; 10px below, so the bottom border stays 0.
+border-top-size = 5
+border-left-size = 10
+border-right-size = 10
+border-bottom-size = 0
+border-color = #00000000
 
 padding = 2
 module-margin-left = 1

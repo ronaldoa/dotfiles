@@ -46,8 +46,8 @@ popup_during_fullscreen smart
 
 gaps inner 10
 gaps outer 0
-# No gaps when a workspace has only one window
-smart_gaps on
+# Keep the gaps even with a single window, so the wallpaper frames it
+smart_gaps off
 
 # xss-lock grabs a logind suspend inhibit lock and will use i3lock to lock the
 # screen before suspend. Use loginctl lock-session to lock your screen.
