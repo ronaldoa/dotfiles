@@ -3,8 +3,8 @@
 #   weather.sh           -> short text for the bar: "<icon> 18°"
 #   weather.sh --detail  -> toggle the weather card (current, details, next 24 h)
 # API key is read from ~/.config/openweathermap/key (kept out of the repo) or $OWM_KEY.
+# Location comes from ~/.config/i3/bin/location (by IP).
 
-CITY="Boston"
 UNITS="metric"
 LANG_CODE="zh_cn"
 ICON_COLOR="#EBCB8B"
@@ -30,7 +30,9 @@ get_icon() {
 
 fetch() {
     [ -n "$KEY" ] || return 1
-    local q="appid=$KEY&q=$CITY&units=$UNITS&lang=$LANG_CODE"
+    local lat lon
+    read -r lat lon < <(~/.config/i3/bin/location)
+    local q="appid=$KEY&lat=$lat&lon=$lon&units=$UNITS&lang=$LANG_CODE"
     local current forecast
     current=$(curl -sf --max-time 10 "$API/weather?$q") || return 1
     forecast=$(curl -sf --max-time 10 "$API/forecast?$q&cnt=8") || return 1

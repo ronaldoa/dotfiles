@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Current location from the public IP (ipinfo.io), shared by the polybar weather module and redshift.
+#   location    -> "LAT LON", e.g. "42.43 -71.07"
+# Looked up at most once an hour; offline it reuses the last answer, and Boston when there has never been one.
+# Behind a VPN this is the VPN exit's location.
+
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/location"
+
+if [ -z "$(find "$cache" -mmin -60 2>/dev/null)" ]; then
+    loc=$(curl -sf --max-time 5 https://ipinfo.io/json | jq -r '.loc // empty' 2>/dev/null)
+    if [[ $loc =~ ^-?[0-9.]+,-?[0-9.]+$ ]]; then
+        mkdir -p "$(dirname "$cache")"
+        echo "${loc/,/ }" > "$cache"
+    fi
+fi
+
+cat "$cache" 2>/dev/null || echo "42.36 -71.06"

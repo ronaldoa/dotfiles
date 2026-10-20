@@ -2,6 +2,8 @@
 # Night light (redshift) overrides on top of the automatic schedule in ~/.config/redshift/redshift.conf.
 #   nightlight          toggle: night now if the screen is in day colours, day now otherwise (Super+Ctrl+N)
 #   nightlight auto     back to the sunrise/sunset schedule (Super+R a)
+#   nightlight start    the schedule without a notification (i3 runs this at login)
+# Sunrise and sunset are for the current location from bin/location (by IP).
 # The override lasts until `auto` or the next login (the state file lives in $XDG_RUNTIME_DIR).
 set -euo pipefail
 
@@ -9,6 +11,8 @@ state="${XDG_RUNTIME_DIR:-/tmp}/dotfiles-nightlight"
 conf="$HOME/.config/redshift/redshift.conf"
 night_temp=$(sed -n 's/^temp-night=//p' "$conf" 2>/dev/null)
 night_temp=${night_temp:-4000}
+read -r lat lon < <("$HOME/.config/i3/bin/location")
+where="$lat:$lon"
 
 # The schedule daemon fades the screen back for a few seconds when told to quit; a straggler
 # would undo the new setting when it finally restores the gamma, so make sure it is gone.
@@ -19,20 +23,20 @@ stop() {
 }
 
 case "${1:-toggle}" in
-    auto)
+    auto|start)
         rm -f "$state"
         stop
-        setsid -f redshift -P >/dev/null 2>&1
-        notify-send "护眼" "自动:按日出日落切换"
+        setsid -f redshift -P -l "$where" >/dev/null 2>&1
+        [ "$1" = start ] || notify-send "护眼" "自动:按日出日落切换"
         exit 0 ;;
     toggle) ;;
-    *) echo 'usage: nightlight [toggle|auto]' >&2; exit 2 ;;
+    *) echo 'usage: nightlight [toggle|auto|start]' >&2; exit 2 ;;
 esac
 
 # What the screen shows right now: the override if there is one, else the schedule's period
 current=$(cat "$state" 2>/dev/null || true)
 if [ -z "$current" ]; then
-    redshift -p 2>/dev/null | grep -q '^Period: Daytime' && current=day || current=night
+    redshift -l "$where" -p 2>/dev/null | grep -q '^Period: Daytime' && current=day || current=night
 fi
 
 stop
