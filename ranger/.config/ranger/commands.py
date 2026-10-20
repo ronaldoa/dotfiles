@@ -2,6 +2,8 @@
 #   :fzf_select [dirs]   fuzzy-find a file (or directory) below the current dir and jump to it
 #   :z [query]           jump to a frecent directory with zoxide; no query opens an fzf picker
 #   :trash               move the selection to the trash (replaces ranger 1.9.4's broken one)
+#   :dual                toggle a Double Commander-like left/right view (two tabs side by side)
+#   :to_other copy|move  copy/move the selection into the other pane's directory (F5/F6)
 import os
 import subprocess
 
@@ -163,3 +165,51 @@ class compress(Command):
         stem = self.rest(1).rsplit(".", 1)[0] if "." in self.rest(1) else self.rest(1)
         return ["compress {}{}".format(stem, ext)
                 for ext in (".zip", ".tar.gz", ".7z", ".tar.zst", ".tar.xz")]
+
+
+class dual(Command):
+    """:dual
+
+    Toggle a two-pane view: ranger's multipane viewmode shows one column per tab, so
+    a second tab (on the same directory) is opened first when there is only one.
+    """
+
+    def execute(self):
+        if self.fm.settings.viewmode == "multipane":
+            self.fm.execute_console("set viewmode miller")
+            return
+        if len(self.fm.tabs) < 2:
+            current = self.fm.current_tab
+            self.fm.tab_new(path=self.fm.thisdir.path)
+            self.fm.tab_open(current)
+        self.fm.execute_console("set viewmode multipane")
+
+
+class to_other(Command):
+    """:to_other copy|move
+
+    Copy or move the marked files (or the current file) into the directory of the other
+    pane, i.e. the next tab -- like F5/F6 in Double Commander. With a single tab there is
+    no other pane, so it falls back to ranger's own copy/cut (paste later with pp).
+    """
+
+    allow_abbrev = False
+
+    def execute(self):
+        move = self.arg(1) == "move"
+        tabs = self.fm.get_tab_list()
+        if len(tabs) < 2:
+            self.fm.cut() if move else self.fm.copy()
+            return
+        other = tabs[(tabs.index(self.fm.current_tab) + 1) % len(tabs)]
+        dest = self.fm.tabs[other].path
+        if dest == self.fm.thisdir.path:
+            self.fm.notify("另一栏是同一个目录", bad=True)
+            return
+        self.fm.cut() if move else self.fm.copy()
+        self.fm.paste(dest=dest)
+        if self.fm.thisdir:
+            self.fm.thisdir.mark_all(False)
+
+    def tab(self, tabnum):
+        return ["to_other copy", "to_other move"]
