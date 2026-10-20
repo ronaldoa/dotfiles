@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# Night light (redshift) overrides on top of the automatic schedule in ~/.config/redshift/redshift.conf.
+#   nightlight          toggle: night now if the screen is in day colours, day now otherwise (Super+Ctrl+N)
+#   nightlight auto     back to the sunrise/sunset schedule (Super+R a)
+# The override lasts until `auto` or the next login (the state file lives in $XDG_RUNTIME_DIR).
+set -euo pipefail
+
+state="${XDG_RUNTIME_DIR:-/tmp}/dotfiles-nightlight"
+conf="$HOME/.config/redshift/redshift.conf"
+night_temp=$(sed -n 's/^temp-night=//p' "$conf" 2>/dev/null)
+night_temp=${night_temp:-4000}
+
+# The schedule daemon fades the screen back for a few seconds when told to quit; a straggler
+# would undo the new setting when it finally restores the gamma, so make sure it is gone.
+stop() {
+    pkill -x redshift || true
+    for _ in $(seq 30); do pgrep -x redshift >/dev/null || return 0; sleep 0.1; done
+    pkill -9 -x redshift || true
+}
+
+case "${1:-toggle}" in
+    auto)
+        rm -f "$state"
+        stop
+        setsid -f redshift -P >/dev/null 2>&1
+        notify-send "护眼" "自动:按日出日落切换"
+        exit 0 ;;
+    toggle) ;;
+    *) echo 'usage: nightlight [toggle|auto]' >&2; exit 2 ;;
+esac
+
+# What the screen shows right now: the override if there is one, else the schedule's period
+current=$(cat "$state" 2>/dev/null || true)
+if [ -z "$current" ]; then
+    redshift -p 2>/dev/null | grep -q '^Period: Daytime' && current=day || current=night
+fi
+
+stop
+if [ "$current" = night ]; then
+    redshift -x >/dev/null 2>&1
+    echo day >"$state"
+    notify-send "护眼" "白天模式(6500K),Super+R a 恢复自动"
+else
+    redshift -P -O "$night_temp" >/dev/null 2>&1
+    echo night >"$state"
+    notify-send "护眼" "夜间模式(${night_temp}K),Super+R a 恢复自动"
+fi

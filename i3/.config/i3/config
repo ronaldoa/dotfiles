@@ -288,12 +288,16 @@ bindsym $mod1+Shift+r exec --no-startup-id $HOME/.config/i3/bin/record
 #bindsym $mod+control+e exec --no-startup-id "xinput enable 'DELL0828:00 06CB:7E7E Touchpad'"
 #bindsym $mod+control+d exec --no-startup-id "xinput disable 'DELL0828:00 06CB:7E7E Touchpad'"
 
+# Night light: switch between day and night colours now (bin/nightlight; Super+R a returns to the schedule)
+bindsym $mod1+control+n exec --no-startup-id $HOME/.config/i3/bin/nightlight
+
 # redshift modes
 bindsym $mod1+r mode "$mode_redshift"
 set $mode_redshift Set colour temperature: (a)uto, (r)eset, (2)500K, (3)000K, (4)000K, (5)000K
-set $kill_redshift pkill -9 redshift;
+# Also drops bin/nightlight's day/night override, so its toggle reads the new state
+set $kill_redshift pkill -9 redshift; rm -f $XDG_RUNTIME_DIR/dotfiles-nightlight;
 mode "$mode_redshift" {
-    bindsym a exec --no-startup-id "$kill_redshift redshift -P", mode "default"
+    bindsym a exec --no-startup-id $HOME/.config/i3/bin/nightlight auto, mode "default"
     bindsym r exec --no-startup-id "$kill_redshift redshift -x", mode "default"
     bindsym 2 exec --no-startup-id "$kill_redshift redshift -P -O 2500", mode "default"
     bindsym 3 exec --no-startup-id "$kill_redshift redshift -P -O 3000", mode "default"
