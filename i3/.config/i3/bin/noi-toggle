@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Toggle the Noi scratchpad window; launch it if it isn't running yet.
+running() { i3-msg -t get_tree | grep -q '"class":"Noi"'; }
+
+if ! running; then
+    "$HOME/.config/i3/bin/appimage" Noi- >/dev/null 2>&1 &
+    # for_window sends the new window straight to the scratchpad; wait for it, then show it
+    for _ in $(seq 150); do running && break; sleep 0.1; done
+    sleep 0.2
+fi
+i3-msg -q '[class="Noi" window_role="browser-window"] scratchpad show'

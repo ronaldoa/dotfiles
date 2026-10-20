@@ -119,7 +119,6 @@ assign [class="firefox"] number $ws3
 assign [class="FirefoxNightly"] number $ws3
 assign [class="Microsoft-edge-dev"] number $ws3
 assign [class="Nightly"] number $ws3
-assign [class="Noi"] number $ws3
 
 assign [class="bilibili"] number $ws4
 assign [class="netease-cloud-music"] number $ws4
@@ -162,8 +161,8 @@ for_window [instance="dropdown"] floating enable, border pixel 2, move scratchpa
 # Audio visualizer (bin/cava-toggle): borderless, on every workspace, never takes focus
 for_window [instance="cava"] floating enable, sticky enable, border none
 no_focus [instance="cava"]
-# ChatGPT lives in the scratchpad
-for_window [class="Chromium" instance="chatgpt.com"] floating enable, resize set 60 ppt 80 ppt, move position center, move scratchpad
+# Noi lives in the scratchpad (its "Quit Noi now?" dialog has another class, so it stays out)
+for_window [class="Noi" window_role="browser-window"] floating enable, resize set 60 ppt 80 ppt, move position center, move scratchpad
 
 # Clipboard history (copyq)
 bindsym $mod+Shift+v exec --no-startup-id copyq toggle
@@ -219,15 +218,16 @@ bindsym $mod+Return exec --no-startup-id alacritty
 
 
 # AppImages: bin/appimage starts the newest <prefix>*.AppImage in /mnt/data/Tools (or the host's APPIMAGE_DIR), so updates need no edits here
-bindsym $mod+control+n exec --no-startup-id $HOME/.config/i3/bin/appimage Noi-
 bindsym $mod+control+o exec --no-startup-id obsidian
 bindsym $mod+control+r exec --no-startup-id obs
 bindsym $mod+control+c exec --no-startup-id code
 bindsym $mod+control+b exec --no-startup-id $HOME/.config/i3/bin/appimage bilibili-
 bindsym $mod+control+t exec --no-startup-id $HOME/.config/i3/bin/appimage teams-for-linux-
 bindsym $mod+control+l exec --no-startup-id $HOME/.config/i3/bin/appimage LM-Studio-
-# Toggle ChatGPT scratchpad
-bindsym $mod+control+g exec --no-startup-id $HOME/.config/i3/bin/chatgpt-toggle
+# Toggle Noi scratchpad (starts Noi if needed)
+bindsym $mod+control+n exec --no-startup-id $HOME/.config/i3/bin/noi-toggle
+# ChatGPT in its own window
+bindsym $mod+control+g exec --no-startup-id chromium --app=https://chatgpt.com
 # Toggle WeChat scratchpad (starts WeChat if needed)
 bindsym $mod+control+w exec --no-startup-id $HOME/.config/i3/bin/wechat-toggle
 # Restart WeChat (kills the old instance first), back into the scratchpad

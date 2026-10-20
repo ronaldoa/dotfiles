@@ -9,7 +9,7 @@ marked() { i3-msg -t get_tree | grep -q '"marks":\["wechat"\]'; }
 take() {
     i3-msg -q "$main mark --add wechat" 2>/dev/null
     marked || return 1
-    # The small login window keeps its size; the main window gets the same size as ChatGPT's
+    # The small login window keeps its size; the main window gets the same size as Noi's
     size=
     i3-msg -t get_tree | /usr/bin/python3 -c '
 import json, sys
