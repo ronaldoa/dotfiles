@@ -34,10 +34,13 @@ height = 34
 offset-x = 0
 offset-y = 0
 
-background = ${color.BACKGROUND}
+; Floating islands: the bar itself is transparent (the wallpaper shows between the groups); every
+; module gets the bar colour from format-background in [settings], and the pill-l / pill-r caps
+; round off the ends of each group (bin/i3bar puts them around the left, centre and right modules)
+background = #00000000
 foreground = ${color.FOREGROUND}
 
-radius = 10
+radius = 0
 
 line-size = 3
 line-color = ${color.BLUE}
@@ -52,9 +55,11 @@ border-right-size = 10
 border-bottom-size = 0
 border-color = #00000000
 
-padding = 2
-module-margin-left = 1
-module-margin-right = 1
+padding = 0
+; No margins: they would be transparent gaps inside a pill. The space between modules is
+; format-padding in [settings] instead, which is painted in the pill colour.
+module-margin-left = 0
+module-margin-right = 0
 
 #font-0 = "Hack Nerd Font:size=13;antialias=true;autohint=true"
 #font-1 = "Hack Nerd Font:size=12;antialias=true;autohint=true"
@@ -75,6 +80,8 @@ font-1 = Font Awesome 7 Free:style=Solid:pixelsize=13;2
 font-2 = NotoColorEmoji:pixelsize=10:fontformat=truetype:antialias=true
 font-3 = Weather Icons:style=Regular:size=10
 font-4 = Noto Sans CJK SC:size=12
+; Pill caps: a half circle as tall as the bar
+font-5 = Hack Nerd Font:size=24;5
 
 
 
@@ -110,6 +117,10 @@ compositing-overline = over
 compositing-underline = over
 compositing-border = over
 
+; Fallbacks for every module format: the pill colour and the space between modules
+format-background = ${color.BACKGROUND}
+format-padding = 1
+
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 ;;
 ;;	    __  ___          __      __
@@ -121,6 +132,33 @@ compositing-border = over
 ;; Created By Aditya Shakya @adi1090x
 ;;
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+
+
+; Rounded ends of the bar's three islands. A module can appear only once per bar, so each
+; group has its own pair (bin/i3bar: pill-l1 ... pill-r1 left, -2 centre, -3 right).
+[module/pill-l]
+type = custom/text
+format = "%{T6}%{T-}"
+format-foreground = ${color.BACKGROUND}
+format-background = #00000000
+format-padding = 0
+
+[module/pill-r]
+inherit = module/pill-l
+format = "%{T6}%{T-}"
+
+[module/pill-l1]
+inherit = module/pill-l
+[module/pill-l2]
+inherit = module/pill-l
+[module/pill-l3]
+inherit = module/pill-l
+[module/pill-r1]
+inherit = module/pill-r
+[module/pill-r2]
+inherit = module/pill-r
+[module/pill-r3]
+inherit = module/pill-r
 
 
 [module/systray]
@@ -331,11 +369,17 @@ fuzzy-match = true
 ;ws-icon-4 = web;♞
 ;ws-icon-default = ♟
 
-format = <label-state> <label-mode>
+; This module doesn't paint its format background (padding and spaces would be transparent gaps
+; in the pill), so no padding: a suffix label with its own background keeps the gap to the next module
+format = <label-state><label-mode>
+format-padding = 0
+format-suffix = " "
+format-suffix-background = ${color.BACKGROUND}
 
 label-monitor = %name%
 label-mode = %mode%
 label-mode-padding = 2
+label-mode-background = ${color.BACKGROUND}
 
 ; If any values for label-dimmed-N are defined, the workspace/mode
 ; colors will get overridden with those values if the monitor is out of focus
@@ -368,11 +412,25 @@ label-urgent-padding = 1
 
 label-empty = %name%
 label-empty-foreground = ${color.FOREGROUND}
+label-empty-background = ${color.BACKGROUND}
 label-empty-padding = 1
+
+; Workspaces that are neither focused nor urgent. This module ignores the [settings] background
+; fallback, so without an explicit background these labels would be transparent in the pill.
+label-unfocused = %name%
+label-unfocused-foreground = ${color.FOREGROUND}
+label-unfocused-background = ${color.BACKGROUND}
+label-unfocused-padding = 1
+
+label-visible = %name%
+label-visible-foreground = ${color.FOREGROUND}
+label-visible-background = ${color.BACKGROUND}
+label-visible-padding = 1
 
 ; Separator in between workspaces
 label-separator = " "
 label-separator-padding = 0
+label-separator-background = ${color.BACKGROUND}
 ;label-separator-foreground = ${color.YELLOW}
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
@@ -447,14 +505,12 @@ port = 6600
 
 interval = 2
 
-; Click the song title to pick another song, right-click to rescan the library into the queue (bin/music-pick)
-format-online = %{A1:~/.config/i3/bin/music-pick &:}%{A3:~/.config/i3/bin/music-pick --refresh &:}<label-song>%{A}%{A} <icon-prev> <toggle> <icon-next>
-format-online-prefix = " "
-format-online-prefix-font = 1
-format-online-prefix-foreground = ${color.GREEN}
+; Only the controls: the song title (or the current lyric line) is the `lyrics` module next to it.
+; Paused shows the same three icons, so the centre island doesn't change size.
+format-online = <icon-prev> <toggle> <icon-next>
 
 format-playing = ${self.format-online}
-format-paused = %{A1:~/.config/i3/bin/music-pick &:}%{A3:~/.config/i3/bin/music-pick --refresh &:}<label-song>%{A}%{A} <toggle>
+format-paused = ${self.format-online}
 
 format-offline = <label-offline>
 label-offline = "Offline"
@@ -463,7 +519,7 @@ format-stopped = MPD: Stopped
 label-stopped = "Stopped"
 
 label-song = "%title% - %artist%"
-label-song-maxlen = 60
+label-song-maxlen = 80
 label-song-ellipsis = true
 
 ;label-song-scroll = true
@@ -500,16 +556,23 @@ format-foreground = ${color.BLUE}
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
 [module/lyrics]
-; Current lyric line of the mpd song (~/.config/i3/bin/lyrics); click for the full lyrics window
+; The centre island's text: the current lyric line while playing, otherwise "title - artist",
+; padded to a fixed width that bin/i3bar works out from the screen width (NOW_COLS cells, plus
+; NOW_EXTRA while the spectrum is hidden), so the island stays the same size.
+; Click: pick a song, right-click: rescan the library (bin/music-pick), middle-click: lyrics window
 type = custom/script
-exec = ~/.config/i3/bin/lyrics bar
+; (the widths come from the environment: polybar only expands ${env:...} as a whole value)
+exec = ~/.config/i3/bin/lyrics now
 tail = true
-click-left = ~/.config/i3/bin/lyrics toggle &
+click-left = ~/.config/i3/bin/music-pick &
+click-right = ~/.config/i3/bin/music-pick --refresh &
+click-middle = ~/.config/i3/bin/lyrics toggle &
 ; Scroll to fix timing for this song: up = lyrics earlier, down = later
 scroll-up = ~/.config/i3/bin/lyrics offset +0.5 &
 scroll-down = ~/.config/i3/bin/lyrics offset -0.5 &
+format-prefix = " "
+format-prefix-foreground = ${color.GREEN}
 format-foreground = ${color.CYAN}
-label-maxlen = 60
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 

@@ -2,6 +2,12 @@
 """Synced lyrics for the song mpd is playing.
 
   lyrics bar     polybar tail script: prints the current lyric line whenever it changes
+  lyrics now [COLS [EXTRA]]
+                 polybar tail script for the bar's centre island: the current lyric line while
+                 playing synced lyrics, otherwise "title - artist", centred in exactly COLS cells
+                 (CJK counts double) so the island keeps its size; EXTRA more cells while not
+                 playing, standing in for the hidden audio spectrum. Empty when stopped.
+                 COLS/EXTRA default to $NOW_COLS/$NOW_EXTRA (set per screen by bin/i3bar).
   lyrics view    scrolling lyrics in a terminal, current line highlighted (? lists keys)
   lyrics toggle  open/close the translucent floating lyrics window (Super+L); its size,
                  position, font size and opacity are remembered in ~/.local/state
@@ -302,6 +308,42 @@ def width(s):
     return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
 
 
+def fit(s, cols):
+    """s centred in exactly cols cells, cut with an ellipsis if it is too wide."""
+    if width(s) > cols:
+        while s and width(s) > cols - 1:
+            s = s[:-1]
+        s += "…"
+    pad = cols - width(s)
+    return " " * (pad // 2) + s + " " * (pad - pad // 2)
+
+
+def now(cols=None, extra=None):
+    cols = cols or os.environ.get("NOW_COLS", "60")
+    extra = extra or os.environ.get("NOW_EXTRA", "0")
+    cols, extra = int(cols), int(extra)
+    tracker, last = Tracker(), None
+    while True:
+        state, clock = tracker.poll()
+        out = ""
+        if tracker.song and state in ("play", "pause"):
+            line = ""
+            if state == "play" and tracker.synced:
+                i = current_index(tracker.lines, clock)
+                line = tracker.lines[i][1] if i >= 0 else ""
+            if line:
+                out = f"♪ {line}"
+            else:
+                song = tracker.song
+                title = song.get("Title") or os.path.basename(song.get("file", ""))
+                out = f"{title} - {song['Artist']}" if song.get("Artist") else title
+            out = fit(out, cols + (0 if state == "play" else extra))
+        if out != last:
+            print(out, flush=True)
+            last = out
+        time.sleep(POLL)
+
+
 # ---------- lyrics window ----------
 
 STATE_FILE = os.path.expanduser("~/.local/state/lyrics-window.json")
@@ -538,5 +580,7 @@ if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "view"
     if mode == "offset" and len(sys.argv) == 3:
         offset(sys.argv[2])
+    elif mode == "now" and len(sys.argv) <= 4:
+        now(*sys.argv[2:])
     else:
         {"bar": bar, "view": view, "toggle": toggle}.get(mode, lambda: sys.exit(__doc__))()
