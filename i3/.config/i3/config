@@ -73,6 +73,10 @@ exec --no-startup-id $HOME/.config/i3/bin/compositor -b
 exec --no-startup-id sh -c "$HOME/.config/i3/bin/display --no-bar; $HOME/.config/i3/bin/theme restore; $HOME/.config/i3/bin/i3bar"
 # Workspace names show an icon per app (re-run on i3 restart, it replaces any old copy)
 exec_always --no-startup-id $HOME/.config/i3/bin/ws-icons
+# GUI programs started from a terminal take its place; the terminal returns when they close
+exec_always --no-startup-id $HOME/.config/i3/bin/swallow
+# Window overview daemon (Super+Tab); it keeps previews of windows on other workspaces
+exec --no-startup-id skippy-xd --start-daemon
 # Desktop widget (clock, weather, system, now playing)
 exec --no-startup-id $HOME/.config/i3/bin/widgets start
 exec --no-startup-id nm-applet
@@ -173,6 +177,9 @@ bindsym $mod1+n exec --no-startup-id dunstctl history-pop
 bindsym $mod1+Shift+n exec --no-startup-id dunstctl close-all
 # Calculator: results update as you type, Enter copies the result
 bindsym $mod1+equal exec --no-startup-id rofi -show calc -modi calc -no-show-match -no-sort -calc-command "echo -n '{result}' | xclip -selection clipboard"
+
+# Window overview: every window on every workspace, click one to jump to it (press again to close)
+bindsym $mod1+Tab exec --no-startup-id skippy-xd --expose --desktop -1 --toggle
 
 # Show all key bindings (searchable)
 bindsym $mod+slash exec --no-startup-id $HOME/.config/i3/bin/keyhelp

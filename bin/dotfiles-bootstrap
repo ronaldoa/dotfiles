@@ -73,7 +73,7 @@ checks=(
   blueman-applet:blueman redshift playerctl notify-send:libnotify flock:util-linux
   xrandr:xorg-xrandr xset:xorg-xset xrdb:xorg-xrdb setxkbmap:xorg-setxkbmap xkill:xorg-xkill
   killall:psmisc ip:iproute2 jq curl
-  cava xwinwrap:xwinwrap-git mpv wal:python-pywal16
+  cava xwinwrap:xwinwrap-git mpv wal:python-pywal16 skippy-xd:skippy-xd-git
   mpd mpc ncmpcpp pactl:libpulse fcitx5
   alacritty nvim:neovim tmux ranger zsh
 )

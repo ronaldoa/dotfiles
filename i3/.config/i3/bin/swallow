@@ -1,0 +1,147 @@
+#!/usr/bin/python3
+"""Window swallowing: a GUI program started from a terminal takes the terminal's place.
+
+When a new window's process descends from a tiled terminal on the same workspace (also through
+tmux: pane -> session -> attached client -> terminal), the terminal is moved to the scratchpad
+and marked "_swallow_<X window id of the program>". When that window closes, the terminal comes back.
+The state lives in i3 marks, so restarting i3 or this script loses nothing.
+
+Started by exec_always in the i3 config. Start a program with NOSWALLOW=1 to keep the terminal.
+"""
+import os
+import signal
+import subprocess
+
+import i3ipc
+from Xlib import display
+
+TERMINALS = ("alacritty", "kitty", "org.wezfurlong.wezterm", "xterm")
+# Terminals that are already special windows (bin/dropdown, lyrics, cava-toggle)
+SPECIAL = ("dropdown", "lyrics", "cava")
+MARK = "_swallow_"
+# Dialogs, menus, splash screens... are not the program itself (plain X programs like feh say "unknown")
+NOT_APPS = ("dialog", "utility", "toolbar", "splash", "menu", "dropdown_menu", "popup_menu", "tooltip", "notification")
+
+xdisplay = display.Display()
+NET_WM_PID = xdisplay.intern_atom("_NET_WM_PID")
+
+
+def window_pid(xid):
+    try:
+        prop = xdisplay.create_resource_object("window", xid).get_full_property(NET_WM_PID, 0)
+    except Exception:
+        return None
+    return prop.value[0] if prop else None
+
+
+def stat(pid):
+    """(parent pid, command name) of a process, or None."""
+    try:
+        with open(f"/proc/{pid}/stat") as f:
+            data = f.read()
+    except OSError:
+        return None
+    comm = data[data.index("(") + 1:data.rindex(")")]
+    return int(data[data.rindex(")") + 2:].split()[1]), comm
+
+
+def ancestors(pid):
+    """pid, its parent, grandparent, ... up to init."""
+    chain = []
+    while pid > 1 and len(chain) < 64:
+        chain.append(pid)
+        info = stat(pid)
+        if not info:
+            break
+        pid = info[0]
+    return chain
+
+
+def tmux_clients(chain):
+    """If the process runs inside tmux, the pids of the tmux clients attached to its session."""
+    for child, parent in zip(chain, chain[1:]):
+        info = stat(parent)
+        if info and info[1].startswith("tmux"):
+            panes = subprocess.run(["tmux", "list-panes", "-a", "-F", "#{pane_pid} #{session_name}"],
+                                   capture_output=True, text=True).stdout.split("\n")
+            session = next((line.split(" ", 1)[1] for line in panes if line.split(" ")[0] == str(child)), None)
+            if session is None:
+                return []
+            clients = subprocess.run(["tmux", "list-clients", "-t", session, "-F", "#{client_pid}"],
+                                     capture_output=True, text=True).stdout.split()
+            return [int(c) for c in clients if c.isdigit()]
+    return []
+
+
+def no_swallow(pid):
+    try:
+        with open(f"/proc/{pid}/environ", "rb") as f:
+            return b"NOSWALLOW=1" in f.read().split(b"\0")
+    except OSError:
+        return False
+
+
+def is_terminal(con):
+    names = f"{con.window_class or ''} {con.window_instance or ''}".lower()
+    return any(t in names for t in TERMINALS)
+
+
+def on_new(i3, event):
+    win = i3.get_tree().find_by_id(event.container.id)
+    if not win or not win.window or is_terminal(win):
+        return
+    ws = win.workspace()
+    if not ws or ws.name == "__i3_scratch" or win.floating in ("auto_on", "user_on"):
+        return
+    if win.ipc_data.get("window_type") in NOT_APPS or win.ipc_data.get("window_properties", {}).get("transient_for"):
+        return
+    pid = window_pid(win.window)
+    if not pid or no_swallow(pid):
+        return
+    chain = ancestors(pid)
+    for client in tmux_clients(chain):
+        chain += ancestors(client)
+
+    terms = {}
+    for con in ws.leaves():
+        if con.id != win.id and is_terminal(con) and con.floating not in ("auto_on", "user_on") \
+                and not (con.window_instance or "") in SPECIAL:
+            terms.setdefault(window_pid(con.window), []).append(con)
+    for p in chain:
+        if p in terms:
+            # Several windows of one terminal process: the focused one, else the first
+            term = next((c for c in terms[p] if c.focused), terms[p][0])
+            i3.command(f'[con_id={term.id}] mark --add {MARK}{win.window}, move scratchpad; '
+                       f'[con_id={win.id}] focus')
+            return
+
+
+def restore(i3, mark):
+    i3.command(f'[con_mark="^{mark}$"] scratchpad show, floating disable, unmark {mark}, focus')
+
+
+def on_close(i3, event):
+    restore(i3, f"{MARK}{event.container.window}")
+
+
+# exec_always runs this again on every i3 restart: replace any older copy
+for pid in filter(str.isdigit, os.listdir("/proc")):
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            argv = f.read().split(b"\0")
+    except OSError:
+        continue
+    if int(pid) != os.getpid() and len(argv) > 1 and argv[1].endswith(b"bin/swallow"):
+        os.kill(int(pid), signal.SIGTERM)
+
+i3 = i3ipc.Connection()
+# A program that closed while this script wasn't running: bring its terminal back
+tree = i3.get_tree()
+alive = {str(c.window) for c in tree.leaves()} | {str(c.window) for c in tree.scratchpad().leaves()}
+for mark in i3.get_marks():
+    if mark.startswith(MARK) and mark[len(MARK):] not in alive:
+        restore(i3, mark)
+
+i3.on("window::new", on_new)
+i3.on("window::close", on_close)
+i3.main()

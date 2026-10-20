@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Lock the screen. Used by xss-lock in the i3 config; runs i3lock in the foreground (-n) as xss-lock expects.
-# Background: a random PNG from ~/Pictures/lockscreen, else the nitrogen wallpaper, else a blurred shot of the desktop.
-# With i3lock-color the image is scaled to fill the screen (any resolution works), and it draws
-# a clock and a Nord-coloured ring that reacts to typing. Plain i3lock can't scale, so it only
-# looks right with PNGs at the screen resolution; it falls back to just the image (or a Nord background).
+# With i3lock-color the background is a blurred shot of the screen as it is right now, with a clock
+# and a Nord-coloured ring that reacts to typing.
+# Plain i3lock can't blur or scale: it shows a random PNG from ~/Pictures/lockscreen, else the
+# nitrogen wallpaper if that is a PNG (only right at the screen resolution), else a Nord background.
 
 dir="$HOME/Pictures/lockscreen"
 shopt -s nullglob
@@ -13,24 +13,19 @@ color=0
 # i3lock-color's version looks like 2.13.c.5
 i3lock --version 2>&1 | grep -q '\.c\.' && color=1
 
-if ((${#images[@]})); then
-    image=${images[RANDOM % ${#images[@]}]}
-else
-    # Otherwise the desktop wallpaper saved by nitrogen (plain i3lock only reads PNG)
-    image=$(sed -n 's/^file=//p' ~/.config/nitrogen/bg-saved.cfg 2>/dev/null | head -1)
-    ((color)) || [[ $image == *.png ]] || image=
-fi
-[ -f "$image" ] && bg=(-i "$image")
-
 if ! ((color)); then
+    if ((${#images[@]})); then
+        image=${images[RANDOM % ${#images[@]}]}
+    else
+        # Otherwise the desktop wallpaper saved by nitrogen (plain i3lock only reads PNG)
+        image=$(sed -n 's/^file=//p' ~/.config/nitrogen/bg-saved.cfg 2>/dev/null | head -1)
+        [[ $image == *.png ]] || image=
+    fi
+    [ -f "$image" ] && bg=(-i "$image")
     exec i3lock -n -c 2E3440 "${bg[@]}"
 fi
 
-if ((${#bg[@]})); then
-    bg+=(--fill)
-else
-    bg=(--blur 8)
-fi
+bg=(--blur 10)
 
 # Colours are RRGGBBAA
 exec i3lock -n -c 2E3440 "${bg[@]}" \

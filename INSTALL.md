@@ -23,7 +23,7 @@ sudo pacman -S --needed \
     firefox thunderbird thunar zathura zathura-pdf-mupdf chromium obsidian obs-studio
 
 # AUR
-yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git visual-studio-code-bin
+yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git visual-studio-code-bin skippy-xd-git
 ```
 
 亮度脚本会自动选择后端，按硬件需要安装：
@@ -53,6 +53,7 @@ yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git visual-s
 | i3lock-color（AUR） | 带时钟和输入动画的锁屏 |
 | xss-lock | 无操作 / 休眠前自动锁屏 |
 | autotiling（AUR） | 新窗口自动沿较长的一边切分 |
+| skippy-xd-git（AUR） | 窗口总览（`Super+Tab`） |
 | nitrogen | 壁纸 |
 | xsettingsd | 把 GTK 主题、图标、光标、字体下发给 GTK 程序 |
 | polkit-gnome | 图形程序要 root 时弹出密码框 |
@@ -158,7 +159,7 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
 - **通知**：屏蔽 xfce 自带的通知服务，免得它抢在 dunst 前面：`systemctl --user mask xfce4-notifyd.service`（只有装了 xfce 才需要）。
 - **天气**：把 OpenWeatherMap 的 API key 写到 `~/.config/openweathermap/key`（不在仓库里）。
 - **壁纸**：运行一次 `nitrogen`，选好壁纸，显示方式选 Zoomed Fill。
-- **锁屏图片**（可选）：放进 `~/Pictures/lockscreen`（PNG，任何分辨率）；没有图片时用 nitrogen 当前的桌面壁纸。
+- **锁屏图片**（可选）：装了 i3lock-color 时锁屏背景是当前屏幕的模糊截图，用不到图片；只有普通 i3lock 时才用 `~/Pictures/lockscreen` 里的 PNG（要和屏幕分辨率一样），没有就用 nitrogen 当前的桌面壁纸。
 - **动态壁纸**（可选）：视频放进 `~/Videos/wallpapers`。
 - **音乐**：歌放在 `~/Music`，然后 `mpc update`。
 - **显示器**：`bin/edid-check` 只对现在这台显示器有效，新机器上会提醒你处理 `/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf`（没有这个文件就什么都不做）。
