@@ -22,6 +22,7 @@ bin/
   lyrics            mpd 当前歌曲的同步歌词：状态栏单行 / 浮动歌词窗口
   music-pick        rofi 搜索 mpd 曲库并播放
   chatgpt-toggle    ChatGPT 网页放在 scratchpad 里，一键呼出/隐藏
+  wechat-toggle     微信主窗口放在 scratchpad 里，一键呼出/隐藏
   edid-check        登录时检查 xorg 里固定的显示器 EDID 是否还对得上
   xstack            按 WM_CLASS 把窗口提到最上层或压到最下层（给 conky 用）
   ws-icons          工作区名字后面显示程序图标
@@ -260,7 +261,8 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | `Alt+Ctrl+t` | Teams |
 | `Alt+Ctrl+l` | LM Studio |
 | `Alt+Ctrl+d` | Double Commander（装了 `doublecmd` 包就用包，否则用 AppImage） |
-| `Alt+Ctrl+w` | 微信（先杀掉旧进程再重新打开） |
+| `Alt+Ctrl+w` | 微信：呼出 / 隐藏（放在 scratchpad 里，没运行就先启动） |
+| `Alt+Ctrl+Shift+w` | 重启微信（先杀掉旧进程，再打开到 scratchpad） |
 
 Noi、哔哩哔哩、Teams、LM Studio、Double Commander、微信都是 AppImage，由 `bin/appimage` 按文件名前缀（不区分大小写，`Noi-` 也能匹配 `noi-…`）找版本号最大的那个来启动。下载新版本后直接放进去就行，不用改配置；旧版本可以删掉，也可以留着。
 
@@ -349,7 +351,7 @@ AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hos
 | 2 | JetBrains 全家、NetBeans |
 | 3 | Firefox、Edge Dev、Noi |
 | 4 | 哔哩哔哩、网易云音乐、FeelUOwn |
-| 5 | Steam、微信 |
+| 5 | Steam |
 | 6 | VirtualBox 虚拟机 |
 | 8 | Thunderbird、QQ、Telegram、Obsidian |
 
@@ -363,6 +365,7 @@ AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hos
 - 画中画视频：浮动，并在所有工作区显示
 - 歌词窗口：浮动、无边框、在所有工作区显示
 - ChatGPT（Chromium app 模式）：启动后直接放进 scratchpad
+- 微信：只有主窗口（标题是「微信」）放进 scratchpad，浮动居中；登录、看图、单独的聊天窗口照常在当前工作区打开。点关闭会缩到托盘，再按 `Alt+Ctrl+W` 会把它叫回来
 
 ## 状态栏（polybar）
 

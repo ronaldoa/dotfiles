@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+# Toggle the WeChat main window in the scratchpad; launch WeChat if it isn't running.
+# Every WeChat window (login, image viewer, popped-out chats) has the same class, so only the
+# window titled 微信/WeChat/Weixin gets the "wechat" mark, and only the marked window is moved.
+# The login window has that title too: it is marked first, and once you log in (it closes)
+# the main window takes over the mark.
+main='[class="(?i)wechat" title="^(微信|WeChat|Weixin)$"]'
+marked() { i3-msg -t get_tree | grep -q '"marks":\["wechat"\]'; }
+take() {
+    i3-msg -q "$main mark --add wechat" 2>/dev/null
+    marked || return 1
+    # The small login window keeps its size; the main window gets the same size as ChatGPT's
+    size=
+    i3-msg -t get_tree | /usr/bin/python3 -c '
+import json, sys
+def walk(n):
+    if "wechat" in n.get("marks", []): sys.exit(n["rect"]["width"] < 600)
+    for c in n["nodes"] + n["floating_nodes"]: walk(c)
+walk(json.load(sys.stdin))' && size='resize set 60 ppt 80 ppt,'
+    i3-msg -q "[con_mark=\"wechat\"] floating enable, $size move position center, move scratchpad"
+}
+wait_take() { for _ in $(seq "$1"); do take && return; sleep 0.1; done; return 1; }
+show() { i3-msg -q '[con_mark="wechat"] scratchpad show'; }
+
+# Closing the main window only hides it to the tray, and starting the AppImage again doesn't
+# bring it back; clicking the tray icon does, so send the icon a left click.
+tray_click() {
+    /usr/bin/python3 -c '
+import sys, time
+from Xlib import X, display
+from Xlib.protocol import event
+d = display.Display()
+root = d.screen().root
+def find(w):
+    for c in w.query_tree().children:
+        try:
+            cls = c.get_wm_class() or ()
+            small = c.get_geometry().width <= 64
+            mapped = c.get_attributes().map_state == X.IsViewable
+        except Exception:
+            continue
+        if w != root and "wechat" in cls and small and mapped:
+            return c
+        found = find(c)
+        if found:
+            return found
+icon = find(root)
+if not icon:
+    sys.exit(1)
+for kind, state in ((event.ButtonPress, 0), (event.ButtonRelease, X.Button1Mask)):
+    icon.send_event(kind(time=X.CurrentTime, root=root, window=icon, same_screen=1, child=X.NONE,
+                         root_x=0, root_y=0, event_x=11, event_y=11, state=state, detail=1),
+                    event_mask=X.ButtonPressMask | X.ButtonReleaseMask)
+    d.flush()
+    time.sleep(0.05)
+'
+}
+
+if marked || take; then
+    show
+elif pgrep -x wechat >/dev/null && tray_click; then
+    wait_take 30 && show
+else
+    "$HOME/.config/i3/bin/appimage" WeChatLinux >/dev/null 2>&1 &
+    wait_take 150 || exit 0
+    sleep 0.2
+    show
+    # If that was the login window, wait (up to 5 min) for it to close, then show the main window
+    for _ in $(seq 600); do marked || break; sleep 0.5; done
+    marked || { wait_take 100 && sleep 0.2 && show; }
+fi
