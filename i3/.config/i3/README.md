@@ -84,7 +84,7 @@ polybar/
 
 `Alt+D`、`Alt+O`、`Alt+Tab`、`Alt+/` 打开的都是屏幕中间的深色圆角卡片：顶部是搜索框，下面是带图标的列表（Papirus-Dark 图标），底部可以切换模式。主题在 `rofi/.config/rofi/themes/card.rasi`，颜色在 `themes/colors.rasi`（切到 pywal 时只替换颜色）。
 
-**电源菜单**（`Alt+Ctrl+Z` 或点状态栏电源图标）：一排五个大按钮——锁屏、睡眠、注销、重启、关机。用方向键或鼠标选择，除了锁屏都会再弹出「Yes / No」两个按钮确认。
+**电源菜单**（`Super+Shift+Esc` 或点状态栏电源图标）：一排五个大按钮——锁屏、睡眠、注销、重启、关机。用方向键或鼠标选择，除了锁屏都会再弹出「Yes / No」两个按钮确认。
 
 ### 通知（dunst）
 
@@ -170,6 +170,23 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 换了壁纸以后想让配色跟上，执行 `~/.config/i3/bin/theme wal`。也可以用 `theme nord` / `theme wal` 直接指定。选择会记住，下次登录自动恢复。rofi 的启动器和电源菜单都跟着变；conky 卡片、通知、GTK 程序不跟着变。
 
 ## 快捷键
+
+### 分组规则
+
+先看修饰键就知道它属于哪一类。新加快捷键时按这张表选组，不要跨组。
+
+| 修饰键 | 管什么 | 例子 |
+|---|---|---|
+| `Alt` | i3 窗口操作，加上最常用的几个程序 | `h/j/k/l` 焦点、`f` 全屏、`q` 关窗口、`Enter` 终端、`d` rofi、`c` Firefox |
+| `Alt+Shift` | `Alt` 那个操作的"加强版"，以及 i3 自身 | `h/j/k/l` 移动窗口、`数字` 把窗口移到工作区、`c` / `r` 重载 / 重启 i3 |
+| `Alt+Ctrl` | 只用来打开程序，字母取程序名首字母（被占了就取一个相关的字母） | `o` Obsidian、`b` 哔哩哔哩、`t` Teams、`g` ChatGPT、`r` OBS（record） |
+| `Super` | 桌面功能（不是某个程序） | 截图、录屏、音乐、通知、歌词、频谱、组件、壁纸、配色、护眼、锁屏 |
+| `Super+Shift` / `Super+Ctrl` / `Super+Alt` | `Super` 那个功能的变体 | `s` 框选截图 → `Shift+s` 全屏 / `Ctrl+s` 延时 / `Alt+s` 到剪贴板；`Esc` 锁屏 → `Shift+Esc` 电源菜单 |
+
+两组相同的按键表示同一个意思：`[` / `]` 是上一个 / 下一个（`Alt` 换工作区，`Super` 换歌）。
+
+历史遗留、暂时不动的例外：VS Code（`Super+c`）、Thunar（`Alt+Shift+n`）、copyq（`Alt+Shift+v`）、
+`Alt+Tab` 是"运行命令"而不是切换窗口（切换窗口用 `Alt+o`）、`Alt+Shift+q` 是切换分割方向。
 
 ### 窗口焦点与移动
 
@@ -262,18 +279,19 @@ AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hos
 
 | 按键 | 功能 |
 |---|---|
-| `Alt+Shift+s` | 框选截图 |
-| `Print` | 全屏截图，保存到 `~/Pictures` |
-| `Alt+Print` | 5 秒后全屏截图，保存到 `~/Pictures` |
-| `Ctrl+Print` | 全屏截图到剪贴板 |
+| `Super+s` | 框选截图 |
+| `Super+Shift+s` | 全屏截图，保存到 `~/Pictures` |
+| `Super+Ctrl+s` | 5 秒后全屏截图，保存到 `~/Pictures` |
+| `Super+Alt+s` | 全屏截图到剪贴板 |
+| `Super+Shift+r` | 开始 / 停止录屏，保存到 `~/Videos`（录制时状态栏有红点，点它也能停止） |
 
 ### 音乐与媒体
 
 | 按键 | 功能 |
 |---|---|
 | 媒体键 播放/下一首/上一首/停止 | 优先控制 MPRIS 播放器（playerctl），没有就控制 mpd |
-| `Alt+Ctrl+p` | mpd 播放/暂停 |
-| `Alt+Ctrl+←/→` | mpd 上一首 / 下一首 |
+| `Super+m` | mpd 播放/暂停 |
+| `Super+[` / `Super+]` | mpd 上一首 / 下一首 |
 | `Super+l` | 开关浮动歌词窗口 |
 | 音量键 / 静音键 / 麦克风静音键 | pactl 调音量（每次 2%） |
 | 亮度键 | 自动检测内置背光设备，用 brightnessctl 或 light 调节；没有内置背光时用 ddcutil 调外接显示器 |
@@ -302,14 +320,15 @@ AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hos
 | 按键 | 功能 |
 |---|---|
 | `Super+Esc`（松开时） | 锁屏 |
-| `Alt+Ctrl+z` | rofi 电源菜单 |
+| `Super+Shift+Esc` | rofi 电源菜单 |
+| `Super+Ctrl+n` | 护眼：立即在白天 / 夜间色温之间切换 |
 | `Super+r` | 色温模式：`a` 自动、`r` 重置、`2/3/4/5` 对应 2500K–5000K |
 | `Alt+p` | 重启 polybar |
 | `Alt+Shift+c` | 重新加载 i3 配置 |
 | `Alt+Shift+r` | 原地重启 i3（保留布局） |
 | `Alt+Shift+Esc` | 退出 i3（会先确认） |
 | `Alt+/` | 快捷键速查 |
-| `Alt+Ctrl+f` | 进入 / 退出会议／专注模式 |
+| `Super+f` | 进入 / 退出会议／专注模式 |
 
 ### 会议／专注模式
 

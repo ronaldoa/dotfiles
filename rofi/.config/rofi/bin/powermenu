@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Power menu: a row of big buttons (rofi, themes/buttons.rasi). Everything except Lock asks
-# for confirmation with a Yes / No pair of buttons. Bound to Alt+Ctrl+Z and the polybar power icon.
+# for confirmation with a Yes / No pair of buttons. Bound to Super+Shift+Esc and the polybar power icon.
 
 theme="$HOME/.config/rofi/themes/buttons.rasi"
 
