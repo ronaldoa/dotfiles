@@ -12,10 +12,12 @@ hosts/
       i3.conf                  # optional i3 preferences
       alacritty.toml           # font size 10
       appimage.env             # AppImages in ~/Tools (no /mnt/data disk)
+      mpd.conf                 # pulse audio output
   ronaldo-ms7c94/              # desktop, HDMI-0 2560x1440
     .config/dotfiles-host/
       i3.conf                  # optional i3 preferences
       alacritty.toml           # font size 14
+      mpd.conf                 # pulse audio output
 ```
 
 ## How it works
@@ -31,7 +33,7 @@ Everything a host can override is funnelled through one directory,
 |---|---|---|
 | `i3/.config/i3/config` | `include ~/.config/dotfiles-host/i3.conf` | silently skipped (verified on i3 4.25) |
 | `alacritty/…/alacritty.toml` | last entry of `general.import` | silently skipped |
-| `mpd/.config/mpd/mpd.conf` | `include_optional "…/mpd.conf"` | silently skipped (needs mpd ≥ 0.22) |
+| `mpd/.config/mpd/mpd.conf` | `include_optional "…/mpd.conf"` | silently skipped (needs mpd ≥ 0.22); mpd runs but plays only into the fifo |
 | `zsh/.zshrc` | `[[ -r … ]] && source` | silently skipped |
 | `i3/.config/i3/bin/i3bar` | sources `~/.config/dotfiles-host/bar.env` | silently skipped; built-in `BAR_LEFT` default applies |
 | `i3/.config/i3/bin/appimage`, `appimage-menu` | source `~/.config/dotfiles-host/appimage.env` | silently skipped; `APPIMAGE_DIR` defaults to `/mnt/data/Tools` |
@@ -64,7 +66,10 @@ Adding `size = …` back to the generic file would silently disable every host's
 font size.
 
 So a machine with no `hosts/` directory of its own still gets a working setup
-from the generic config alone — the overrides are purely additive.
+from the generic config alone — the overrides are purely additive. The one
+exception is mpd's audio output: the output plugins differ per OS (`pulse` on
+Linux, `osx` on the Mac) and mpd refuses to start on an unknown one, so the
+generic `mpd.conf` only has the visualizer fifo and each host adds its real output.
 
 The i3 include sits at the very **end** of the config, but a host **cannot rebind** a
 key the generic config already binds: i3 does not let a later `bindsym` replace an

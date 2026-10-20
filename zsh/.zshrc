@@ -115,9 +115,9 @@ source $ZSH/oh-my-zsh.sh
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-# 加载 fzf 自动补全和快捷键
-[ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh
-[ -f /usr/share/fzf/completion.zsh ] && source /usr/share/fzf/completion.zsh
+# 加载 fzf 自动补全和快捷键（Ctrl+R / Ctrl+T / Alt+C）
+# `fzf --zsh` 需要 fzf ≥ 0.48，不用写死 Arch（/usr/share/fzf）或 Homebrew 的路径
+command -v fzf >/dev/null && source <(fzf --zsh)
 # 历史记录最大条数（内存中）
 HISTSIZE=10000
 
@@ -176,9 +176,12 @@ for __conda_root in "$HOME/miniforge3" "$HOME/mambaforge" "$HOME/anaconda3" \
 done
 unset __conda_root
 
-export CUDA_HOME=/opt/cuda
-export PATH=$CUDA_HOME/bin:$PATH
-export LD_LIBRARY_PATH="$CUDA_HOME/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+# CUDA: only where it is installed (Arch puts it in /opt/cuda; the Mac has none)
+if [[ -d /opt/cuda ]]; then
+  export CUDA_HOME=/opt/cuda
+  export PATH=$CUDA_HOME/bin:$PATH
+  export LD_LIBRARY_PATH="$CUDA_HOME/lib64${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
 
 export PATH="$HOME/.npm-global/bin:$PATH"
 
@@ -208,8 +211,11 @@ fi
 export GOROOT="$HOME/.go"
 export GOPATH="$HOME/go"
 export PATH="$PATH:$GOROOT/bin:$GOPATH/bin"
-# 加到 ~/.bashrc
-export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+# systemd 用户服务 ssh-agent 的 socket（Linux）。macOS 没有 XDG_RUNTIME_DIR，
+# launchd 已经设好了 SSH_AUTH_SOCK，覆盖掉会让 ssh 找不到钥匙串里的密钥
+if [[ -n $XDG_RUNTIME_DIR ]]; then
+  export SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent.socket"
+fi
 
 # Drop duplicate PATH entries (nested shells, e.g. inside tmux, re-add them)
 typeset -U path PATH
