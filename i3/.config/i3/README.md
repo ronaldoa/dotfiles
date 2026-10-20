@@ -235,6 +235,7 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 | `Alt+z` | Zathura |
 | `Alt+Shift+n` | Thunar |
 | `Alt+Ctrl+o` | Obsidian |
+| `Alt+Ctrl+r` | OBS Studio（录屏 / 直播；只是快速录屏用 `Super+Shift+R`） |
 | `Alt+Ctrl+n` | Noi |
 | `Alt+Ctrl+b` | 哔哩哔哩 |
 | `Alt+Ctrl+t` | Teams |

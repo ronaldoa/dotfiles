@@ -222,6 +222,7 @@ bindsym $mod+Return exec --no-startup-id alacritty
 # AppImages: bin/appimage starts the newest <prefix>*.AppImage in /mnt/data/Tools (or the host's APPIMAGE_DIR), so updates need no edits here
 bindsym $mod+control+n exec --no-startup-id $HOME/.config/i3/bin/appimage Noi-
 bindsym $mod+control+o exec --no-startup-id obsidian
+bindsym $mod+control+r exec --no-startup-id obs
 bindsym $mod+control+b exec --no-startup-id $HOME/.config/i3/bin/appimage bilibili-
 bindsym $mod+control+t exec --no-startup-id $HOME/.config/i3/bin/appimage teams-for-linux-
 bindsym $mod+control+l exec --no-startup-id $HOME/.config/i3/bin/appimage LM-Studio-
