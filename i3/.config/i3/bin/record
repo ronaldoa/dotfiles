@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Screen recording with ffmpeg (Super+Shift+R, or click the red dot on the bar to stop).
+#   record           start, or stop if already recording
+#   record status    print the bar's red dot while recording, nothing otherwise
+#   record restore   refresh the dot (bin/i3bar runs this once fresh bars are up)
+# Records the monitor with the focused workspace, plus whatever is playing on the default
+# output, to ~/Videos/record-<date>_<time>.mp4.
+set -euo pipefail
+
+runtime="${XDG_RUNTIME_DIR:-/tmp}"
+pidfile="$runtime/dotfiles-record-$UID.pid"
+outdir="$(xdg-user-dir VIDEOS 2>/dev/null || echo "$HOME/Videos")"
+
+recording() { [ -e "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2>/dev/null; }
+# The dot is a custom/ipc module whose only hook runs `record status`
+refresh() { polybar-msg action "#record.hook.0" >/dev/null 2>&1 || true; }
+
+case "${1:-toggle}" in
+    status)  recording && echo "%{F#BF616A}●%{F-} REC"; exit 0 ;;
+    restore) refresh; exit 0 ;;
+    toggle)  ;;
+    *) echo 'usage: record [toggle|status|restore]' >&2; exit 2 ;;
+esac
+
+if recording; then
+    # SIGINT lets ffmpeg finish the file properly; give it a few seconds to write the index
+    pid=$(cat "$pidfile")
+    kill -INT "$pid"
+    for _ in $(seq 50); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+    rm -f "$pidfile"
+    refresh
+    file=$(cat "$pidfile.file" 2>/dev/null || true)
+    rm -f "$pidfile.file"
+    notify-send "录屏" "已保存:${file/#$HOME/\~}"
+    exit 0
+fi
+
+output=$(i3-msg -t get_workspaces | jq -r '.[] | select(.focused).output')
+read -r x y width height < <(i3-msg -t get_outputs |
+    jq -r --arg o "$output" '.[] | select(.name == $o).rect | "\(.x) \(.y) \(.width) \(.height)"')
+mkdir -p "$outdir"
+file="$outdir/record-$(date +%F_%H-%M-%S).mp4"
+monitor="$(pactl get-default-sink).monitor"
+
+ffmpeg -loglevel error -nostdin \
+    -f x11grab -framerate 30 -video_size "${width}x${height}" -i "$DISPLAY+$x,$y" \
+    -f pulse -i "$monitor" \
+    -c:v libx264 -preset veryfast -crf 23 -pix_fmt yuv420p \
+    -c:a aac -b:a 160k \
+    "$file" >"$runtime/dotfiles-record-$UID.log" 2>&1 &
+echo $! >"$pidfile"
+echo "$file" >"$pidfile.file"
+
+sleep 0.5
+if ! recording; then
+    rm -f "$pidfile" "$pidfile.file"
+    notify-send -u critical "录屏" "ffmpeg 启动失败,见 $runtime/dotfiles-record-$UID.log"
+    exit 1
+fi
+refresh
+notify-send "录屏" "开始录制,再按 Super+Shift+R 停止"

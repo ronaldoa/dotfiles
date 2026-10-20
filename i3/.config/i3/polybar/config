@@ -251,6 +251,9 @@ use-ui-max = false
 ; Default: 5
 interval = 5
 
+; Right-click: choose the audio output (bin/audio-output)
+click-right = ~/.config/i3/bin/audio-output &
+
 format-volume = <ramp-volume> <label-volume>
 
 format-muted = <label-muted>
@@ -373,6 +376,14 @@ label-separator-padding = 0
 ;label-separator-foreground = ${color.YELLOW}
 
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
+
+[module/record]
+; Red dot while bin/record is recording; empty (and so hidden) otherwise. Click to stop.
+; Like the collapse arrow, `initial` does not fire on startup, so bin/i3bar runs
+; `record restore` once the bars are up.
+type = custom/ipc
+hook-0 = ~/.config/i3/bin/record status
+click-left = ~/.config/i3/bin/record &
 
 [module/collapse]
 ; Arrow that folds the informational modules away when the bar runs out of room

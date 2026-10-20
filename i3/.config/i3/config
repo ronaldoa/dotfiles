@@ -81,6 +81,8 @@ exec --no-startup-id blueman-applet
 exec --no-startup-id flameshot
 # Notifications (dunst; xfce4-notifyd.service is masked so it can't grab the D-Bus name first)
 exec --no-startup-id dunst
+# Night light: warmer screen after sunset (~/.config/redshift/redshift.conf; Super+R changes it)
+exec --no-startup-id redshift -P
 # Warn if the pinned monitor EDID (xorg.conf.d/20-nvidia-connected-monitor.conf) no longer matches the live monitor
 # Exits silently when that file is absent, so this is harmless on a laptop.
 exec --no-startup-id sh -c "sleep 10; ~/.config/i3/bin/edid-check"
@@ -171,6 +173,8 @@ bindsym $mod1+period exec --no-startup-id rofimoji --action copy --skin-tone neu
 # Notifications: bring back the last one / close all
 bindsym $mod1+n exec --no-startup-id dunstctl history-pop
 bindsym $mod1+Shift+n exec --no-startup-id dunstctl close-all
+# Calculator: results update as you type, Enter copies the result
+bindsym $mod1+equal exec --no-startup-id rofi -show calc -modi calc -no-show-match -no-sort -calc-command "echo -n '{result}' | xclip -selection clipboard"
 
 # Show all key bindings (searchable)
 bindsym $mod+slash exec --no-startup-id $HOME/.config/i3/bin/keyhelp
@@ -268,13 +272,16 @@ bindsym $mod+t exec --no-startup-id thunderbird
 bindsym $mod+shift+n exec --no-startup-id thunar
 bindsym --release $mod1+Escape exec --no-startup-id loginctl lock-session
 
-# Screenshots (flameshot names files by date and time, so they never overwrite each other)
+# Screenshots (flameshot names files by date and time, so they never overwrite each other).
+# On Super+S rather than Print: the keyboard has no Print key. Alt+Shift+S selects a region.
 # Full screenshot saved to ~/Pictures
-bindsym Print exec --no-startup-id flameshot full -p $HOME/Pictures
+bindsym $mod1+s exec --no-startup-id flameshot full -p $HOME/Pictures
 # Full screenshot after 5 seconds
-bindsym $mod+Print exec --no-startup-id flameshot full -d 5000 -p $HOME/Pictures
+bindsym $mod1+control+s exec --no-startup-id flameshot full -d 5000 -p $HOME/Pictures
 # Full screenshot to the clipboard
-bindsym control+Print exec --no-startup-id flameshot full -c
+bindsym $mod1+Shift+s exec --no-startup-id flameshot full -c
+# Screen recording: start / stop, saved to ~/Videos (a red dot shows on the bar while recording)
+bindsym $mod1+Shift+r exec --no-startup-id $HOME/.config/i3/bin/record
 
 # enable and disable touchpad
 # reference: https://wiki.archlinux.org/index.php/Libinput#Disable_touchpad
@@ -286,7 +293,7 @@ bindsym $mod1+r mode "$mode_redshift"
 set $mode_redshift Set colour temperature: (a)uto, (r)eset, (2)500K, (3)000K, (4)000K, (5)000K
 set $kill_redshift pkill -9 redshift;
 mode "$mode_redshift" {
-    bindsym a exec --no-startup-id "$kill_redshift redshift -P -t 5000:4000", mode "default"
+    bindsym a exec --no-startup-id "$kill_redshift redshift -P", mode "default"
     bindsym r exec --no-startup-id "$kill_redshift redshift -x", mode "default"
     bindsym 2 exec --no-startup-id "$kill_redshift redshift -P -O 2500", mode "default"
     bindsym 3 exec --no-startup-id "$kill_redshift redshift -P -O 3000", mode "default"

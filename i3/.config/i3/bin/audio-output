@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Pick the audio output in rofi (right-click the volume on the bar).
+# Makes it the default and moves everything that is already playing over to it.
+set -euo pipefail
+
+default=$(pactl get-default-sink)
+# name<TAB>description. Not `pactl -f json`: it chokes on non-ASCII descriptions and prints (null).
+sinks=$(LC_ALL=C pactl list sinks | awk '
+    /^\tName: /        { name = substr($0, 8) }
+    /^\tDescription: / { print name "\t" substr($0, 15) }')
+[ -n "$sinks" ] || { notify-send "音频输出" "没有找到输出设备"; exit 1; }
+
+rows=$(awk -F'\t' -v d="$default" '{ print ($1 == d ? "● " : "   ") $2 }' <<<"$sinks")
+sel=$(awk -F'\t' -v d="$default" '$1 == d { print NR - 1; exit }' <<<"$sinks")
+idx=$(rofi -dmenu -i -no-custom -format i -p "󰓃 输出" ${sel:+-selected-row "$sel"} <<<"$rows") || exit 0
+
+sink=$(sed -n "$((idx + 1))p" <<<"$sinks" | cut -f1)
+[ -n "$sink" ] && [ "$sink" != "$default" ] || exit 0
+pactl set-default-sink "$sink"
+for input in $(pactl list short sink-inputs | cut -f1); do
+    pactl move-sink-input "$input" "$sink" || true
+done
+notify-send "音频输出" "$(sed -n "$((idx + 1))p" <<<"$sinks" | cut -f2)"
