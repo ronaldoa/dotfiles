@@ -38,7 +38,7 @@ Everything a host can override is funnelled through one directory,
 |---|---|---|
 | `i3/.config/i3/config` | `include ~/.config/dotfiles-host/i3.conf` | silently skipped (verified on i3 4.25) |
 | `alacritty/…/alacritty.toml` | last entry of `general.import` | silently skipped |
-| `mpd/.config/mpd/mpd.conf` | `include_optional "…/mpd.conf"` | silently skipped (needs mpd ≥ 0.22); mpd runs but plays only into the fifo |
+| `mpd/.mpdconf` | `include_optional ".config/dotfiles-host/mpd.conf"` (relative to `~`: mpd does not expand `~` in includes) | silently skipped (needs mpd ≥ 0.22); mpd runs but plays only into the fifo |
 | `zsh/.zshrc` | `[[ -r … ]] && source` | silently skipped |
 | `i3/.config/i3/bin/i3bar` | sources `~/.config/dotfiles-host/bar.env` | silently skipped; built-in `BAR_LEFT` default applies |
 | `i3/.config/i3/bin/appimage`, `appimage-menu` | source `~/.config/dotfiles-host/appimage.env` | silently skipped; `APPIMAGE_DIR` defaults to `/mnt/data/Tools` |

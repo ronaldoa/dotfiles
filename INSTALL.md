@@ -170,4 +170,16 @@ Firefox 的视频和音频默认跟随系统输出：`wireplumber` 配置只关�
 
 ## Mac
 
-Mac 上只用得到一部分（nvim、tmux、zsh、终端、ranger、mpd 等），窗口管理换成 AeroSpace。安装步骤和需要的软件见 `aerospace/.config/aerospace/README.md`。
+Mac 上只用得到一部分：aerospace、alacritty、conda、mpd、ncmpcpp、nvim、ranger、tmux、wallpapers、wezterm、zsh。
+`bin/dotfiles-bootstrap` 在 macOS 上会自动跳过 i3、picom、rofi 这些 Linux 专用的包（列表在脚本的 `LINUX_ONLY`），用法和 Linux 一样：
+
+```sh
+brew install stow mpd mpc ncmpcpp fzf chafa neovim tmux ranger
+brew install --cask alacritty
+bin/dotfiles-bootstrap -n     # 先看看会链接什么；已有的同名文件要先挪走，stow 不会覆盖
+bin/dotfiles-bootstrap
+brew services start mpd       # Homebrew 的 mpd 读 ~/.mpdconf
+```
+
+本机设置在 `hosts/QingyuZhoudeMacBook-Pro/`（mpd 用 osx 输出、alacritty 字号和 Cmd 快捷键、zshrc）。
+窗口管理换成 AeroSpace，需要的软件和 macOS 设置见 `aerospace/.config/aerospace/README.md`。

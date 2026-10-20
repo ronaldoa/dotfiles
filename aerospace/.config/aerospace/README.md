@@ -2,7 +2,7 @@
 
 把 Linux 上的 i3 配置（`i3/.config/i3/config`）翻译成 [AeroSpace](https://github.com/nikitabobko/AeroSpace)，让 Mac 上的平铺窗口操作和 i3 基本一样。Mac 上的 `Alt` 就是 `Option` 键。
 
-> 这个配置是在 Linux 上写的，只检查过 TOML 语法，还没在 Mac 上实际跑过。第一次用时如果 AeroSpace 报错，按它提示的那一行改就行。
+> 这个配置是在 Linux 上写的，已经在 Mac 上用 AeroSpace 0.20.3 加载过（`aerospace reload-config` 不报错）。
 
 ## 安装
 
@@ -11,9 +11,9 @@ brew install --cask nikitabobko/tap/aerospace
 brew install FelixKratz/formulae/borders     # 焦点窗口边框，相当于 i3 的彩色边框
 brew install mpc                             # 可选：Ctrl+Cmd+M 等 mpd 快捷键要用
 
-# 链接配置（假设 dotfiles 在 ~/dotfiles）
-mkdir -p ~/.config
-ln -s ~/dotfiles/aerospace/.config/aerospace ~/.config/aerospace
+# 链接配置：和其他包一起由 bootstrap 链接（见仓库根目录的 INSTALL.md「Mac」一节）
+brew install stow
+~/dotfiles/bin/dotfiles-bootstrap
 ```
 
 然后打开 AeroSpace，在「系统设置 → 隐私与安全性 → 辅助功能」里允许它。配置里设了 `start-at-login = true`，以后开机会自动启动。

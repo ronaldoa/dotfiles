@@ -12,7 +12,8 @@
 set -euo pipefail
 
 DOTFILES="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-HOST="${DOTFILES_HOST:-$(hostname)}"
+# -s: macOS's hostname is "Name.local", the hosts/ directory is just "Name"
+HOST="${DOTFILES_HOST:-$(hostname -s)}"
 # Untracked editor state can sit inside any package (e.g. mpd/.vscode); never link it into $HOME
 STOW_FLAGS=(--target="$HOME" --ignore='\.history' --ignore='\.vscode' --ignore='\.idea')
 ACTION="--stow"
@@ -29,17 +30,21 @@ done
 
 command -v stow >/dev/null || { echo "GNU stow is not installed" >&2; exit 1; }
 
-# Generic packages = every top-level directory that is not infrastructure.
+# Packages that only make sense on one OS. The Linux ones need X11, PipeWire/PulseAudio
+# or i3; cava is among them because its config reads from pulse.
+LINUX_ONLY='i3|picom|rofi|dunst|conky|flameshot|gtk|redshift|skippy-xd|wireplumber|cava'
+MAC_ONLY='aerospace'
+if [ "$(uname)" = Darwin ]; then SKIP="hosts|bin|$LINUX_ONLY"; else SKIP="hosts|bin|$MAC_ONLY"; fi
+
+# Generic packages = every top-level directory that is not infrastructure or for the other OS.
 # Hidden directories are skipped too: .git, and untracked editor state such as
 # .history (VS Code local history) or .vscode, which would otherwise be stowed into $HOME.
-mapfile -t PACKAGES < <(
-  find "$DOTFILES" -mindepth 1 -maxdepth 1 -type d -not -name '.*' -printf '%f\n' \
-    | grep -vxE 'hosts|bin' | sort
-)
-# Mac-only packages are skipped elsewhere
-if [ "$(uname)" != Darwin ]; then
-  mapfile -t PACKAGES < <(printf '%s\n' "${PACKAGES[@]}" | grep -vxE 'aerospace')
-fi
+# Plain loop rather than mapfile / find -printf: macOS ships bash 3.2 and BSD find.
+PACKAGES=()
+for dir in "$DOTFILES"/*/; do
+  pkg=$(basename -- "$dir")
+  printf '%s\n' "$pkg" | grep -qxE "$SKIP" || PACKAGES+=("$pkg")
+done
 [ ${#PACKAGES[@]} -gt 0 ] || { echo "no packages found in $DOTFILES" >&2; exit 1; }
 
 echo "dotfiles : $DOTFILES"
@@ -59,7 +64,7 @@ if [ -d "$DOTFILES/hosts/$HOST" ]; then
 else
   echo "host overrides: none for '$HOST' (generic config only)"
   echo "  to add some:  mkdir -p hosts/$HOST/.config/dotfiles-host"
-  echo "  available  : $(find "$DOTFILES/hosts" -mindepth 1 -maxdepth 1 -type d -printf '%f ' 2>/dev/null)"
+  echo "  available  : $(cd "$DOTFILES/hosts" && ls -d -- */ | tr -d / | tr '\n' ' ')"
 fi
 
 [ "$ACTION" = "--delete" ] && exit 0
@@ -67,16 +72,23 @@ fi
 # Report anything the configs and scripts use that is not installed here, as package names
 # (command:package, or just the command when the package has the same name). Keep in sync
 # with INSTALL.md.
-checks=(
-  i3:i3-wm polybar picom rofi rofimoji dunst conky i3lock:i3lock-color xss-lock autotiling
-  nitrogen udiskie xsettingsd copyq flameshot xfce4-power-manager nm-applet:network-manager-applet
-  blueman-applet:blueman redshift playerctl notify-send:libnotify flock:util-linux
-  xrandr:xorg-xrandr xset:xorg-xset xrdb:xorg-xrdb setxkbmap:xorg-setxkbmap xkill:xorg-xkill
-  killall:psmisc ip:iproute2 jq curl
-  cava xwinwrap:xwinwrap-git mpv wal:python-pywal16 skippy-xd:skippy-xd-git
-  mpd mpc ncmpcpp pactl:libpulse fcitx5
-  alacritty nvim:neovim tmux ranger zsh
-)
+if [ "$(uname)" = Darwin ]; then
+  checks=(
+    aerospace:nikitabobko/tap/aerospace borders:FelixKratz/formulae/borders
+    mpd mpc ncmpcpp fzf chafa nvim:neovim tmux ranger zsh
+  )
+else
+  checks=(
+    i3:i3-wm polybar picom rofi rofimoji dunst conky i3lock:i3lock-color xss-lock autotiling
+    nitrogen udiskie xsettingsd copyq flameshot xfce4-power-manager nm-applet:network-manager-applet
+    blueman-applet:blueman redshift playerctl notify-send:libnotify flock:util-linux
+    xrandr:xorg-xrandr xset:xorg-xset xrdb:xorg-xrdb setxkbmap:xorg-setxkbmap xkill:xorg-xkill
+    killall:psmisc ip:iproute2 jq curl
+    cava xwinwrap:xwinwrap-git mpv wal:python-pywal16 skippy-xd:skippy-xd-git
+    mpd mpc ncmpcpp pactl:libpulse fcitx5
+    alacritty nvim:neovim tmux ranger zsh
+  )
+fi
 missing=()
 for entry in "${checks[@]}"; do
   cmd=${entry%%:*} pkg=${entry#*:}
@@ -90,10 +102,14 @@ if [ "$(uname)" = Linux ]; then
     command -v ddcutil >/dev/null || missing+=(ddcutil)
   fi
 fi
-[ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ] || missing+=(polkit-gnome)
-# Python modules for the i3 scripts (they run /usr/bin/python3, not a conda python)
-/usr/bin/python3 -c 'import i3ipc' 2>/dev/null || missing+=(python-i3ipc)
-/usr/bin/python3 -c 'import Xlib' 2>/dev/null || missing+=(python-xlib)
+# Alacritty.app has no command on PATH
+[ "$(uname)" = Darwin ] && { [ -d /Applications/Alacritty.app ] || missing+=(alacritty); }
+if [ "$(uname)" = Linux ]; then
+  [ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ] || missing+=(polkit-gnome)
+  # Python modules for the i3 scripts (they run /usr/bin/python3, not a conda python)
+  /usr/bin/python3 -c 'import i3ipc' 2>/dev/null || missing+=(python-i3ipc)
+  /usr/bin/python3 -c 'import Xlib' 2>/dev/null || missing+=(python-xlib)
+fi
 # Commands this host's i3 overrides launch (e.g. ddcutil on the desktop, light on the ThinkPad)
 host_i3="$DOTFILES/hosts/$HOST/.config/dotfiles-host/i3.conf"
 if [ -r "$host_i3" ]; then

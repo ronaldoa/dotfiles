@@ -419,6 +419,9 @@ input {
 ###############################################################################
 #
 #
+# This file is ~/.mpdconf rather than ~/.config/mpd/mpd.conf: the Homebrew mpd only looks
+# for ~/.mpdconf, and Linux builds fall back to it when ~/.config/mpd/mpd.conf is absent.
+# ~/.config/mpd/ (stowed from mpd/.config/mpd/) still holds the database, playlists, log...
 music_directory         "~/Music"
 playlist_directory      "~/.config/mpd/playlists"
 db_file                 "~/.config/mpd/database"
@@ -461,4 +464,6 @@ audio_output {
 
 # Per-machine overrides (audio device, music_directory, ...).
 # Stowed from hosts/<hostname>/; include_optional skips a missing file.
-include_optional "~/.config/dotfiles-host/mpd.conf"
+# mpd does not expand ~ here: a relative path is joined to the directory of the file
+# mpd opened, which is ~ because this file is read as ~/.mpdconf.
+include_optional ".config/dotfiles-host/mpd.conf"
