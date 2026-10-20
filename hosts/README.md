@@ -34,7 +34,7 @@ Everything a host can override is funnelled through one directory,
 | `mpd/.config/mpd/mpd.conf` | `include_optional "…/mpd.conf"` | silently skipped (needs mpd ≥ 0.22) |
 | `zsh/.zshrc` | `[[ -r … ]] && source` | silently skipped |
 | `i3/.config/i3/bin/i3bar` | sources `~/.config/dotfiles-host/bar.env` | silently skipped; built-in `BAR_LEFT` default applies |
-| `i3/.config/i3/bin/appimage` | sources `~/.config/dotfiles-host/appimage.env` | silently skipped; `APPIMAGE_DIR` defaults to `/mnt/data/Tools` |
+| `i3/.config/i3/bin/appimage`, `appimage-menu` | source `~/.config/dotfiles-host/appimage.env` | silently skipped; `APPIMAGE_DIR` defaults to `/mnt/data/Tools` |
 
 `appimage.env` works the same way: it sets `APPIMAGE_DIR`, the directory that
 `bin/appimage` searches for the `Alt+Ctrl+…` AppImage key bindings. The desktop keeps

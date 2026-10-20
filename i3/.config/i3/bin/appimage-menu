@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+# Generate rofi/desktop menu entries for every app in the AppImage directory.
+# One entry per app (not per file): it starts the app through bin/appimage <prefix>,
+# so a newly downloaded version is picked up without touching the entry.
+#
+#   appimage-menu        add/refresh entries; already up-to-date apps are skipped
+#   appimage-menu -f     re-extract name and icon for every app
+#
+# Name, Chinese name, icon and StartupWMClass come from the .desktop file inside the
+# AppImage. Entries for apps whose files are gone are removed. Runs at i3 startup.
+host_env="$HOME/.config/dotfiles-host/appimage.env"
+[ -r "$host_env" ] && . "$host_env"
+dir=${APPIMAGE_DIR:-/mnt/data/Tools}
+apps="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+icons="${XDG_DATA_HOME:-$HOME/.local/share}/icons/appimage"
+launcher="$HOME/.config/i3/bin/appimage"
+force=0
+[ "$1" = -f ] && force=1
+
+mkdir -p "$apps" "$icons"
+shopt -s nullglob nocaseglob
+
+# Filename prefix up to the version: Noi-1.1.0-x64 -> Noi-, drawio-x86_64-24.7.17 -> drawio-x86_64-.
+# A name without a version (WeChatLinux_x86_64) is its own prefix.
+prefix_of() {
+    local s=$1 prefix='' seg
+    while [[ $s =~ ^([^-_]*[-_])(.*)$ ]]; do
+        seg=${BASH_REMATCH[1]} s=${BASH_REMATCH[2]}
+        prefix+=$seg
+        # x86_64: the 64 is architecture, not a version
+        [[ $s =~ ^v?[0-9] && ! $seg =~ x86[-_]$ ]] && { printf '%s' "$prefix"; return; }
+    done
+    printf '%s' "$1"
+}
+
+# Newest file per prefix (case-insensitive, like bin/appimage)
+declare -A newest prefix_for
+for f in "$dir"/*.appimage; do
+    base=${f##*/}
+    p=$(prefix_of "${base%.*}")
+    key=${p,,}
+    prefix_for[$key]=$p
+    if [ -z "${newest[$key]}" ] || [ "$(printf '%s\n%s\n' "${newest[$key]}" "$f" | sort -V | tail -n 1)" = "$f" ]; then
+        newest[$key]=$f
+    fi
+done
+
+# Value of Key= in the [Desktop Entry] group of a .desktop file
+field() { sed -n '/^\[Desktop Entry\]/,/^\[/{s/^'"$(printf '%s' "$2" | sed 's/[][]/\\&/g')"'=//p}' "$1" | head -n 1; }
+
+declare -A keep
+for key in "${!newest[@]}"; do
+    app=${newest[$key]} p=${prefix_for[$key]}
+    id=$(printf '%s' "${p,,}" | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')
+    entry="$apps/appimage-$id.desktop"
+    keep[$entry]=1
+    if [ $force = 0 ] && [ -f "$entry" ] && grep -qxF "X-AppImage-Path=$app" "$entry"; then
+        continue
+    fi
+
+    tmp=$(mktemp -d)
+    # Extract only what is needed; AppImages run their own runtime for this
+    # Some runtimes fail with "fopen error" unless the parent directory already exists
+    extract() {
+        mkdir -p "$tmp/squashfs-root/$(dirname "$1")"
+        ( cd "$tmp" && timeout 60 "$app" --appimage-extract "$1" ) >/dev/null 2>&1
+    }
+    extract '*.desktop'
+    meta=$(find "$tmp/squashfs-root" -maxdepth 1 -name '*.desktop' 2>/dev/null | head -n 1)
+    name='' name_zh='' comment='' wmclass='' categories='' icon_name=''
+    if [ -n "$meta" ]; then
+        name=$(field "$meta" Name) name_zh=$(field "$meta" 'Name[zh_CN]') comment=$(field "$meta" Comment)
+        wmclass=$(field "$meta" StartupWMClass) categories=$(field "$meta" Categories) icon_name=$(field "$meta" Icon)
+    fi
+    [ -n "$name" ] || name=${p%[-_]}
+
+    # Icon: <Icon>.png/.svg at the top level, else .DirIcon. These are usually symlinks into
+    # usr/share/icons, and extracting a symlink does not extract its target, so follow them.
+    icon=''
+    for rel in ${icon_name:+"$icon_name.png" "$icon_name.svg"} .DirIcon; do
+        for _ in 1 2 3; do
+            extract "$rel"
+            src="$tmp/squashfs-root/$rel"
+            [ -L "$src" ] || break
+            target=$(readlink "$src")
+            case $target in /*) rel=${target#/} ;; *) rel=$(dirname "$rel")/$target rel=${rel#./} ;; esac
+        done
+        if [ -f "$src" ] && [ ! -L "$src" ]; then icon=$src; break; fi
+    done
+    rm -f "$icons/$id".*
+    icon_path=''
+    if [ -n "$icon" ]; then
+        case $(file -b --mime-type "$icon") in
+            image/svg*) icon_path="$icons/$id.svg" ;;
+            *) icon_path="$icons/$id.png" ;;
+        esac
+        cp "$icon" "$icon_path"
+    fi
+    rm -rf "$tmp"
+
+    {
+        echo '[Desktop Entry]'
+        echo 'Type=Application'
+        echo "Name=$name"
+        [ -n "$name_zh" ] && echo "Name[zh_CN]=$name_zh"
+        [ -n "$comment" ] && echo "Comment=$comment"
+        echo "Exec=$launcher $p %U"
+        [ -n "$icon_path" ] && echo "Icon=$icon_path"
+        echo "Categories=${categories:-Utility;}"
+        [ -n "$wmclass" ] && echo "StartupWMClass=$wmclass"
+        echo 'Terminal=false'
+        echo "X-AppImage-Path=$app"
+        echo 'X-Generated-By=appimage-menu'
+    } > "$entry"
+    echo "updated: $name ($p)"
+done
+
+# Drop entries whose app is no longer in the directory
+for entry in "$apps"/appimage-*.desktop; do
+    grep -qxF 'X-Generated-By=appimage-menu' "$entry" || continue
+    [ -n "${keep[$entry]}" ] && continue
+    id=${entry##*/appimage-} id=${id%.desktop}
+    rm -f "$entry" "$icons/$id".*
+    echo "removed: $id"
+done
+
+command -v update-desktop-database >/dev/null && update-desktop-database -q "$apps" 2>/dev/null
+exit 0

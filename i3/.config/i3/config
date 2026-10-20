@@ -84,6 +84,8 @@ exec --no-startup-id dunst
 # Warn if the pinned monitor EDID (xorg.conf.d/20-nvidia-connected-monitor.conf) no longer matches the live monitor
 # Exits silently when that file is absent, so this is harmless on a laptop.
 exec --no-startup-id sh -c "sleep 10; ~/.config/i3/bin/edid-check"
+# rofi/menu entries for the AppImages in the AppImage directory (only new or changed apps are re-read)
+exec --no-startup-id $HOME/.config/i3/bin/appimage-menu
 
 
 # Use pactl to adjust volume in PulseAudio.
