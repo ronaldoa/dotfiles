@@ -245,7 +245,7 @@ bindsym $mod1+v exec --no-startup-id $HOME/.config/i3/bin/cava-toggle
 bindsym $mod1+d exec --no-startup-id $HOME/.config/i3/bin/widgets
 # Video wallpaper on/off (random video from ~/Videos/wallpapers)
 bindsym $mod1+w exec --no-startup-id $HOME/.config/i3/bin/livewall
-# Colour theme: Nord <-> pywal (from the current wallpaper)
+# Colour theme: cycle Nord -> classic black -> pywal (from the current wallpaper)
 bindsym $mod1+t exec --no-startup-id $HOME/.config/i3/bin/theme toggle
 # mpd next / previous song
 bindsym $mod+control+Right exec mpc next

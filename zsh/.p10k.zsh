@@ -168,7 +168,13 @@
   fi
 
   # Default background color.
-  typeset -g POWERLEVEL9K_BACKGROUND=234
+  # Follows ~/.config/i3/bin/theme: Nord polar night by default, the old near-black for
+  # "classic", and the terminal's own colour 0 for pywal (which sets the palette).
+  case $(<~/.cache/theme/mode) in
+    classic) typeset -g POWERLEVEL9K_BACKGROUND=234 ;;
+    wal)     typeset -g POWERLEVEL9K_BACKGROUND=0 ;;
+    *)       typeset -g POWERLEVEL9K_BACKGROUND='#3b4252' ;;
+  esac 2>/dev/null
 
   # Separator between same-color segments on the left.
   typeset -g POWERLEVEL9K_LEFT_SUBSEGMENT_SEPARATOR='%242F\uE0B1'
