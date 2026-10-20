@@ -450,7 +450,7 @@ label-offline = "Offline"
 format-stopped = MPD: Stopped
 label-stopped = "Stopped"
 
-label-song = "%title%"
+label-song = "%title% - %artist%"
 label-song-maxlen = 60
 label-song-ellipsis = true
 
