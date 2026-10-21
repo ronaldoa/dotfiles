@@ -559,8 +559,9 @@ format-foreground = ${color.BLUE}
 
 [module/lyrics]
 ; The centre island's text: the current lyric line while playing, otherwise "title - artist",
-; padded to a fixed width that bin/i3bar works out from the screen width (NOW_COLS cells, plus
-; NOW_EXTRA while the spectrum is hidden), so the island stays the same size.
+; padded to at least the width bin/i3bar works out from the screen width (NOW_COLS cells, plus
+; NOW_EXTRA while the spectrum is hidden), so short lines don't shrink the island; a longer line
+; widens it up to NOW_MAX cells and only past that gets cut with "…".
 ; Click: pick a song, right-click: rescan the library (bin/music-pick), middle-click: lyrics window
 type = custom/script
 ; (the widths come from the environment: polybar only expands ${env:...} as a whole value)

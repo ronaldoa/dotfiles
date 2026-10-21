@@ -58,9 +58,11 @@ for screen in "${ordered[@]}"; do
     # The centre island is about 45% of the screen: the song/lyric slot (8.7px per cell in Hack 12)
     # gets what is left after ~300px of caps, icons and controls, and the 14-bar spectrum
     # (16 cells; the slot takes them back while the spectrum is hidden). Measured on a 2560px screen.
+    # A longer lyric line widens the island up to 52%, which still leaves a gap on both sides.
     width=${geometry%%x*}
     now_cols=$(( (width * 45 / 100 - 300) * 10 / 87 - 16 ))
-    MONITOR="$monitor" NOW_COLS="$now_cols" NOW_EXTRA=16 BAR_LEFT="pill-l1 $BAR_LEFT pill-r1" BAR_CENTER="$center" BAR_RIGHT="pill-l3 $right pill-r3" \
+    now_max=$(( (width * 52 / 100 - 300) * 10 / 87 - 16 ))
+    MONITOR="$monitor" NOW_COLS="$now_cols" NOW_MAX="$now_max" NOW_EXTRA=16 BAR_LEFT="pill-l1 $BAR_LEFT pill-r1" BAR_CENTER="$center" BAR_RIGHT="pill-l3 $right pill-r3" \
         polybar main -c "$HOME/.config/i3/polybar/config" \
         >"$log_dir/${monitor//\//_}.log" 2>&1 9>&- &
 done

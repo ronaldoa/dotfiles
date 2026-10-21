@@ -2,12 +2,13 @@
 """Synced lyrics for the song mpd is playing.
 
   lyrics bar     polybar tail script: prints the current lyric line whenever it changes
-  lyrics now [COLS [EXTRA]]
+  lyrics now [COLS [EXTRA [MAX]]]
                  polybar tail script for the bar's centre island: the current lyric line while
-                 playing synced lyrics, otherwise "title - artist", centred in exactly COLS cells
-                 (CJK counts double) so the island keeps its size; EXTRA more cells while not
+                 playing synced lyrics, otherwise "title - artist", centred in at least COLS cells
+                 (CJK counts double) so short lines don't shrink the island; longer lines widen it
+                 up to MAX cells and only past that get cut. EXTRA more cells (on both) while not
                  playing, standing in for the hidden audio spectrum. Empty when stopped.
-                 COLS/EXTRA default to $NOW_COLS/$NOW_EXTRA (set per screen by bin/i3bar).
+                 COLS/EXTRA/MAX default to $NOW_COLS/$NOW_EXTRA/$NOW_MAX (set per screen by bin/i3bar).
   lyrics view    scrolling lyrics in a terminal, current line highlighted (? lists keys)
   lyrics toggle  open/close the translucent floating lyrics window (Super+L); its size,
                  position, font size and opacity are remembered in ~/.local/state
@@ -308,20 +309,21 @@ def width(s):
     return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
 
 
-def fit(s, cols):
-    """s centred in exactly cols cells, cut with an ellipsis if it is too wide."""
-    if width(s) > cols:
-        while s and width(s) > cols - 1:
+def fit(s, cols, most):
+    """s centred in at least cols cells, growing up to most; cut with an ellipsis past that."""
+    if width(s) > most:
+        while s and width(s) > most - 1:
             s = s[:-1]
         s += "…"
-    pad = cols - width(s)
+    pad = max(0, cols - width(s))
     return " " * (pad // 2) + s + " " * (pad - pad // 2)
 
 
-def now(cols=None, extra=None):
+def now(cols=None, extra=None, most=None):
     cols = cols or os.environ.get("NOW_COLS", "60")
     extra = extra or os.environ.get("NOW_EXTRA", "0")
-    cols, extra = int(cols), int(extra)
+    most = most or os.environ.get("NOW_MAX", cols)
+    cols, extra, most = int(cols), int(extra), int(most)
     tracker, last = Tracker(), None
     while True:
         state, clock = tracker.poll()
@@ -337,7 +339,8 @@ def now(cols=None, extra=None):
                 song = tracker.song
                 title = song.get("Title") or os.path.basename(song.get("file", ""))
                 out = f"{title} - {song['Artist']}" if song.get("Artist") else title
-            out = fit(out, cols + (0 if state == "play" else extra))
+            more = 0 if state == "play" else extra
+            out = fit(out, cols + more, max(cols, most) + more)
         if out != last:
             print(out, flush=True)
             last = out
