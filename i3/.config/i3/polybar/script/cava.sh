@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Polybar audio spectrum (tail script): prints a row of ▁▂▃▄▅▆▇█ bars per frame from cava.
-# Prints an empty line while nothing is playing, so the module disappears.
+# Prints blanks of the same width while it is silent, so the bar slot (and the centre island) keeps its size.
 
 bars="▁▂▃▄▅▆▇█"
+count=14
 work=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/polybar-cava.XXXXXX") || exit 1
 conf="$work/config"
 cava_pid= filter_pid=
@@ -17,7 +18,7 @@ trap 'exit 0' HUP INT TERM
 
 cat > "$conf" <<CONF
 [general]
-bars = 14
+bars = $count
 framerate = 30
 [input]
 method = pulse
@@ -29,8 +30,8 @@ data_format = ascii
 ascii_max_range = 7
 CONF
 
-# cava prints "3;5;0;...;" per frame: blank all-zero frames, map 0-7 to bar glyphs, drop the separators
-dict='/^\(0;\)*$/s/.*//;s/;//g;'
+# cava prints "3;5;0;...;" per frame: all-zero frames become $count spaces, map 0-7 to bar glyphs, drop the separators
+dict="/^\\(0;\\)*\$/s/.*/$(printf '%*s' "$count" '')/;s/;//g;"
 for i in {0..7}; do
     dict+="s/$i/${bars:$i:1}/g;"
 done

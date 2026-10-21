@@ -548,7 +548,8 @@ icon-next-foreground = ${color.CYAN}
 ;; _-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_
 
 [module/cava]
-; Audio spectrum of whatever is playing (hidden when silent); click for the big visualizer window
+; Audio spectrum of whatever is playing, mpd or not (blank but the same width when silent, so the
+; centre island keeps its size); click for the big visualizer window
 type = custom/script
 exec = ~/.config/i3/polybar/script/cava.sh
 tail = true
@@ -559,8 +560,8 @@ format-foreground = ${color.BLUE}
 
 [module/lyrics]
 ; The centre island's text: the current lyric line while playing, otherwise "title - artist",
-; padded to at least the width bin/i3bar works out from the screen width (NOW_COLS cells, plus
-; NOW_EXTRA while the spectrum is hidden), so short lines don't shrink the island; a longer line
+; padded to at least the width bin/i3bar works out from the screen width (NOW_COLS cells), so
+; short lines don't shrink the island; a longer line
 ; widens it up to NOW_MAX cells and only past that gets cut with "…".
 ; Click: pick a song, right-click: rescan the library (bin/music-pick), middle-click: lyrics window
 type = custom/script

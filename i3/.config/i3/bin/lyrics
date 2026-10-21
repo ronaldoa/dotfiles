@@ -2,13 +2,12 @@
 """Synced lyrics for the song mpd is playing.
 
   lyrics bar     polybar tail script: prints the current lyric line whenever it changes
-  lyrics now [COLS [EXTRA [MAX]]]
+  lyrics now [COLS [MAX]]
                  polybar tail script for the bar's centre island: the current lyric line while
                  playing synced lyrics, otherwise "title - artist", centred in at least COLS cells
                  (CJK counts double) so short lines don't shrink the island; longer lines widen it
-                 up to MAX cells and only past that get cut. EXTRA more cells (on both) while not
-                 playing, standing in for the hidden audio spectrum. Empty when stopped.
-                 COLS/EXTRA/MAX default to $NOW_COLS/$NOW_EXTRA/$NOW_MAX (set per screen by bin/i3bar).
+                 up to MAX cells and only past that get cut. Empty when stopped.
+                 COLS/MAX default to $NOW_COLS/$NOW_MAX (set per screen by bin/i3bar).
   lyrics view    scrolling lyrics in a terminal, current line highlighted (? lists keys)
   lyrics toggle  open/close the translucent floating lyrics window (Super+L); its size,
                  position, font size and opacity are remembered in ~/.local/state
@@ -319,11 +318,10 @@ def fit(s, cols, most):
     return " " * (pad // 2) + s + " " * (pad - pad // 2)
 
 
-def now(cols=None, extra=None, most=None):
+def now(cols=None, most=None):
     cols = cols or os.environ.get("NOW_COLS", "60")
-    extra = extra or os.environ.get("NOW_EXTRA", "0")
     most = most or os.environ.get("NOW_MAX", cols)
-    cols, extra, most = int(cols), int(extra), int(most)
+    cols, most = int(cols), int(most)
     tracker, last = Tracker(), None
     while True:
         state, clock = tracker.poll()
@@ -339,8 +337,7 @@ def now(cols=None, extra=None, most=None):
                 song = tracker.song
                 title = song.get("Title") or os.path.basename(song.get("file", ""))
                 out = f"{title} - {song['Artist']}" if song.get("Artist") else title
-            more = 0 if state == "play" else extra
-            out = fit(out, cols + more, max(cols, most) + more)
+            out = fit(out, cols, max(cols, most))
         if out != last:
             print(out, flush=True)
             last = out
@@ -583,7 +580,7 @@ if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "view"
     if mode == "offset" and len(sys.argv) == 3:
         offset(sys.argv[2])
-    elif mode == "now" and len(sys.argv) <= 4:
+    elif mode == "now" and len(sys.argv) <= 3:
         now(*sys.argv[2:])
     else:
         {"bar": bar, "view": view, "toggle": toggle}.get(mode, lambda: sys.exit(__doc__))()
