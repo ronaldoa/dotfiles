@@ -168,6 +168,34 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
 
 Firefox 的视频和音频默认跟随系统输出：`wireplumber` 配置只关闭 Firefox 播放流的设备记忆，保留音量和静音记忆。修改后执行 `systemctl --user restart wireplumber`，再重新开始网页播放；之后在 pavucontrol「输出设备」中设置默认设备即可。
 
+## 五、远端更新后让它生效
+
+```sh
+git pull
+git log --stat ORIG_HEAD..HEAD   # 看这次改了哪些包
+bin/dotfiles-bootstrap -n        # 只在增删、改名了文件时需要：先模拟
+bin/dotfiles-bootstrap -R        # 再重新整理链接
+```
+
+配置是链接进家目录的，只改了已有文件的内容时，`git pull` 完文件就已经是新的了，不用跑 bootstrap。
+新加了包或 `hosts/<主机名>/` 下的文件也要 `-R`；新配置用到了没装的程序，bootstrap 最后会列出来。
+
+剩下的是让正在运行的程序重新读配置：
+
+| 改了 | 怎么生效 |
+|---|---|
+| i3 | `i3 -C -c ~/.config/i3/config` 检查语法，再 `Alt+Shift+c`（`i3-msg reload`）；改了 `exec` 启动项要 `Alt+Shift+r` |
+| polybar（`i3/.config/i3/polybar`） | `Alt+p`（`~/.config/i3/bin/i3bar`，每块屏幕重建一条） |
+| picom | 一般会自己重新读；不行就 `pkill -x picom; ~/.config/i3/bin/compositor -b` |
+| dunst | `dunstctl reload` |
+| conky 桌面组件 | `~/.config/i3/bin/widgets stop; ~/.config/i3/bin/widgets start` |
+| wireplumber | `systemctl --user restart wireplumber` |
+| zsh | `exec zsh` |
+| tmux | `tmux source ~/.tmux.conf` |
+| nvim | 重开；`lazy-lock.json` 变了就 `:Lazy restore` |
+| alacritty、ranger、rofi 等 | 自动生效或下次打开生效 |
+| aerospace（Mac） | `aerospace reload-config` |
+
 ## Mac
 
 Mac 上只用得到一部分：aerospace、alacritty、conda、mpd、ncmpcpp、nvim、ranger、tmux、wallpapers、wezterm、zsh。
