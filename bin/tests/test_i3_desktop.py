@@ -662,7 +662,7 @@ printf '%s|%s|%s\\n' "$MONITOR" "$BAR_CENTER" "$BAR_RIGHT" >> "$TEST_BAR_LOG"
                 self.assertEqual(set(by_monitor), {'HDMI-1', 'eDP-1'})
                 self.assertIn('systray', by_monitor['HDMI-1'][1])
                 self.assertNotIn('systray', by_monitor['eDP-1'][1])
-                self.assertEqual(by_monitor['HDMI-1'][0], '' if active else 'mpd cava lyrics')
+                self.assertEqual(by_monitor['HDMI-1'][0], '' if active else 'pill-l2 lyrics cava mpd pill-r2')
                 self.assertEqual(by_monitor['eDP-1'][0], '')
 
 
