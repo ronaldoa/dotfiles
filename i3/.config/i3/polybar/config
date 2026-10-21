@@ -38,7 +38,7 @@ offset-y = 0
 
 ; Floating islands: the bar itself is transparent (the wallpaper shows between the groups); every
 ; module gets the bar colour from format-background in [settings], and the pill-l / pill-r caps
-; round off the ends of each group (bin/i3bar puts them around the left, centre and right modules)
+; round off the ends of each group (bin/polybar-launch puts them around the left, centre and right modules)
 background = #00000000
 foreground = ${color.FOREGROUND}
 
@@ -137,7 +137,7 @@ format-padding = 1
 
 
 ; Rounded ends of the bar's three islands. A module can appear only once per bar, so each
-; group has its own pair (bin/i3bar: pill-l1 ... pill-r1 left, -2 centre, -3 right).
+; group has its own pair (bin/polybar-launch: pill-l1 ... pill-r1 left, -2 centre, -3 right).
 [module/pill-l]
 type = custom/text
 format = "%{T6}%{T-}"
@@ -439,7 +439,7 @@ label-separator-background = ${color.BACKGROUND}
 
 [module/record]
 ; Red dot while bin/record is recording; empty (and so hidden) otherwise. Click to stop.
-; Like the collapse arrow, `initial` does not fire on startup, so bin/i3bar runs
+; Like the collapse arrow, `initial` does not fire on startup, so bin/polybar-launch runs
 ; `record restore` once the bars are up.
 type = custom/ipc
 hook-0 = ~/.config/i3/bin/record status
@@ -453,7 +453,7 @@ click-left = ~/.config/i3/bin/record &
 type = custom/ipc
 ; hook-0 = expanded, click to collapse.  hook-1 = collapsed, click to expand.
 ; No `initial`: it does not fire on startup here (verified -- the module stayed
-; blank until a hook action arrived), so bin/i3bar runs `bar-collapse restore`
+; blank until a hook action arrived), so bin/polybar-launch runs `bar-collapse restore`
 ; once the bars are up, which sets both the arrow and the hidden modules.
 hook-0 = echo ""
 hook-1 = echo ""
@@ -560,7 +560,7 @@ format-foreground = ${color.BLUE}
 
 [module/lyrics]
 ; The centre island's text: the current lyric line while playing, otherwise "title - artist",
-; padded to at least the width bin/i3bar works out from the screen width (NOW_COLS cells), so
+; padded to at least the width bin/polybar-launch works out from the screen width (NOW_COLS cells), so
 ; short lines don't shrink the island; a longer line
 ; widens it up to NOW_MAX cells and only past that gets cut with "…".
 ; Click: pick a song, right-click: rescan the library (bin/music-pick), middle-click: lyrics window

@@ -93,7 +93,7 @@ def main():
         else:
             enter()
         # The bar drops music, lyrics and its spectrum while focus mode is active.
-        run([BIN / 'i3bar'], check=True)
+        run([BIN / 'polybar-launch'], check=True)
 
 
 if __name__ == '__main__':

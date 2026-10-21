@@ -185,7 +185,7 @@ bin/dotfiles-bootstrap -R        # 再重新整理链接
 | 改了 | 怎么生效 |
 |---|---|
 | i3 | `i3 -C -c ~/.config/i3/config` 检查语法，再 `Alt+Shift+c`（`i3-msg reload`）；改了 `exec` 启动项要 `Alt+Shift+r` |
-| polybar（`i3/.config/i3/polybar`） | `Alt+p`（`~/.config/i3/bin/i3bar`，每块屏幕重建一条） |
+| polybar（`i3/.config/i3/polybar`） | `Alt+p`（`~/.config/i3/bin/polybar-launch`，每块屏幕重建一条） |
 | picom | 一般会自己重新读；不行就 `pkill -x picom; ~/.config/i3/bin/compositor -b` |
 | dunst | `dunstctl reload` |
 | conky 桌面组件 | `~/.config/i3/bin/widgets stop; ~/.config/i3/bin/widgets start` |

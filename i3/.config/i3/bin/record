@@ -2,7 +2,7 @@
 # Screen recording with ffmpeg (Super+Shift+R, or click the red dot on the bar to stop).
 #   record           start, or stop if already recording
 #   record status    print the bar's red dot while recording, nothing otherwise
-#   record restore   refresh the dot (bin/i3bar runs this once fresh bars are up)
+#   record restore   refresh the dot (bin/polybar-launch runs this once fresh bars are up)
 # Records the monitor with the focused workspace, plus whatever is playing on the default
 # output, to ~/Videos/record-<date>_<time>.mp4.
 set -euo pipefail

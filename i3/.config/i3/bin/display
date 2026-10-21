@@ -64,7 +64,7 @@ def main():
         return
     subprocess.run(['xrandr', *args], check=True)
     if '--no-bar' not in sys.argv:
-        subprocess.run([str(Path(__file__).resolve().with_name('i3bar'))], check=True)
+        subprocess.run([str(Path(__file__).resolve().with_name('polybar-launch'))], check=True)
 
 
 if __name__ == '__main__':

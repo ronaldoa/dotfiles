@@ -18,8 +18,7 @@ set $ws8 "8"
 set $ws9 "9"
 set $ws10 "10"
 
-# Font for window titles. Will also be used by the bar unless a different font
-# is used in the bar {} block below.
+# Font for window titles (polybar sets its own fonts in polybar/config).
 font pango: Input Nerd Font 12
 
 title_align center
@@ -70,7 +69,7 @@ exec --no-startup-id xfce4-power-manager
 exec --no-startup-id copyq
 exec --no-startup-id $HOME/.config/i3/bin/compositor -b
 # Set displays, then restore colours, then start one bar per screen (in this order).
-exec --no-startup-id sh -c "$HOME/.config/i3/bin/display --no-bar; $HOME/.config/i3/bin/theme restore; $HOME/.config/i3/bin/i3bar"
+exec --no-startup-id sh -c "$HOME/.config/i3/bin/display --no-bar; $HOME/.config/i3/bin/theme restore; $HOME/.config/i3/bin/polybar-launch"
 # Workspace names show an icon per app (re-run on i3 restart, it replaces any old copy)
 exec_always --no-startup-id $HOME/.config/i3/bin/ws-icons
 # GUI programs started from a terminal take its place; the terminal returns when they close
@@ -262,7 +261,7 @@ bindsym $mod1+w exec --no-startup-id $HOME/.config/i3/bin/livewall
 bindsym $mod1+t exec --no-startup-id $HOME/.config/i3/bin/theme toggle
 
 # Polybar reload
-bindsym $mod+p exec "$HOME/.config/i3/bin/i3bar"
+bindsym $mod+p exec "$HOME/.config/i3/bin/polybar-launch"
 
 # Fold the informational modules (weather, backlight, battery, volume) away when the
 # bar is crowded; also clickable as the arrow left of that group.

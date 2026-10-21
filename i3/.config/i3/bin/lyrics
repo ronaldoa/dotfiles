@@ -7,7 +7,7 @@
                  playing synced lyrics, otherwise "title - artist", centred in at least COLS cells
                  (CJK counts double) so short lines don't shrink the island; longer lines widen it
                  up to MAX cells and only past that get cut. Empty when stopped.
-                 COLS/MAX default to $NOW_COLS/$NOW_MAX (set per screen by bin/i3bar).
+                 COLS/MAX default to $NOW_COLS/$NOW_MAX (set per screen by bin/polybar-launch).
   lyrics view    scrolling lyrics in a terminal, current line highlighted (? lists keys)
   lyrics toggle  open/close the translucent floating lyrics window (Super+L); its size,
                  position, font size and opacity are remembered in ~/.local/state

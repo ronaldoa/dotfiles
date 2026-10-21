@@ -2,7 +2,7 @@
 # One bar per distinct screen area. Media and the tray appear on the primary screen only.
 set -euo pipefail
 runtime="${XDG_RUNTIME_DIR:-/tmp}"
-exec 9>"$runtime/dotfiles-i3bar-$UID.lock"
+exec 9>"$runtime/dotfiles-polybar-$UID.lock"
 flock -x 9
 
 # Left-hand modules differ per machine, so they come from the hosts/ layer rather than

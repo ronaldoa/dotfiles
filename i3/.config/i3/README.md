@@ -10,7 +10,7 @@ i3 4.25（自带 gaps），Nord 配色，状态栏用 polybar。
 ```
 config              i3 主配置
 bin/
-  i3bar             每个独立屏幕区域启动一个 polybar（镜像屏幕不重复）
+  polybar-launch    每个独立屏幕区域启动一个 polybar（镜像屏幕不重复）
   hardware          共享硬件采集：CPU/GPU、温度、电池、背光、网络、本地磁盘容量
   brightness        自动识别内置背光，或使用外接显示器 DDC/CI
   compositor        按驱动选择 picom 的 NVIDIA 重绘兼容参数

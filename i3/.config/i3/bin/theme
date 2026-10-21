@@ -155,6 +155,6 @@ tmux source-file ~/.tmux.conf 2>/dev/null
 # At login everything starts with the Nord fallback, so only a pywal theme needs a reload
 if [ "$1" != restore ] || [ "$mode" = wal ]; then
     i3-msg -q reload
-    ~/.config/i3/bin/i3bar >/dev/null 2>&1
+    ~/.config/i3/bin/polybar-launch >/dev/null 2>&1
 fi
 [ "$1" = restore ] || notify-send "主题" "已切换到 $mode"

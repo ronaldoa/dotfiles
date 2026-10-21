@@ -6,7 +6,7 @@
 #   bar-collapse            toggle
 #   bar-collapse collapse   hide the group
 #   bar-collapse expand     show it
-#   bar-collapse restore    re-apply the saved state (bin/i3bar calls this on startup:
+#   bar-collapse restore    re-apply the saved state (bin/polybar-launch calls this on startup:
 #                           hidden modules and the arrow both live inside the Polybar
 #                           process, so fresh bars come up blank and expanded)
 #   bar-collapse state      print "collapsed" or "expanded"
@@ -16,7 +16,7 @@
 set -euo pipefail
 
 runtime="${XDG_RUNTIME_DIR:-/tmp}"
-state="$runtime/dotfiles-i3bar-collapsed-$UID"
+state="$runtime/dotfiles-polybar-collapsed-$UID"
 
 host_bar="$HOME/.config/dotfiles-host/bar.env"
 if [ -r "$host_bar" ]; then

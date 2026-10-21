@@ -40,7 +40,7 @@ Everything a host can override is funnelled through one directory,
 | `alacritty/…/alacritty.toml` | last entry of `general.import` | silently skipped |
 | `mpd/.mpdconf` | `include_optional ".config/dotfiles-host/mpd.conf"` (relative to `~`: mpd does not expand `~` in includes) | silently skipped (needs mpd ≥ 0.22); mpd runs but plays only into the fifo |
 | `zsh/.zshrc` | `[[ -r … ]] && source` | silently skipped |
-| `i3/.config/i3/bin/i3bar` | sources `~/.config/dotfiles-host/bar.env` | silently skipped; built-in `BAR_LEFT` default applies |
+| `i3/.config/i3/bin/polybar-launch` | sources `~/.config/dotfiles-host/bar.env` | silently skipped; built-in `BAR_LEFT` default applies |
 | `i3/.config/i3/bin/appimage`, `appimage-menu` | source `~/.config/dotfiles-host/appimage.env` | silently skipped; `APPIMAGE_DIR` defaults to `/mnt/data/Tools` |
 
 `appimage.env` works the same way: it sets `APPIMAGE_DIR`, the directory that
@@ -51,7 +51,7 @@ the keys in a host `i3.conf` (which i3 would reject as duplicates, see below).
 
 `bar.env` is a shell fragment, not a Polybar config: Polybar aborts on a missing
 `include-file`, so the bar is customised through the environment instead.
-`modules-left/center/right` all read `${env:BAR_*:default}`, and `bin/i3bar`
+`modules-left/center/right` all read `${env:BAR_*:default}`, and `bin/polybar-launch`
 exports them. A host sets `BAR_LEFT` there to change the left-hand modules --
 the ThinkPad swaps `gpu_temp` for `gpu`, because its Skylake iGPU has no hwmon
 directory, so `hardware gpu-temp` prints nothing, Polybar renders no module, and
@@ -91,7 +91,7 @@ pinned-EDID xorg file. Brightness keys use the generic `bin/brightness`: an
 automatically detected internal panel via brightnessctl/light, otherwise DDC/CI.
 
 Polybar deliberately has no host include: it aborts on a missing `include-file`.
-`bin/i3bar` starts it for every distinct active screen area, with media and the
+`bin/polybar-launch` starts it for every distinct active screen area, with media and the
 tray on the primary output. `bin/hardware` supplies a shared, cached snapshot to
 all bars and Conky. There are no fixed battery, adapter, network or backlight IDs.
 Unsupported readings disappear; sleeping GPUs are not queried. No host package

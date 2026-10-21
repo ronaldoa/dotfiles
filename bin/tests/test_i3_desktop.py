@@ -651,7 +651,7 @@ printf '%s|%s|%s\\n' "$MONITOR" "$BAR_CENTER" "$BAR_RIGHT" >> "$TEST_BAR_LOG"
                 if active:
                     (root / f'dotfiles-i3-focus-{os.getuid()}.json').write_text('{}')
                 (root / 'bars').write_text('')
-                subprocess.run(['bash', str(BIN / 'i3bar')], env=env, check=True, timeout=5)
+                subprocess.run(['bash', str(BIN / 'polybar-launch')], env=env, check=True, timeout=5)
                 for _ in range(100):
                     rows = (root / 'bars').read_text().splitlines()
                     if len(rows) == 2:
