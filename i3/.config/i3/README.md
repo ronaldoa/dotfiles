@@ -69,6 +69,7 @@ polybar/
 | picom | 合成器（阴影、透明、淡入淡出） |
 | polybar | 状态栏 |
 | nm-applet / blueman-applet | 网络 / 蓝牙托盘 |
+| kdeconnect-indicator | KDE Connect 托盘：手机通知、共享剪贴板、互传文件 |
 | mpd | 音乐服务 |
 | flameshot | 截图 |
 | dunst | 桌面通知（`xfce4-notifyd.service` 已用 `systemctl --user mask` 屏蔽，免得它抢先占用通知服务；想换回去就 `unmask`） |

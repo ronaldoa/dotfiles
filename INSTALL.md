@@ -36,6 +36,10 @@ sudo pacman -S --needed \
     yt-dlp ffmpeg task urlscan micro xclip
 yay -S --needed lux-dl                              # 在 archlinuxcn 源里
 curl -LsSf https://astral.sh/uv/install.sh | sh     # uv 用官方脚本装到 ~/.local/bin，之后 `uv self update` 升级
+
+# 同步、远程、文档和视频（装完的设置见第四节）
+sudo pacman -S --needed syncthing tailscale kdeconnect xournalpp pdfarranger kdenlive
+yay -S --needed zotero-bin                          # archlinuxcn 源或 AUR
 ```
 
 亮度脚本会自动选择后端，按硬件需要安装：
@@ -226,6 +230,18 @@ fcitx5、fcitx5-chinese-addons（拼音）、fcitx5-gtk、fcitx5-qt、fcitx5-con
 | micro | `micro` | 操作像普通编辑器的终端编辑器（`Ctrl+S` 保存），临时改文件用 |
 | xclip | `xclip` | 命令行读写剪贴板（`… \| xclip -sel c`） |
 
+### 同步、远程、文档和视频
+
+| 包 | 干什么的 |
+|---|---|
+| syncthing | 几台机器之间自动同步文件夹，点对点直传、不经过云端；在浏览器里 `http://127.0.0.1:8384` 设置 |
+| tailscale | 把自己的几台机器连成一个私有网络，在外面也能用 `ssh <机器名>` 连回家里的台式机 |
+| kdeconnect | 手机和电脑互通：手机通知显示在电脑上、共享剪贴板、互传文件、手机当遥控器；托盘图标随 i3 启动 |
+| xournalpp | Xournal++：在 PDF 上手写 / 打字批注、签名，记手写笔记 |
+| pdfarranger | 合并、拆分、旋转、删除、重排 PDF 页面 |
+| kdenlive | 视频剪辑（剪 OBS 录的视频） |
+| zotero-bin | Zotero：管理论文和参考文献，浏览器一键收藏，在 LibreOffice / Word 里插入引用 |
+
 ### 常用程序（快捷键会打开它们）
 
 firefox、thunderbird、thunar、zathura + zathura-pdf-mupdf（zathura 不装插件打不开 PDF）、chromium（ChatGPT 窗口）、obsidian（`Alt+Ctrl+O`）、obs-studio（`Alt+Ctrl+R`）、visual-studio-code-bin（AUR，`Alt+Ctrl+C`）。
@@ -257,6 +273,10 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
 - **锁屏图片**（可选）：装了 i3lock-color 时锁屏背景是当前屏幕的模糊截图，用不到图片；只有普通 i3lock 时才用 `~/Pictures/lockscreen` 里的 PNG（要和屏幕分辨率一样），没有就用 nitrogen 当前的桌面壁纸。
 - **动态壁纸**（可选）：视频放进 `~/Videos/wallpapers`。
 - **音乐**：歌放在 `~/Music`，然后 `mpc update`。
+- **Syncthing**：`systemctl --user enable --now syncthing`（开机自动运行），再到 `http://127.0.0.1:8384` 添加其他机器和要同步的文件夹。
+- **Tailscale**：`sudo systemctl enable --now tailscaled`，`sudo tailscale up` 后按提示在浏览器里登录；`sudo tailscale set --operator=$USER` 之后不用 sudo 也能用 `tailscale` 命令。
+- **防火墙**（开了 ufw 才需要）：KDE Connect 要 `sudo ufw allow 1714:1764/udp` 和 `sudo ufw allow 1714:1764/tcp`；Syncthing 要 `sudo ufw allow syncthing`，局域网里才能直连。
+- **KDE Connect**：手机装 KDE Connect（安卓在应用商店 / F-Droid，iPhone 在 App Store），和电脑连同一个网络，在托盘图标里配对。
 - **显示器**：`bin/edid-check` 只对现在这台显示器有效，新机器上会提醒你处理 `/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf`（没有这个文件就什么都不做）。
 
 各功能的用法和快捷键见 `i3/.config/i3/README.md`。

@@ -85,6 +85,8 @@ exec --no-startup-id $HOME/.config/i3/bin/widgets start
 exec --no-startup-id nm-applet
 exec --no-startup-id mpd
 exec --no-startup-id blueman-applet
+# KDE Connect tray icon (phone notifications, shared clipboard, file sending); the daemon starts with it
+exec --no-startup-id kdeconnect-indicator
 exec --no-startup-id flameshot
 # Notifications (dunst; xfce4-notifyd.service is masked so it can't grab the D-Bus name first)
 exec --no-startup-id dunst
