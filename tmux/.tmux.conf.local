@@ -432,6 +432,9 @@ set -g status-interval 30
 # display a message after toggling mouse support
 bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?#{mouse},on,off}'
 
+# 只留当前 pane,关掉这个窗口里的其他 pane(only,同 Vim 的 C-w o)
+bind O confirm-before -p "kill other panes? (y/n)" "kill-pane -a"
+
 # move status line to top
 #set -g status-position top
 
