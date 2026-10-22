@@ -397,3 +397,16 @@ sudo ufw allow from 192.168.1.0/24 to any port 22
 - 校园网常常限制 UDP，打不通直连时会走中转服务器（`via DERP`），能连上，只是延迟高一点，传大文件会慢。
 - 发起连接那台要自己能装 Tailscale（需要管理员权限）；学校机房、实验室的公用机一般装不了，也不要在公用机上登录自己的账号。
 - 连不上时，先在发起连接那台跑 `tailscale status`，看家里那台是不是在线。
+
+**接着用家里的 tmux**：tmux 会话一直在家里那台上跑，ssh 断了也不会退出，连上后 attach 就能接着做：
+
+```sh
+ssh home
+tmux ls               # 看有哪些会话
+tmux attach -t 0      # 接上会话 0；一步到位：ssh -t home tmux attach -t 0
+```
+
+- 家里屏幕上那个 tmux 还接着时，两边显示同一个画面，窗口大小跟最后操作的那一边走；`tmux attach -d -t 0` 会把其他客户端断开。回家后再 attach 一次就恢复了。
+- 网断了、笔记本合上都没关系，程序还在家里跑，重新 ssh 再 attach 就行。
+- 家里那台重启或关机后会话就没了（`.tmux.conf.local` 里 tmux-resurrect / continuum 是注释掉的）。
+- 颜色乱或报 `unknown terminal`：发起连接那台的终端设了家里不认识的 `TERM`（如 Ghostty、kitty），用 `TERM=xterm-256color ssh home`。
