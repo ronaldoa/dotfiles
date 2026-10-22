@@ -17,7 +17,7 @@ GNU stow 管理的 dotfiles：每个顶层目录是一个包，`bin/dotfiles-boo
 
 - 两组相同的按键表示同一个意思：`[` / `]` 是上一个 / 下一个（`Alt` 换工作区，`Super` 换歌）。
 - 历史遗留的例外，不要照着学，也不要顺手改：Thunar（`Alt+Shift+n`）、
-  copyq（`Alt+Shift+v`）、`Alt+Tab` 是"运行命令"、`Alt+Shift+q` 是切换分割方向。
+  copyq（`Alt+Shift+v`）、`Alt+Tab` 是"运行命令"。
 - 这台键盘没有 `Print` 键，截图不要绑到 `Print` 上。
 
 加快捷键时：

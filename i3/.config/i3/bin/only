@@ -1,0 +1,15 @@
+#!/usr/bin/python3
+"""Close every other window on the focused workspace, keeping only the focused one (Alt+Shift+q).
+
+Floating windows count too. If a parent container is focused (Alt+a), everything inside it is kept.
+"""
+import i3ipc
+
+i3 = i3ipc.Connection()
+focused = i3.get_tree().find_focused()
+workspace = focused.workspace()
+if workspace is not None:
+    keep = {focused.id} | {c.id for c in focused.descendants()}
+    others = [c for c in workspace.leaves() if c.window and c.id not in keep]
+    if others:
+        i3.command('; '.join(f'[con_id={c.id}] kill' for c in others))

@@ -319,6 +319,8 @@ mode "$mode_redshift" {
 
 # kill focused window
 bindsym $mod+q kill
+# Close the other windows on this workspace, keep only the focused one
+bindsym $mod+Shift+q exec --no-startup-id $HOME/.config/i3/bin/only
 bindsym --release $mod1+q exec --no-startup-id xkill
 
 # start dmenu (a program launcher)
@@ -359,8 +361,6 @@ bindsym $mod+Shift+Right move right
 bindsym $mod+semicolon split h
 # split in vertical orientation
 bindsym $mod+v split v
-# split orientation toggle
-bindsym $mod+shift+q split toggle
 
 # enter fullscreen mode for the focused container
 bindsym $mod+f fullscreen toggle
