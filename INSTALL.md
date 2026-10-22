@@ -277,6 +277,9 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
 - **Tailscale**：`sudo systemctl enable --now tailscaled`，`sudo tailscale up` 后按提示在浏览器里登录；`sudo tailscale set --operator=$USER` 之后不用 sudo 也能用 `tailscale` 命令。
 - **防火墙**（开了 ufw 才需要）：KDE Connect 要 `sudo ufw allow 1714:1764/udp` 和 `sudo ufw allow 1714:1764/tcp`；Syncthing 要 `sudo ufw allow syncthing`，局域网里才能直连。
 - **KDE Connect**：手机装 KDE Connect（安卓在应用商店 / F-Droid，iPhone 在 App Store），和电脑连同一个网络，在托盘图标里配对。
+- **Caps 和 Ctrl 互换**：i3 启动时跑的 `setxkbmap -option ctrl:swapcaps` 只管当时插着的键盘，键盘拔插、休眠唤醒、USB 掉线后就失效了。
+  写进系统的键盘配置（`/etc/X11/xorg.conf.d/00-keyboard.conf`），之后接上的键盘也都会换，重新登录后生效：
+  `sudo localectl set-x11-keymap cn pc105 "" ctrl:swapcaps,terminate:ctrl_alt_bksp`（布局按这台机器改，`setxkbmap -query` 查）。
 - **显示器**：`bin/edid-check` 只对现在这台显示器有效，新机器上会提醒你处理 `/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf`（没有这个文件就什么都不做）。
 
 各功能的用法和快捷键见 `i3/.config/i3/README.md`。
