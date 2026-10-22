@@ -24,6 +24,18 @@ sudo pacman -S --needed \
 
 # AUR
 yay -S --needed i3lock-color autotiling python-pywal16 nordic-theme-git visual-studio-code-bin skippy-xd-git
+
+# 命令行工具（每个是干什么的见第二节「命令行工具」；和上面重复的包 --needed 会跳过）
+sudo pacman -S --needed \
+    fzf ripgrep fd bat eza zoxide atuin direnv \
+    git-delta difftastic lazygit github-cli git-lfs \
+    jq go-yq sd xh wget aria2 rsync \
+    btop htop duf dust ncdu nethogs fastfetch inxi \
+    tldr shellcheck actionlint hyperfine watchexec tokei cloc \
+    yazi glow chafa lnav tree trash-cli 7zip unzip unrar \
+    yt-dlp ffmpeg task urlscan micro xclip
+yay -S --needed lux-dl                              # 在 archlinuxcn 源里
+curl -LsSf https://astral.sh/uv/install.sh | sh     # uv 用官方脚本装到 ~/.local/bin，之后 `uv self update` 升级
 ```
 
 亮度脚本会自动选择后端，按硬件需要安装：
@@ -130,6 +142,89 @@ fcitx5、fcitx5-chinese-addons（拼音）、fcitx5-gtk、fcitx5-qt、fcitx5-con
 | git、lazygit、fzf、zoxide、ripgrep、fd、nodejs、npm | nvim 插件和日常命令行工具 |
 | ranger、ueberzugpp | 文件管理器和图片预览 |
 | trash-cli、bat、ffmpegthumbnailer、poppler、7zip、unzip、w3m | ranger 的回收站、代码 / 视频 / PDF / 网页预览、解压缩 |
+
+### 命令行工具
+
+第一节里「命令行工具」那条命令装的全部工具。
+
+**找文件、跳目录、看内容**
+
+| 包 | 命令 | 干什么的 |
+|---|---|---|
+| fzf | `fzf` | 模糊查找：zsh 里 `Ctrl+T` 选文件、`Alt+C` 进目录；nvim 也用它 |
+| ripgrep | `rg` | 在文件内容里搜索，比 grep 快，自动跳过 .gitignore 里的文件 |
+| fd | `fd` | 按文件名找文件，比 find 好写 |
+| bat | `bat` | 带语法高亮和行号的 `cat`；ranger 也用它预览代码 |
+| eza | `eza` | 带图标、git 状态、树形视图（`eza -T`）的 `ls` |
+| zoxide | `z`、`zi` | 记住常去的目录，`z dot` 直接跳到 dotfiles，`zi` 用 fzf 选；yazi 里的 `z` 也用它 |
+| atuin | `atuin` | 命令历史：`Ctrl+R` 全文搜索，可按目录 / 主机过滤，可多台机器同步 |
+| direnv | `direnv` | 进目录时自动加载该目录 `.envrc` 里的环境变量 / 虚拟环境，离开时撤掉 |
+| yazi | `yazi` | 终端文件管理器，带图片预览（ranger 的现代替代） |
+| tree | `tree` | 树形列出目录 |
+| trash-cli | `trash-put` | 删到回收站而不是直接删掉；ranger 的删除也用它 |
+
+**git**
+
+| 包 | 命令 | 干什么的 |
+|---|---|---|
+| git-delta | `delta` | 带语法高亮、并排显示的 git diff |
+| difftastic | `difft` | 按语法结构比较差异：只改了缩进或换行时不会整段标红 |
+| lazygit | `lazygit` | git 的终端界面：暂存、提交、rebase、解冲突 |
+| github-cli | `gh` | 在命令行里看 / 开 PR 和 issue、克隆仓库 |
+| git-lfs | `git lfs` | 大文件（模型、素材）存进 git |
+
+**处理数据和网络**
+
+| 包 | 命令 | 干什么的 |
+|---|---|---|
+| jq | `jq` | 处理 JSON；天气、配色等脚本也用它 |
+| go-yq | `yq` | 处理 YAML / TOML / XML，用法同 jq |
+| sd | `sd` | 查找替换，比 sed 好写（`sd 旧 新 文件`） |
+| xh | `xh` | 发 HTTP 请求，输出带颜色，比 curl 好读 |
+| wget | `wget` | 下载文件 |
+| aria2 | `aria2c` | 多线程 / 断点续传下载，支持 BT 和磁力链接 |
+| rsync | `rsync` | 增量同步 / 备份文件，可以走 ssh |
+
+**看系统状态**
+
+| 包 | 命令 | 干什么的 |
+|---|---|---|
+| btop | `btop` | 图形化的 CPU、内存、磁盘、网络、进程监控 |
+| htop | `htop` | 轻量的进程监控 |
+| duf | `duf` | 各分区用了多少，比 df 直观 |
+| dust | `dust` | 哪个目录占空间最多，一眼看出来 |
+| ncdu | `ncdu` | 交互式翻目录、清理大文件 |
+| nethogs | `nethogs` | 哪个进程在占网速（要 sudo） |
+| fastfetch | `fastfetch` | 显示系统信息和发行版 logo |
+| inxi | `inxi -F` | 详细硬件信息，报 bug 时贴给别人看 |
+
+**写脚本和代码**
+
+| 包 | 命令 | 干什么的 |
+|---|---|---|
+| tldr | `tldr` | 命令的常用示例，比 man 短（`tldr tar`） |
+| shellcheck | `shellcheck` | 检查 shell 脚本的常见错误（引号、未定义变量等） |
+| actionlint | `actionlint` | 检查 GitHub Actions 的 workflow 文件 |
+| hyperfine | `hyperfine` | 反复运行命令、统计耗时，对比两种写法哪个快 |
+| watchexec | `watchexec` | 文件一改就自动重跑命令（`watchexec -e py pytest`） |
+| tokei、cloc | `tokei`、`cloc` | 按语言统计代码行数 |
+| uv（官方脚本） | `uv` | Python 包和虚拟环境管理，比 pip 快很多 |
+
+**预览、日志、媒体和其他**
+
+| 包 | 命令 | 干什么的 |
+|---|---|---|
+| glow | `glow` | 在终端里渲染 Markdown（`glow README.md`） |
+| chafa | `chafa` | 在终端里显示图片 |
+| lnav | `lnav` | 看日志：自动高亮、按时间合并多个日志、过滤 |
+| 7zip、unzip、unrar | `7z`、`unzip`、`unrar` | 解压缩各种格式 |
+| yt-dlp | `yt-dlp` | 下载 YouTube 等网站的视频 / 音频 |
+| lux-dl（archlinuxcn） | `lux` | 下载哔哩哔哩等国内网站的视频 |
+| ffmpeg | `ffmpeg` | 音视频转码、剪切、提取音轨 |
+| task | `task` | Taskwarrior，命令行待办清单 |
+| urlscan | `urlscan` | 从一段文字（邮件、日志）里挑出链接打开 |
+| micro | `micro` | 操作像普通编辑器的终端编辑器（`Ctrl+S` 保存），临时改文件用 |
+| xclip | `xclip` | 命令行读写剪贴板（`… \| xclip -sel c`） |
 
 ### 常用程序（快捷键会打开它们）
 

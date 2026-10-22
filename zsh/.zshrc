@@ -80,7 +80,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git z zsh-autosuggestions zsh-syntax-highlighting)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -118,6 +118,21 @@ source $ZSH/oh-my-zsh.sh
 # 加载 fzf 自动补全和快捷键（Ctrl+R / Ctrl+T / Alt+C）
 # `fzf --zsh` 需要 fzf ≥ 0.48，不用写死 Arch（/usr/share/fzf）或 Homebrew 的路径
 command -v fzf >/dev/null && source <(fzf --zsh)
+# atuin 接管 Ctrl+R：全文搜索历史，Ctrl+R 再按一次在 全局 / 本机 / 本会话 / 本目录 之间切换。
+# 要在 fzf 后面才能覆盖 fzf 的 Ctrl+R；上箭头保持 zsh 原来的逐条翻历史
+command -v atuin >/dev/null && eval "$(atuin init zsh --disable-up-arrow)"
+# direnv：进入有 .envrc 的目录时自动加载其中的环境变量，离开时撤掉（新 .envrc 要先 `direnv allow`）
+command -v direnv >/dev/null && eval "$(direnv hook zsh)"
+# eza 代替 ls：图标、目录排在前面；ll / la 带 git 状态，lt 是两层的树
+if command -v eza >/dev/null; then
+  alias ls='eza --icons=auto --group-directories-first'
+  alias ll='eza -l --icons=auto --group-directories-first --git'
+  alias la='eza -la --icons=auto --group-directories-first --git'
+  alias lt='eza -T --icons=auto --level=2'
+fi
+# zoxide 记住常去的目录：`z dot` 跳到最常去的匹配目录，`zi` 用 fzf 选。代替 oh-my-zsh 的 z 插件，
+# 旧的 ~/.z 用 `zoxide import --merge z` 导入。yazi 里的 z 也读同一个数据库
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 # 历史记录最大条数（内存中）
 HISTSIZE=10000
 
