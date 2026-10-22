@@ -351,3 +351,34 @@ Linux 和 Mac、两台 Linux 之间都一样。两边先都装好 Syncthing 并�
 - 不要同步 git 仓库或 `.git` 目录，两边同时改动容易出冲突文件；dotfiles 这类仓库继续用 git 推拉。
 - 不想同步的缓存、`node_modules` 等，在文件夹的「忽略模式」里加规则。
 - 两边同时改了同一个文件时不会覆盖，而是多出一份 `.sync-conflict-…` 文件，自己决定留哪个。
+
+## 从外面 ssh 回家里的电脑
+
+前提：两台机器都装了 Tailscale 并登录同一个账号（见第四节）；被连的机器不能睡眠，xfce4-power-manager 里把「空闲时睡眠」关掉或设长一点。
+
+**办法一：Tailscale SSH（推荐）**。由 Tailscale 验证身份，不用开 sshd，也不用管密钥和密码，只有登录了自己账号的设备能连。在被连的机器上：
+
+```sh
+sudo tailscale set --ssh
+sudo ufw allow in on tailscale0      # 开了 ufw 才需要：放行 Tailscale 网络进来的连接，外网照样挡住
+```
+
+然后在另一台（比如 Mac：`brew install --cask tailscale` 或 App Store 装 Tailscale）上直接 `ssh <用户名>@<机器名>`，
+例如 `ssh ronaldo@ronaldo-ms7c94`。机器名就是 Tailscale 里显示的名字（`tailscale status` 查），在家在外面都能用；第一次可能要在浏览器里确认一次。
+
+**办法二：普通 OpenSSH**。要给不支持 Tailscale SSH 的工具用时（某些 IDE 的远程开发、手机 ssh App）：
+
+```sh
+sudo systemctl enable --now sshd
+sudo ufw allow in on tailscale0 to any port 22    # 只允许经 Tailscale 连 22 端口
+```
+
+再把另一台的公钥（`~/.ssh/id_ed25519.pub`）追加到这台的 `~/.ssh/authorized_keys`，最好在 `/etc/ssh/sshd_config` 里设 `PasswordAuthentication no`，只允许密钥登录。
+
+**起个短名字**：在发起连接那台的 `~/.ssh/config` 里加上，之后 `ssh home` 就能连：
+
+```
+Host home
+    HostName ronaldo-ms7c94
+    User ronaldo
+```
