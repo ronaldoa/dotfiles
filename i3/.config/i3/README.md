@@ -219,6 +219,7 @@ i3 会把其他工作区的窗口藏起来，skippy-xd 只能在打开总览时�
 | `Alt+h/j/k/l` 或方向键 | 切换焦点 |
 | `Alt+Shift+h/j/k/l` 或方向键 | 移动窗口 |
 | `Alt+o` | rofi 搜索已打开的窗口并跳转 |
+| `Alt+Shift+o` | rofi 选一个窗口，把它拉到当前工作区（`Shift+Enter` 则是跳过去） |
 | `Alt+u` | 跳到最近请求关注（urgent）的窗口；需要应用设置 urgent 提示 |
 | `Alt+a` / `Alt+x` | 聚焦父容器 / 子容器 |
 | `Alt+Space` | 在平铺和浮动窗口之间切换焦点 |
@@ -266,13 +267,16 @@ i3 会把其他工作区的窗口藏起来，skippy-xd 只能在打开总览时�
 
 ### 启动程序
 
+`Alt+Ctrl` 这一组里，Obsidian、VS Code、OBS、ChatGPT、哔哩哔哩、Teams、LM Studio 已经开着时只跳到它的窗口，没开才启动；
+要再开一个 VS Code 窗口，在 VS Code 里按 `Ctrl+Shift+N`。
+
 | 按键 | 程序 |
 |---|---|
 | `Alt+Enter` | alacritty |
 | `Alt+d` | rofi 启动器（应用 + 命令） |
 | `Alt+Tab` | rofi 运行命令 |
-| `Alt+c` | Firefox |
-| `Alt+t` | Thunderbird |
+| `Alt+c` | Firefox（已开着就跳过去；新窗口在 Firefox 里按 `Ctrl+N`） |
+| `Alt+t` | Thunderbird（已开着就跳过去） |
 | `Alt+z` | Zathura |
 | `Alt+Shift+n` | Thunar |
 | `Alt+Ctrl+o` | Obsidian |
@@ -377,6 +381,10 @@ AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hos
 | 5 | Steam |
 | 6 | VirtualBox 虚拟机 |
 | 8 | Thunderbird、QQ、Telegram、Obsidian |
+
+工作区 8 里平铺的窗口默认叠成标签页（tabbed），浮动的 QQ 不受影响。
+
+**不抢焦点**：程序自己要求聚焦时（比如点了它的通知），只标成 urgent，不直接跳过去，按 `Alt+u` 再过去；`Alt+o` 等窗口切换照常直接跳。
 
 **自动浮动**：对话框和弹出窗口、文件选择框（打开/保存）、pavucontrol、蓝牙管理器、网络连接编辑器、QQ、Steam、VirtualBox Manager、Lxappearance、Qalculate、Nitrogen、xdman 等。
 

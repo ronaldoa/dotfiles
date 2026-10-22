@@ -43,6 +43,10 @@ hide_edge_borders smart
 # In fullscreen, only show pop-ups that belong to the fullscreen app
 popup_during_fullscreen smart
 
+# A program asking for focus (e.g. a notification click) only gets marked urgent; Alt+u jumps there.
+# Window switchers (rofi Alt+o) are pagers and still switch directly.
+focus_on_window_activation urgent
+
 gaps inner 10
 gaps outer 0
 # Keep the gaps even with a single window, so the wallpaper frames it
@@ -152,6 +156,8 @@ for_window [class="Blueman-manager"] floating enable
 for_window [class="Nm-connection-editor"] floating enable
 for_window [title="^(Open File|Open Files|Save As|Save File|File Upload|打开文件|另存为)"] floating enable
 
+# Workspace 8 (chat, mail, notes) stacks its tiled windows as tabs
+for_window [workspace="^8( |$)" tiling] layout tabbed
 # Dialogs and pop-ups float instead of breaking the tiling layout
 for_window [window_role="pop-up|dialog|task_dialog"] floating enable
 for_window [window_type="dialog"] floating enable
@@ -192,6 +198,8 @@ bindsym $mod+Shift+p sticky toggle
 
 # Search open windows and jump to one
 bindsym $mod+o exec --no-startup-id rofi -show window
+# Pick a window in rofi and bring it to this workspace
+bindsym $mod+Shift+o exec --no-startup-id $HOME/.config/i3/bin/window-pull
 # Jump to the most recent window requesting attention
 bindsym $mod+u [urgent=latest] focus
 
@@ -223,17 +231,25 @@ bindsym $mod+Return exec --no-startup-id alacritty
 #bindsym $mod+shift+Return exec --no-startup-id kitty -e fish
 
 
+# These program keys jump to the program's window if it is already open, and only start it otherwise
+# (i3-msg fails when no window matches). For another VS Code window use Ctrl+Shift+N inside it.
 # AppImages: bin/appimage starts the newest <prefix>*.AppImage in /mnt/data/Tools (or the host's APPIMAGE_DIR), so updates need no edits here
-bindsym $mod+control+o exec --no-startup-id obsidian
-bindsym $mod+control+r exec --no-startup-id obs
-bindsym $mod+control+c exec --no-startup-id code
-bindsym $mod+control+b exec --no-startup-id $HOME/.config/i3/bin/appimage bilibili-
-bindsym $mod+control+t exec --no-startup-id $HOME/.config/i3/bin/appimage teams-for-linux-
-bindsym $mod+control+l exec --no-startup-id $HOME/.config/i3/bin/appimage LM-Studio-
+# Obsidian
+bindsym $mod+control+o exec --no-startup-id i3-msg -q '[class="(?i)obsidian"] focus' || obsidian
+# OBS Studio
+bindsym $mod+control+r exec --no-startup-id i3-msg -q '[class="(?i)^obs$"] focus' || obs
+# VS Code
+bindsym $mod+control+c exec --no-startup-id i3-msg -q '[class="(?i)^code$"] focus' || code
+# Bilibili
+bindsym $mod+control+b exec --no-startup-id i3-msg -q '[class="(?i)bilibili"] focus' || $HOME/.config/i3/bin/appimage bilibili-
+# Teams
+bindsym $mod+control+t exec --no-startup-id i3-msg -q '[class="(?i)teams-for-linux"] focus' || $HOME/.config/i3/bin/appimage teams-for-linux-
+# LM Studio
+bindsym $mod+control+l exec --no-startup-id i3-msg -q '[class="(?i)lm.?studio"] focus' || $HOME/.config/i3/bin/appimage LM-Studio-
 # Toggle Noi scratchpad (starts Noi if needed)
 bindsym $mod+control+n exec --no-startup-id $HOME/.config/i3/bin/noi-toggle
 # ChatGPT in its own window
-bindsym $mod+control+g exec --no-startup-id chromium --app=https://chatgpt.com
+bindsym $mod+control+g exec --no-startup-id i3-msg -q '[instance="^chatgpt.com$"] focus' || chromium --app=https://chatgpt.com
 # Toggle WeChat scratchpad (starts WeChat if needed)
 bindsym $mod+control+w exec --no-startup-id $HOME/.config/i3/bin/wechat-toggle
 # Restart WeChat (kills the old instance first), back into the scratchpad
@@ -268,10 +284,12 @@ bindsym $mod+p exec "$HOME/.config/i3/bin/polybar-launch"
 bindsym $mod+Shift+b exec --no-startup-id "$HOME/.config/i3/bin/bar-collapse"
 
 # start specific application
-bindsym $mod+c exec --no-startup-id firefox
+# Firefox: jump to it if open, otherwise start it (Ctrl+N inside Firefox for a new window)
+bindsym $mod+c exec --no-startup-id i3-msg -q '[class="^firefox$"] focus' || firefox
 bindsym $mod+z exec --no-startup-id zathura
 #bindsym $mod+n exec --no-startup-id netbeans
-bindsym $mod+t exec --no-startup-id thunderbird 
+# Thunderbird: jump to it if open, otherwise start it
+bindsym $mod+t exec --no-startup-id i3-msg -q '[class="(?i)^thunderbird"] focus' || thunderbird
 bindsym $mod+shift+n exec --no-startup-id thunar
 bindsym --release $mod1+Escape exec --no-startup-id loginctl lock-session
 # Power menu (lock, sleep, log out, reboot, shut down)

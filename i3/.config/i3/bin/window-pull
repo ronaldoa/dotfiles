@@ -1,0 +1,10 @@
+#!/bin/sh
+# Pick a window in rofi and bring it to the current workspace (Alt+Shift+o).
+# Enter and Shift+Enter are swapped: Shift+Enter jumps to the window instead, like Alt+o.
+# rofi calls this script back with the window id: [] in -window-command is rofi's own template syntax.
+if [ -n "$1" ]; then
+    exec i3-msg -q "[id=$1] move workspace current, focus"
+fi
+exec rofi -show window \
+    -kb-accept-entry Shift+Return -kb-accept-alt Return,KP_Enter \
+    -window-command "$0 {window}"
