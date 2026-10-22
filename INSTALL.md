@@ -382,3 +382,18 @@ Host home
     HostName ronaldo-ms7c94
     User ronaldo
 ```
+
+**在家里的局域网里**：同样用 `ssh ronaldo@ronaldo-ms7c94`。两台在同一个局域网时 Tailscale 会直接在局域网里连，不绕外网，速度和局域网直连差不多；
+`tailscale ping ronaldo-ms7c94` 显示 `direct` 就是直连，显示 `via DERP` 是走了 Tailscale 的中转服务器。
+要用机器名或 `100.x` 地址连，不要用 `192.168.x.x` 这种局域网 IP：Tailscale SSH 只接受经 Tailscale 进来的连接，办法二的 ufw 规则也只放行 `tailscale0`。
+局域网里没装 Tailscale 的设备也要连的话，用办法二，再放行局域网网段（按自家网段改）：
+
+```sh
+sudo ufw allow from 192.168.1.0/24 to any port 22
+```
+
+**在学校或其他网络**：命令完全一样。注意：
+
+- 校园网常常限制 UDP，打不通直连时会走中转服务器（`via DERP`），能连上，只是延迟高一点，传大文件会慢。
+- 发起连接那台要自己能装 Tailscale（需要管理员权限）；学校机房、实验室的公用机一般装不了，也不要在公用机上登录自己的账号。
+- 连不上时，先在发起连接那台跑 `tailscale status`，看家里那台是不是在线。
