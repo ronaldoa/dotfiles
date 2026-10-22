@@ -57,4 +57,6 @@ fetch
 [ -s "$CACHE" ] || { echo ""; exit 0; }
 icon=$(get_icon "$(jq -r '.current.weather[0].icon' "$CACHE")")
 temp=$(jq -r '.current.main.temp | round' "$CACHE")
-echo "%{F$ICON_COLOR}$icon%{F-} $temp°"
+# The space sits inside the coloured part: weather glyphs are wider than one cell, and the next
+# %{F-} segment paints its background over whatever sticks out (the cloud showed only its left half)
+echo "%{F$ICON_COLOR}$icon %{F-}$temp°"
