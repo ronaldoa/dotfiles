@@ -324,5 +324,9 @@ bin/dotfiles-bootstrap
 brew services start mpd       # Homebrew 的 mpd 读 ~/.mpdconf
 ```
 
+**KDE Connect**（可选，和 Linux 机器互传文件、共享剪贴板）：Homebrew 里没有，到 <https://kdeconnect.kde.org/download.html> 下载 macOS 版，
+拖进「应用程序」；第一次打开时在「系统设置 → 隐私与安全性」里允许运行，再在菜单栏图标里和 Linux 机器配对（两边要在同一个网络）。
+iPhone 用 App Store 里的 KDE Connect，但 iOS 不让它读通知、自动同步剪贴板，切到后台会断开，只适合传文件和当遥控器。
+
 本机设置在 `hosts/QingyuZhoudeMacBook-Pro/`（mpd 用 osx 输出、alacritty 字号和 Cmd 快捷键、zshrc）。
 窗口管理换成 AeroSpace，需要的软件和 macOS 设置见 `aerospace/.config/aerospace/README.md`。
