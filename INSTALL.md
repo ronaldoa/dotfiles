@@ -273,7 +273,7 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
 - **锁屏图片**（可选）：装了 i3lock-color 时锁屏背景是当前屏幕的模糊截图，用不到图片；只有普通 i3lock 时才用 `~/Pictures/lockscreen` 里的 PNG（要和屏幕分辨率一样），没有就用 nitrogen 当前的桌面壁纸。
 - **动态壁纸**（可选）：视频放进 `~/Videos/wallpapers`。
 - **音乐**：歌放在 `~/Music`，然后 `mpc update`。
-- **Syncthing**：`systemctl --user enable --now syncthing`（开机自动运行），再到 `http://127.0.0.1:8384` 添加其他机器和要同步的文件夹。
+- **Syncthing**：`systemctl --user enable --now syncthing`（开机自动运行），再到 `http://127.0.0.1:8384` 添加其他机器和要同步的文件夹，步骤见文末「Syncthing 在两台机器之间同步」。
 - **Tailscale**：`sudo systemctl enable --now tailscaled`，`sudo tailscale up` 后按提示在浏览器里登录；`sudo tailscale set --operator=$USER` 之后不用 sudo 也能用 `tailscale` 命令。
 - **防火墙**（开了 ufw 才需要）：KDE Connect 要 `sudo ufw allow 1714:1764/udp` 和 `sudo ufw allow 1714:1764/tcp`；Syncthing 要 `sudo ufw allow syncthing`，局域网里才能直连。
 - **KDE Connect**：手机装 KDE Connect（安卓在应用商店 / F-Droid，iPhone 在 App Store），和电脑连同一个网络，在托盘图标里配对。
@@ -328,5 +328,26 @@ brew services start mpd       # Homebrew 的 mpd 读 ~/.mpdconf
 拖进「应用程序」；第一次打开时在「系统设置 → 隐私与安全性」里允许运行，再在菜单栏图标里和 Linux 机器配对（两边要在同一个网络）。
 iPhone 用 App Store 里的 KDE Connect，但 iOS 不让它读通知、自动同步剪贴板，切到后台会断开，只适合传文件和当遥控器。
 
+**Syncthing**：`brew install --cask syncthing-app`（带菜单栏图标，开机自动启动；点图标选 Open 打开设置网页）。
+不要菜单栏图标就用命令行版：`brew install syncthing`，再 `brew services start syncthing`。和 Linux 机器配对见下一节。
+
 本机设置在 `hosts/QingyuZhoudeMacBook-Pro/`（mpd 用 osx 输出、alacritty 字号和 Cmd 快捷键、zshrc）。
 窗口管理换成 AeroSpace，需要的软件和 macOS 设置见 `aerospace/.config/aerospace/README.md`。
+
+## Syncthing 在两台机器之间同步
+
+Linux 和 Mac、两台 Linux 之间都一样。两边先都装好 Syncthing 并运行，设置网页都是 `http://127.0.0.1:8384`。
+
+1. **互相添加设备**：在一台机器上运行 `syncthing device-id` 查看它的设备 ID（网页右上角「操作 → 显示 ID」也能看到）。
+   到另一台的网页点右下角「添加远程设备」，粘贴这个 ID、起个名字保存；
+   原来那台的网页顶部会弹出「新设备请求连接」，点「添加设备」。同一个局域网里几秒钟就能互相发现。
+2. **共享文件夹**：在一边点「添加文件夹」选好目录，到「共享」标签页勾选另一台设备，保存；
+   另一边会弹出「共享文件夹请求」，点「添加」并选好在这台机器上放到哪个目录。之后任何一边改了文件都会自动同步。
+3. **不在同一个网络时**：默认经公共中继服务器连接，能连上但比较慢。两边都登录了 Tailscale 的话，
+   在网页里编辑对方这个设备，「高级」里把地址设成 `tcp://<对方的 Tailscale IP>:22000, dynamic`（IP 用 `tailscale ip -4` 查），在外面也能直连。
+
+注意：
+
+- 不要同步 git 仓库或 `.git` 目录，两边同时改动容易出冲突文件；dotfiles 这类仓库继续用 git 推拉。
+- 不想同步的缓存、`node_modules` 等，在文件夹的「忽略模式」里加规则。
+- 两边同时改了同一个文件时不会覆盖，而是多出一份 `.sync-conflict-…` 文件，自己决定留哪个。
