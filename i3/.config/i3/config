@@ -97,6 +97,8 @@ exec --no-startup-id $HOME/.config/i3/bin/nightlight start
 exec --no-startup-id sh -c "sleep 10; ~/.config/i3/bin/edid-check"
 # rofi/menu entries for the AppImages in the AppImage directory (only new or changed apps are re-read)
 exec --no-startup-id $HOME/.config/i3/bin/appimage-menu
+# Check those AppImages for new versions (sources in appimage-sources); a notification offers to update
+exec --no-startup-id sh -c "sleep 30; ~/.config/i3/bin/appimage-update --notify"
 
 
 # Use pactl to adjust volume in PulseAudio.

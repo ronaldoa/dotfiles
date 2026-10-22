@@ -35,6 +35,7 @@ bin/
   theme             配色切换：Nord → 经典黑色 → pywal（从壁纸取色）轮换
   appimage          启动 AppImage 目录里某个程序最新版本的 AppImage（默认 /mnt/data/Tools，可按机器改）
   appimage-menu     给 AppImage 目录里的每个程序生成一个菜单项（名字、图标取自 AppImage 内部）
+  appimage-update   检查 AppImage 新版本并下载，删掉旧版本（来源写在 appimage-sources）
   popup-pos         算出弹出卡片的位置：鼠标正下方、状态栏下面
   display           重新检测显示器，设置分辨率和最高刷新率，重建状态栏
 themes/
@@ -75,6 +76,7 @@ polybar/
 | dunst | 桌面通知（`xfce4-notifyd.service` 已用 `systemctl --user mask` 屏蔽，免得它抢先占用通知服务；想换回去就 `unmask`） |
 | edid-check | 登录 10 秒后检查显示器 EDID |
 | `bin/appimage-menu` | 给 AppImage 目录里的程序生成菜单项（rofi `Alt+D` 里能搜到） |
+| `bin/appimage-update --notify` | 登录 30 秒后检查 AppImage 有没有新版本，有就弹通知，点「更新」下载 |
 
 ## 外观
 
@@ -304,6 +306,25 @@ AppImage 目录默认是 `/mnt/data/Tools`（台式机）。别的机器在 `hos
 - 生成到 `~/.local/share/applications/appimage-<id>.desktop`，图标在 `~/.local/share/icons/appimage/`。这些文件只属于本机，不进仓库。
 - i3 启动时自动运行一次，已经是最新的程序直接跳过（几十毫秒）。下载或删除 AppImage 后想马上看到变化就手动跑 `~/.config/i3/bin/appimage-menu`；文件被删掉的程序，菜单项也会被删掉。`-f` 强制全部重新提取。
 - 同一个程序既用 pacman 装了又放了 AppImage，菜单里会出现两个，删掉不用的那个。
+
+#### 更新（`bin/appimage-update`）
+
+每个程序从哪里下新版本写在 `appimage-sources` 里，一行一个：前缀（和 `bin/appimage` 一样）、来源类型、参数。来源有四种：
+
+- `url`：固定下载链接。跳转到带版本号的文件名（LM Studio）就按文件名比；文件名固定的（微信）按大小和 `Last-Modified` 比。
+- `json`：先请求一个 JSON 接口，用 jq 取出下载链接（Cursor）。
+- `github`：最新 release 里文件名匹配正则的那个 asset，用 GitHub 给的 sha256 校验。
+- `electron`：electron-updater 的 `latest-linux.yml`，用里面的 sha512 校验（Chatbox）。
+
+只检查 AppImage 目录里已经有的程序，所以一份列表所有机器共用。Fiddler Everywhere 打过补丁，更新会把补丁冲掉，所以没列进去。
+
+```
+appimage-update            下载所有更新，删掉旧版本，刷新菜单项
+appimage-update -n         只列出哪些有更新
+appimage-update Noi- ...   只更新这几个
+```
+
+新版本先下载到旧文件旁边（`.<文件名>.part`），校验通过（AppImage 文件头、大小、有哈希就比哈希）才替换旧的，下载失败什么都不改。正在运行的程序继续用旧文件，重启后才用新版本，结束时会提示哪些要重启。i3 启动 30 秒后会自动跑一次 `--notify`：有更新就弹通知，点「更新」才下载。GitHub 接口匿名每小时 60 次，够用；设置了 `GITHUB_TOKEN` 就带上。
 
 ### 截图（flameshot）
 

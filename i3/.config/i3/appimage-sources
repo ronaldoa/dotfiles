@@ -1,0 +1,19 @@
+# Where bin/appimage-update gets new versions of the AppImages in the AppImage directory.
+# Only apps that already have a file in the directory are checked, so one list serves every host.
+#
+#   <prefix>  url       <url>                  fixed link; the file name comes from where it redirects
+#   <prefix>  json      <url> <jq filter>      the filter picks the download link out of a JSON reply
+#   <prefix>  github    <owner/repo> <regex>   asset of the latest release whose name matches
+#   <prefix>  electron  <base url>             <base>/latest-linux.yml (electron-updater), with sha512
+#
+# <prefix> is the same as for bin/appimage (case-insensitive).
+# Not listed: fiddler-everywhere (patched, an update would undo it), doublecmd (no AppImage release).
+
+WeChatLinux_x86_64  url       https://dldir1v6.qq.com/weixin/Universal/Linux/WeChatLinux_x86_64.AppImage
+Noi-                github    lencx/Noi                       ^Noi-.*-x64\.AppImage$
+drawio-x86_64-      github    jgraph/drawio-desktop           ^drawio-x86_64-.*\.AppImage$
+teams-for-linux-    github    IsmaelMartinez/teams-for-linux  ^teams-for-linux-[0-9.]+\.AppImage$
+bilibili-           github    msojocs/bilibili-linux          ^bilibili-.*-x86_64\.AppImage$
+Chatbox-            electron  https://download.chatboxai.app/releases
+cursor-             json      https://cursor.com/api/download?platform=linux-x64&releaseTrack=stable  .downloadUrl
+LM-Studio-          url       https://lmstudio.ai/download/latest/linux/x64

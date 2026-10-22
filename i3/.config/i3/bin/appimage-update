@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+# Check the AppImages in the AppImage directory for new versions and download them.
+# Sources are listed in ~/.config/i3/appimage-sources; apps without a source are left alone.
+#
+#   appimage-update             download every update, delete the old versions, refresh the menu
+#   appimage-update -n          only list what has an update
+#   appimage-update --notify    check quietly and send a notification with an 更新 button (i3 startup)
+#   appimage-update Noi- ...    only these prefixes
+#
+# The new file is downloaded next to the old one and checked (AppImage magic, size, hash when the
+# source gives one) before the old one is removed, so a failed download changes nothing. A running
+# app keeps using its old file (it stays open until the app exits); restart it to get the new one.
+host_env="$HOME/.config/dotfiles-host/appimage.env"
+[ -r "$host_env" ] && . "$host_env"
+dir=${APPIMAGE_DIR:-/mnt/data/Tools}
+sources="$HOME/.config/i3/appimage-sources"
+bin="$HOME/.config/i3/bin"
+mode=update
+case $1 in
+    -n|--check) mode=check; shift ;;
+    --notify) mode=notify; shift ;;
+esac
+only=("$@")
+shopt -s nullglob nocaseglob
+
+auth=()
+[ -n "$GITHUB_TOKEN" ] && auth=(-H "Authorization: Bearer $GITHUB_TOKEN")
+fetch() { curl -fsSL --max-time 30 --retry 2 "$@"; }
+
+# Newest local file for a prefix, the same way bin/appimage picks it
+local_file() { printf '%s\n' "$dir/$1"*.[Aa]pp[Ii]mage | sort -V | tail -n 1; }
+
+# Resolve a source to: <file name> <url> <size or empty> <hash type:value or empty>
+resolve() {
+    local type=$1 a=$2 b=$3 url json yml
+    case $type in
+        url|json)
+            if [ "$type" = json ]; then
+                url=$(fetch "$a" | jq -r "$b") || return 1
+            else
+                url=$a
+            fi
+            # Follow redirects without downloading, to learn the real file name
+            url=$(curl -fsIL --max-time 30 -o /dev/null -w '%{url_effective}' "$url") || return 1
+            printf '%s\t%s\t\t\n' "$(basename "${url%%\?*}")" "$url"
+            ;;
+        github)
+            json=$(fetch "${auth[@]}" "https://api.github.com/repos/$a/releases/latest") || return 1
+            jq -r --arg re "$b" 'first(.assets[] | select(.name | test($re)))
+                | [.name, .browser_download_url, .size, (.digest // "")] | @tsv' <<<"$json" | grep . || return 1
+            ;;
+        electron)
+            yml=$(fetch "${a%/}/latest-linux.yml") || return 1
+            # First AppImage in the files: list, with its sha512 and size
+            awk -v base="${a%/}" '
+                /^ *- url: .*\.AppImage *$/ { name = $3; next }
+                name && /^ *sha512:/ { sha = $2; next }
+                name && /^ *size:/ { printf "%s\t%s/%s\t%s\tsha512b64:%s\n", name, base, name, $2, sha; exit }
+                /^ *- url:/ { name = "" }' <<<"$yml" | grep . || return 1
+            ;;
+        *) return 1 ;;
+    esac
+}
+
+# Does the remote file differ from the local one of the same name? (fixed-name links like WeChat)
+changed() {
+    local file=$1 url=$2 head size modified
+    head=$(curl -fsIL --max-time 30 "$url" | tr -d '\r') || return 1
+    size=$(grep -i '^content-length:' <<<"$head" | tail -n 1 | awk '{print $2}')
+    modified=$(grep -i '^last-modified:' <<<"$head" | tail -n 1 | cut -d' ' -f2-)
+    [ -n "$size" ] && [ "$size" != "$(stat -c %s "$file")" ] && return 0
+    [ -n "$modified" ] && [ "$(date -d "$modified" +%s)" -gt "$(stat -c %Y "$file")" ] && return 0
+    return 1
+}
+
+verify() {
+    local file=$1 size=$2 hash=$3
+    # ELF with the AppImage magic "AI" at offset 8
+    [ "$(head -c 4 "$file" | od -An -c | tr -d ' ')" = "177ELF" ] || { echo "not an ELF file"; return 1; }
+    [ "$(dd if="$file" bs=1 skip=8 count=2 2>/dev/null)" = AI ] || { echo "not an AppImage"; return 1; }
+    [ -z "$size" ] || [ "$size" = "$(stat -c %s "$file")" ] || { echo "size mismatch"; return 1; }
+    case $hash in
+        sha256:*) [ "$(sha256sum "$file" | cut -d' ' -f1)" = "${hash#sha256:}" ] || { echo "sha256 mismatch"; return 1; } ;;
+        sha512b64:*) [ "$(openssl dgst -sha512 -binary "$file" | base64 -w0)" = "${hash#sha512b64:}" ] || { echo "sha512 mismatch"; return 1; } ;;
+    esac
+}
+
+updates=() failed=() restart=() done_=()
+while read -r prefix type a b; do
+    [[ -z $prefix || $prefix == \#* ]] && continue
+    if [ ${#only[@]} -gt 0 ]; then
+        match=0
+        for o in "${only[@]}"; do [ "${o,,}" = "${prefix,,}" ] && match=1; done
+        [ $match = 1 ] || continue
+    fi
+    old=$(local_file "$prefix")
+    [ -f "$old" ] || continue
+    if ! info=$(resolve "$type" "$a" "$b"); then
+        echo "$prefix: could not check ($type $a)" >&2
+        failed+=("$prefix")
+        continue
+    fi
+    IFS=$'\t' read -r name url size hash <<<"$info"
+    if [ "$name" = "${old##*/}" ]; then
+        # Same name: versioned files are the same version unless the size differs;
+        # fixed names (no size from the source) are compared by size and Last-Modified
+        if { [ -n "$size" ] && [ "$size" = "$(stat -c %s "$old")" ]; } || { [ -z "$size" ] && ! changed "$old" "$url"; }; then
+            [ "$mode" = check ] && echo "$prefix: up to date (${old##*/})"
+            continue
+        fi
+    elif [ "$(printf '%s\n' "${old##*/}" "$name" | tr '[:upper:]' '[:lower:]' | sort -V | tail -n 1)" != "${name,,}" ]; then
+        [ "$mode" = check ] && echo "$prefix: local ${old##*/} is newer than $name"
+        continue
+    fi
+
+    updates+=("${old##*/} → $name")
+    if [ "$mode" != update ]; then
+        [ "$mode" = check ] && echo "$prefix: ${old##*/} → $name"
+        continue
+    fi
+
+    echo "$prefix: downloading $name"
+    part="$dir/.$name.part"
+    if ! curl -fL --retry 3 -R --progress-bar -o "$part" "$url" || ! err=$(verify "$part" "$size" "$hash"); then
+        echo "$prefix: download failed${err:+: $err}" >&2
+        rm -f "$part"
+        failed+=("$prefix")
+        continue
+    fi
+    chmod +x "$part"
+    pgrep -f -- "$old" >/dev/null && restart+=("$prefix")
+    # Rename over the old file (same name) or next to it, then remove the other versions
+    mv -f "$part" "$dir/$name"
+    for f in "$dir/$prefix"*.[Aa]pp[Ii]mage; do
+        [ "$f" = "$dir/$name" ] || { rm -f "$f"; echo "$prefix: removed ${f##*/}"; }
+    done
+    done_+=("$name")
+done < "$sources"
+
+case $mode in
+    check)
+        [ ${#updates[@]} -eq 0 ] && echo "no updates"
+        exit 0
+        ;;
+    notify)
+        [ ${#updates[@]} -eq 0 ] && exit 0
+        action=$(notify-send -a AppImage --wait -A update=更新 "AppImage 有更新" "$(printf '%s\n' "${updates[@]}")")
+        [ "$action" = update ] || exit 0
+        "$0" >/dev/null 2>&1
+        ;;
+    update)
+        [ ${#done_[@]} -gt 0 ] && "$bin/appimage-menu" >/dev/null
+        msg=''
+        [ ${#done_[@]} -gt 0 ] && msg+="已更新：${done_[*]}"$'\n'
+        [ ${#restart[@]} -gt 0 ] && msg+="正在运行，重启后生效：${restart[*]}"$'\n'
+        [ ${#failed[@]} -gt 0 ] && msg+="失败：${failed[*]}"$'\n'
+        if [ -n "$msg" ]; then
+            [ -t 1 ] && printf '%s' "$msg" || notify-send -a AppImage "AppImage 更新" "$msg"
+        else
+            echo "no updates"
+        fi
+        [ ${#failed[@]} -eq 0 ]
+        ;;
+esac
