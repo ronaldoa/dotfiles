@@ -291,8 +291,9 @@ use-ui-max = false
 ; Default: 5
 interval = 5
 
-; Right-click: choose the audio output (bin/audio-output)
-click-right = ~/.config/i3/bin/audio-output &
+; Right-click: choose the audio output; middle-click: choose the microphone (bin/audio-device)
+click-right = ~/.config/i3/bin/audio-device output &
+click-middle = ~/.config/i3/bin/audio-device input &
 
 format-volume = <ramp-volume> <label-volume>
 

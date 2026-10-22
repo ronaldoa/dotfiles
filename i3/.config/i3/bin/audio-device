@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Pick the audio output or input in rofi (right-click / middle-click the volume on the bar).
+#   audio-device [output]   speakers / headphones
+#   audio-device input      microphones (monitors of outputs are left out)
+# Makes it the default and moves everything that is already playing / recording over to it.
+set -euo pipefail
+
+case ${1:-output} in
+    output) kind=sink;   title="音频输出"; icon="󰓃 输出" ;;
+    input)  kind=source; title="麦克风";   icon="󰍬 输入" ;;
+    *) echo "usage: audio-device [output|input]" >&2; exit 2 ;;
+esac
+
+default=$(pactl get-default-$kind)
+# name<TAB>description. Not `pactl -f json`: it chokes on non-ASCII descriptions and prints (null).
+devices=$(LC_ALL=C pactl list ${kind}s | awk '
+    function flush() { if (name != "" && (monitor == "" || monitor == "n/a")) print name "\t" desc; name = monitor = "" }
+    /^(Sink|Source) #/      { flush() }
+    /^\tName: /             { name = substr($0, 8) }
+    /^\tDescription: /      { desc = substr($0, 15) }
+    /^\tMonitor of Sink: /  { monitor = substr($0, 19) }
+    END                     { flush() }')
+[ -n "$devices" ] || { notify-send "$title" "没有找到设备"; exit 1; }
+
+rows=$(awk -F'\t' -v d="$default" '{ print ($1 == d ? "● " : "   ") $2 }' <<<"$devices")
+sel=$(awk -F'\t' -v d="$default" '$1 == d { print NR - 1; exit }' <<<"$devices")
+idx=$(rofi -dmenu -i -no-custom -format i -p "$icon" ${sel:+-selected-row "$sel"} <<<"$rows") || exit 0
+
+device=$(sed -n "$((idx + 1))p" <<<"$devices" | cut -f1)
+[ -n "$device" ] && [ "$device" != "$default" ] || exit 0
+pactl set-default-$kind "$device"
+# sink-inputs are streams playing to a sink, source-outputs are streams recording from a source
+streams=$([ $kind = sink ] && echo sink-inputs || echo source-outputs)
+for stream in $(pactl list short $streams | cut -f1); do
+    pactl move-${streams%s} "$stream" "$device" || true
+done
+notify-send "$title" "$(sed -n "$((idx + 1))p" <<<"$devices" | cut -f2)"
