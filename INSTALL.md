@@ -281,6 +281,19 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
   写进系统的键盘配置（`/etc/X11/xorg.conf.d/00-keyboard.conf`），之后接上的键盘也都会换，重新登录后生效：
   `sudo localectl set-x11-keymap cn pc105 "" ctrl:swapcaps,terminate:ctrl_alt_bksp`（布局按这台机器改，`setxkbmap -query` 查）。
 - **显示器**：`bin/edid-check` 只对现在这台显示器有效，新机器上会提醒你处理 `/etc/X11/xorg.conf.d/20-nvidia-connected-monitor.conf`（没有这个文件就什么都不做）。
+- **nvim 的 Python 环境**（Mac 上也要做）：`options.lua` 把 nvim 的 Python 指向 `~/.virtualenvs/neovim`，不建它的话 molten 和所有靠 Python 的插件都用不了。
+  它同时是编辑 `.ipynb` 用的 kernel（`plugins/molten.lua`：jupytext 打开、molten 执行，键在 `<leader>j` 下）：
+  ```sh
+  uv venv ~/.virtualenvs/neovim --python 3.12
+  uv pip install --python ~/.virtualenvs/neovim/bin/python pynvim jupyter_client ipykernel nbformat jupytext pillow matplotlib
+  ~/.virtualenvs/neovim/bin/python -m ipykernel install --user --name python3 --display-name "Python 3 (nvim)"
+  ln -s ~/.virtualenvs/neovim/bin/jupytext ~/.local/bin/jupytext   # jupytext.nvim 从 PATH 里找它
+  nvim --headless "+Lazy! load molten-nvim" +UpdateRemotePlugins +qa
+  ```
+  - 图片靠 ueberzugpp（上面已装）在 alacritty 里叠窗口显示，只在 Linux / X11 下有效；Mac 上 molten 能跑，但图不会内嵌显示。
+  - 这个 kernel 只有 matplotlib，没有 pandas 等。要用某个项目自己的环境：在那个环境里
+    `pip install ipykernel && python -m ipykernel install --user --name <名字>`，再在 nvim 里 `<leader>ji` 选它。
+  - 以后手动跑 `:UpdateRemotePlugins` 前要先 `:Lazy load molten-nvim`：molten 是按需加载的，没加载时重新生成的注册文件会漏掉它，所有 `Molten*` 命令随之失效。
 
 各功能的用法和快捷键见 `i3/.config/i3/README.md`。
 
