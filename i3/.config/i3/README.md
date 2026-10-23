@@ -192,11 +192,11 @@ i3 会把其他工作区的窗口藏起来，skippy-xd 只能在打开总览时�
 
 每按一次换一套，按 Nord → 经典黑色 → pywal → Nord 的顺序轮换，没装 pywal 时跳过 pywal：
 
-- **Nord**：默认配色，影响 i3 边框、polybar、rofi、alacritty、tmux 和 p10k 提示符
-- **经典黑色**：以前的样子，终端接近纯黑、用 Tango 配色，tmux 状态栏是亮色；i3、polybar 和 rofi 仍然是 Nord
+- **Nord**：默认配色，影响 i3 边框、polybar、rofi、alacritty、tmux、btop 和 p10k 提示符
+- **经典黑色**：以前的样子，终端接近纯黑、用 Tango 配色，tmux 状态栏是亮色，btop 也换成 Tango 配色；i3、polybar 和 rofi 仍然是 Nord
 - **pywal**：从当前 nitrogen 壁纸里提取颜色生成一套配色，范围和 Nord 一样
 
-换了壁纸以后想让配色跟上，执行 `~/.config/i3/bin/theme wal`。也可以用 `theme nord` / `theme classic` / `theme wal` 直接指定。选择会记住，下次登录自动恢复。p10k 提示符只在之后新开的终端里变色，已经打开的终端不变。rofi 的启动器和电源菜单都跟着变；conky 卡片、通知、GTK 程序不跟着变。
+换了壁纸以后想让配色跟上，执行 `~/.config/i3/bin/theme wal`。也可以用 `theme nord` / `theme classic` / `theme wal` 直接指定。选择会记住，下次登录自动恢复。p10k 提示符只在之后新开的终端里变色，已经打开的终端不变。rofi 的启动器和电源菜单都跟着变，开着的 btop 也马上换色；conky 卡片、通知、GTK 程序不跟着变。
 
 ## 快捷键
 

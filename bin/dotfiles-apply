@@ -77,6 +77,9 @@ fi
 if tmux info >/dev/null 2>&1 && changed '^tmux/'; then
     run tmux source-file "$HOME/.tmux.conf"
 fi
+if running btop && changed '^btop/'; then
+    run pkill -USR2 -u "$UID" -x btop
+fi
 if running AeroSpace && changed '^aerospace/'; then
     run aerospace reload-config
 fi

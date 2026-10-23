@@ -9,4 +9,6 @@ mpd/.config/mpd/pid
 mpd/.config/mpd/state
 mpd/.config/mpd/database
 ncmpcpp/.config/ncmpcpp/lyrics/
+# link written by i3/.config/i3/bin/theme, lands here if stow folded ~/.config/btop into the package
+btop/.config/btop/themes/
 __pycache__/

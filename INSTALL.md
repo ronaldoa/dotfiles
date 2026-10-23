@@ -321,6 +321,7 @@ git log --stat ORIG_HEAD..HEAD  # 看这次改了哪些包
 | wireplumber | `systemctl --user restart wireplumber` |
 | zsh | `exec zsh` |
 | tmux | `tmux source ~/.tmux.conf` |
+| btop | `pkill -USR2 -x btop`（让开着的 btop 重读配置） |
 | nvim | 重开；`lazy-lock.json` 变了就 `:Lazy restore` |
 | alacritty、ranger、rofi 等 | 自动生效或下次打开生效 |
 | aerospace（Mac） | `aerospace reload-config` |
