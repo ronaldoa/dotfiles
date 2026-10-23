@@ -176,6 +176,10 @@ for_window [instance="cava"] floating enable, sticky enable, border none
 no_focus [instance="cava"]
 # Noi lives in the scratchpad (its "Quit Noi now?" dialog has another class, so it stays out)
 for_window [class="Noi" window_role="browser-window"] floating enable, resize set 60 ppt 80 ppt, move position center, move scratchpad
+# WeChat main window (bin/wechat-toggle): closing it only unmaps it to the tray, so a tray click maps a
+# window i3 sees as new; put it straight back in the scratchpad and show it. No resize here: the login
+# window has the same title, the script sizes the main window
+for_window [class="(?i)wechat" title="^(微信|WeChat|Weixin)$"] mark --add wechat, floating enable, move position center, move scratchpad, scratchpad show
 
 # Clipboard history (copyq)
 bindsym $mod+Shift+v exec --no-startup-id copyq toggle
