@@ -30,6 +30,14 @@ fetch() { curl -fsSL --max-time 30 --retry 2 "$@"; }
 # Newest local file for a prefix, the same way bin/appimage picks it
 local_file() { printf '%s\n' "$dir/$1"*.[Aa]pp[Ii]mage | sort -V | tail -n 1; }
 
+# Version at the start of a file name after its prefix (Cursor-1.5.11-x86_64.AppImage → 1.5.11),
+# empty for fixed names like WeChatLinux_x86_64.AppImage
+version() {
+    local rest=${1,,}
+    rest=${rest#"${2,,}"}
+    [[ $rest =~ ^v?([0-9]+([.-][0-9]+)*) ]] && echo "${BASH_REMATCH[1]}"
+}
+
 # Resolve a source to: <file name> <url> <size or empty> <hash type:value or empty>
 resolve() {
     local type=$1 a=$2 b=$3 url json yml
@@ -108,9 +116,18 @@ while read -r prefix type a b; do
             [ "$mode" = check ] && echo "$prefix: up to date (${old##*/})"
             continue
         fi
-    elif [ "$(printf '%s\n' "${old##*/}" "$name" | tr '[:upper:]' '[:lower:]' | sort -V | tail -n 1)" != "${name,,}" ]; then
-        [ "$mode" = check ] && echo "$prefix: local ${old##*/} is newer than $name"
-        continue
+    else
+        # Compare the versions, not the whole names: a release can rename its file
+        # (LM-Studio-0.4.26-4-linux-x64 → LM-Studio-0.4.26-4-x64); fall back to the names without one
+        oldv=$(version "${old##*/}" "$prefix") newv=$(version "$name" "$prefix")
+        [ -n "$oldv" ] && [ -n "$newv" ] || { oldv=${old##*/} oldv=${oldv,,} newv=${name,,}; }
+        if [ "$oldv" = "$newv" ]; then
+            [ "$mode" = check ] && echo "$prefix: up to date (${old##*/}, upstream now calls it $name)"
+            continue
+        elif [ "$(printf '%s\n' "$oldv" "$newv" | sort -V | tail -n 1)" != "$newv" ]; then
+            [ "$mode" = check ] && echo "$prefix: local ${old##*/} is newer than $name"
+            continue
+        fi
     fi
 
     updates+=("${old##*/} → $name")
