@@ -101,13 +101,13 @@ exec --no-startup-id $HOME/.config/i3/bin/appimage-menu
 exec --no-startup-id sh -c "sleep 30; ~/.config/i3/bin/appimage-update --notify"
 
 
-# Use pactl to adjust volume in PulseAudio.
-bindsym XF86AudioRaiseVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ +2%
-bindsym XF86AudioLowerVolume exec --no-startup-id pactl set-sink-volume @DEFAULT_SINK@ -2%
-bindsym XF86AudioMute exec --no-startup-id pactl set-sink-mute @DEFAULT_SINK@ toggle
-bindsym XF86AudioMicMute exec --no-startup-id pactl set-source-mute @DEFAULT_SOURCE@ toggle
+# Volume keys go through bin/volume (pactl, 2% a step), which then shows a progress bar (bin/osd).
+bindsym XF86AudioRaiseVolume exec --no-startup-id $HOME/.config/i3/bin/volume up
+bindsym XF86AudioLowerVolume exec --no-startup-id $HOME/.config/i3/bin/volume down
+bindsym XF86AudioMute exec --no-startup-id $HOME/.config/i3/bin/volume mute
+bindsym XF86AudioMicMute exec --no-startup-id $HOME/.config/i3/bin/volume mic-mute
 
-# Detect the laptop backlight device; otherwise use DDC/CI for external displays.
+# Detect the laptop backlight device; otherwise use DDC/CI for external displays. Shows a progress bar too.
 bindsym XF86MonBrightnessUp exec --no-startup-id $HOME/.config/i3/bin/brightness up
 bindsym XF86MonBrightnessDown exec --no-startup-id $HOME/.config/i3/bin/brightness down
 

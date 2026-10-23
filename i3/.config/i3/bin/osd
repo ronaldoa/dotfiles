@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# On-screen display after a volume / brightness key: a dunst notification with a progress bar.
+# Each kind has its own stack tag, so holding the key updates one card instead of piling them up;
+# dunstrc keeps app "OSD" out of the history Super+N brings back.
+#
+#   osd volume       speaker volume (or "静音")
+#   osd mic          microphone on / off
+#   osd brightness   internal panel, else the external monitor over DDC/CI
+set -euo pipefail
+
+show() { # summary icon tag [percent]
+    local hint=()
+    [ -n "${4:-}" ] && hint=(-h "int:value:$4")
+    notify-send -a OSD -u low -t 1500 -i "$2" -h "string:x-dunst-stack-tag:osd-$3" "${hint[@]}" "$1"
+}
+
+case ${1:-} in
+    volume)
+        v=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -om1 '[0-9]*%' | tr -d %)
+        if pactl get-sink-mute @DEFAULT_SINK@ | grep -q yes; then
+            show "静音" audio-volume-muted volume "$v"
+        else
+            icon=audio-volume-high
+            ((v < 67)) && icon=audio-volume-medium
+            ((v < 34)) && icon=audio-volume-low
+            show "音量 $v%" "$icon" volume "$v"
+        fi
+        ;;
+    mic)
+        if pactl get-source-mute @DEFAULT_SOURCE@ | grep -q yes; then
+            show "麦克风已关闭" microphone-sensitivity-muted mic
+        else
+            show "麦克风已打开" microphone-sensitivity-high mic
+        fi
+        ;;
+    brightness)
+        panel=$("$(dirname "$0")/hardware" backlight-device)
+        if [ -n "$panel" ]; then
+            d=/sys/class/backlight/$panel
+            v=$(( $(cat "$d/brightness") * 100 / $(cat "$d/max_brightness") ))
+        else
+            # "VCP 10 C <current> <max>"
+            read -r _ _ _ cur max < <(ddcutil --brief getvcp 10)
+            v=$(( cur * 100 / max ))
+        fi
+        show "亮度 $v%" display-brightness brightness "$v"
+        ;;
+    *) echo 'usage: osd volume|mic|brightness' >&2; exit 2 ;;
+esac

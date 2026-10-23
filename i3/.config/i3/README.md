@@ -13,6 +13,8 @@ bin/
   polybar-launch    每个独立屏幕区域启动一个 polybar（镜像屏幕不重复）
   hardware          共享硬件采集：CPU/GPU、温度、电池、背光、网络、本地磁盘容量
   brightness        自动识别内置背光，或使用外接显示器 DDC/CI
+  volume            音量键：调音量 / 静音 / 麦克风静音
+  osd               音量、亮度变化后弹出带进度条的通知
   compositor        按驱动选择 picom 的 NVIDIA 重绘兼容参数
   focus-mode        会议／专注模式，记录并恢复通知和视觉组件状态
   lock              锁屏：当前屏幕的模糊截图 + 时钟 + 输入动画圈（i3lock-color）
@@ -344,8 +346,8 @@ appimage-update Noi- ...   只更新这几个
 | `Super+m` | mpd 播放/暂停 |
 | `Super+[` / `Super+]` | mpd 上一首 / 下一首 |
 | `Super+l` | 开关浮动歌词窗口 |
-| 音量键 / 静音键 / 麦克风静音键 | pactl 调音量（每次 2%） |
-| 亮度键 | 自动检测内置背光设备，用 brightnessctl 或 light 调节；没有内置背光时用 ddcutil 调外接显示器 |
+| 音量键 / 静音键 / 麦克风静音键 | pactl 调音量（每次 2%），右上角弹出带进度条的通知（`bin/osd`） |
+| 亮度键 | 自动检测内置背光设备，用 brightnessctl 或 light 调节；没有内置背光时用 ddcutil 调外接显示器；同样弹出进度条 |
 
 ### 剪贴板、emoji、通知
 

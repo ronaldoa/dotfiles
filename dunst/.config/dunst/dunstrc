@@ -71,3 +71,8 @@
     frame_color = "#BF616A"
     highlight = "#BF616A"
     timeout = 0
+
+# Volume / brightness progress bars (i3 bin/osd): not worth bringing back with Super+N
+[osd]
+    appname = OSD
+    history_ignore = yes

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Internal panel: detect its sysfs name; external monitor: DDC/CI, no fixed bus number.
+# Then shows the new level (bin/osd).
 set -euo pipefail
 case ${1:-} in
     up) sign=+; light_arg=-A ;;
@@ -10,13 +11,16 @@ panel=$("$(dirname "$0")/hardware" backlight-device)
 if [ -n "$panel" ]; then
     if command -v brightnessctl >/dev/null; then
         [ "$sign" = + ] && amount=5%+ || amount=5%-
-        exec brightnessctl --device="$panel" set "$amount"
+        brightnessctl --device="$panel" set "$amount" >/dev/null
+        exec "$(dirname "$0")/osd" brightness
     elif command -v light >/dev/null; then
-        exec light -s "sysfs/backlight/$panel" "$light_arg" 5
+        light -s "sysfs/backlight/$panel" "$light_arg" 5
+        exec "$(dirname "$0")/osd" brightness
     fi
     notify-send '亮度' '需要 brightnessctl 或 light 才能调节屏幕背光'
 elif command -v ddcutil >/dev/null; then
-    exec ddcutil --noverify setvcp 10 "$sign" 5
+    ddcutil --noverify setvcp 10 "$sign" 5
+    exec "$(dirname "$0")/osd" brightness
 else
     notify-send '亮度' '未发现内置背光；外接显示器需要 ddcutil 和 DDC/CI 支持'
 fi

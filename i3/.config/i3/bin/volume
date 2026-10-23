@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Volume keys: change the default sink / source, then show the level (bin/osd).
+set -euo pipefail
+case ${1:-} in
+    up) pactl set-sink-volume @DEFAULT_SINK@ +2%; kind=volume ;;
+    down) pactl set-sink-volume @DEFAULT_SINK@ -2%; kind=volume ;;
+    mute) pactl set-sink-mute @DEFAULT_SINK@ toggle; kind=volume ;;
+    mic-mute) pactl set-source-mute @DEFAULT_SOURCE@ toggle; kind=mic ;;
+    *) echo 'usage: volume up|down|mute|mic-mute' >&2; exit 2 ;;
+esac
+exec "$(dirname "$0")/osd" "$kind"
