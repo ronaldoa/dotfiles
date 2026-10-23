@@ -1,0 +1,4 @@
+#!/bin/sh
+# After `git pull --rebase`; `git commit --amend` also runs this hook and is ignored.
+[ "$1" = rebase ] || exit 0
+exec "$(git rev-parse --show-toplevel)/bin/dotfiles-apply"

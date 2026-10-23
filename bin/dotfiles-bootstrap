@@ -17,10 +17,11 @@ HOST="${DOTFILES_HOST:-$(hostname -s)}"
 # Untracked editor state can sit inside any package (e.g. mpd/.vscode); never link it into $HOME
 STOW_FLAGS=(--target="$HOME" --ignore='\.history' --ignore='\.vscode' --ignore='\.idea')
 ACTION="--stow"
+DRY=
 
 while getopts ':nRDh' opt; do
   case "$opt" in
-    n) STOW_FLAGS+=(--no --verbose) ;;
+    n) STOW_FLAGS+=(--no --verbose); DRY=1 ;;
     R) ACTION="--restow" ;;
     D) ACTION="--delete" ;;
     h) sed -n '2,12p' "$0"; exit 0 ;;
@@ -65,6 +66,16 @@ else
   echo "host overrides: none for '$HOST' (generic config only)"
   echo "  to add some:  mkdir -p hosts/$HOST/.config/dotfiles-host"
   echo "  available  : $(cd "$DOTFILES/hosts" && ls -d -- */ | tr -d / | tr '\n' ' ')"
+fi
+
+# Git hooks in .githooks/ run bin/dotfiles-apply after every pull: relink, reload what changed
+if [ -z "$DRY" ]; then
+  if [ "$ACTION" = "--delete" ]; then
+    git -C "$DOTFILES" config --unset core.hooksPath || true
+  else
+    git -C "$DOTFILES" config core.hooksPath .githooks
+    echo "git hooks: after a pull, bin/dotfiles-apply relinks and reloads what changed"
+  fi
 fi
 
 [ "$ACTION" = "--delete" ] && exit 0

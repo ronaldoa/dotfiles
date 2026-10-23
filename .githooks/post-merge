@@ -1,0 +1,3 @@
+#!/bin/sh
+# After `git pull` (and any other merge): make the pulled changes take effect.
+exec "$(git rev-parse --show-toplevel)/bin/dotfiles-apply"

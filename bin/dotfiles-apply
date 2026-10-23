@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Make changes pulled from the remote take effect: relink if files were added, removed or renamed,
+# then reload whichever running programs had their config changed (INSTALL.md section 5).
+# Run by the git hooks in .githooks/ after `git pull` (merge or rebase); can be run by hand too.
+#
+#   bin/dotfiles-apply              changes since ORIG_HEAD (what the last pull brought in)
+#   bin/dotfiles-apply <rev>        changes from <rev> to HEAD
+#   bin/dotfiles-apply -n [<rev>]   only print what would be done
+#
+# Programs that are not running are left alone. Works over ssh: the X display is taken from
+# the running i3. Plain bash 3.2 for macOS.
+set -uo pipefail
+
+DOTFILES="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+HOST="${DOTFILES_HOST:-$(hostname -s)}"
+HOSTCFG="hosts/$HOST/.config/dotfiles-host"
+I3BIN="$HOME/.config/i3/bin"
+
+dry=
+[ "${1:-}" = -n ] && { dry=1; shift; }
+from=${1:-ORIG_HEAD}
+git -C "$DOTFILES" rev-parse -q --verify "$from^{commit}" >/dev/null || exit 0
+[ "$(git -C "$DOTFILES" rev-parse "$from")" = "$(git -C "$DOTFILES" rev-parse HEAD)" ] && exit 0
+
+changes=$(git -C "$DOTFILES" diff --name-status -M "$from" HEAD)
+[ -n "$changes" ] || exit 0
+files=$(printf '%s\n' "$changes" | awk -F'\t' '{print $2; if ($3) print $3}')
+
+# Is any changed path matched by one of these extended regexes?
+changed() { grep -qE "$1" <<<"$files"; }
+running() { pgrep -u "$UID" -x "$1" >/dev/null; }
+# Say what runs on the hook's own stderr (fd 3), even when the command's output is discarded
+exec 3>&2
+run() {
+    echo "dotfiles-apply: $*" >&3
+    [ -n "$dry" ] || "$@"
+}
+hints=()
+
+# A changed file is already live through its link; only new, removed or renamed files need restowing
+if grep -qv '^M' <<<"$changes"; then
+    run "$DOTFILES/bin/dotfiles-bootstrap" -R >/dev/null || echo 'dotfiles-apply: bootstrap -R failed, run it by hand to see why' >&2
+fi
+
+# The X session's display, for when the pull happened over ssh
+if [ "$(uname)" = Linux ] && running i3 && [ -z "${DISPLAY:-}" ]; then
+    DISPLAY=$(tr '\0' '\n' <"/proc/$(pgrep -u "$UID" -xo i3)/environ" | sed -n 's/^DISPLAY=//p')
+    export DISPLAY
+fi
+
+if running i3 && changed "^i3/\.config/i3/config$|^$HOSTCFG/i3\.conf$"; then
+    if i3 -C -c "$HOME/.config/i3/config" >/dev/null 2>&1; then
+        run i3-msg -q reload
+        git -C "$DOTFILES" diff "$from" HEAD -- i3/.config/i3/config "$HOSTCFG/i3.conf" | grep -qE '^[-+]exec' &&
+            hints+=('i3 的 exec 启动项变了：Alt+Shift+r 重启 i3 才会生效')
+    else
+        hints+=('i3 配置检查没通过，没有重载：i3 -C -c ~/.config/i3/config 看看哪里错了')
+    fi
+fi
+if running polybar && changed "^i3/\.config/i3/polybar/|^i3/\.config/i3/bin/(polybar-launch|lyrics|bar-collapse)$|^$HOSTCFG/bar\.env$"; then
+    run setsid "$I3BIN/polybar-launch" >/dev/null 2>&1 </dev/null
+fi
+if running dunst && changed '^dunst/'; then
+    run dunstctl reload
+fi
+if running conky && changed '^conky/'; then
+    run "$I3BIN/widgets" stop && run "$I3BIN/widgets" start >/dev/null 2>&1
+fi
+if running wireplumber && changed '^wireplumber/'; then
+    run systemctl --user restart wireplumber
+fi
+if tmux info >/dev/null 2>&1 && changed '^tmux/'; then
+    run tmux source-file "$HOME/.tmux.conf"
+fi
+if running AeroSpace && changed '^aerospace/'; then
+    run aerospace reload-config
+fi
+changed '^zsh/' && hints+=('zsh 配置变了：开着的终端里 exec zsh')
+changed '^nvim/.*lazy-lock\.json$' && hints+=('nvim 插件版本变了：nvim 里 :Lazy restore')
+
+for h in ${hints[@]+"${hints[@]}"}; do echo "dotfiles-apply: $h"; done
+exit 0

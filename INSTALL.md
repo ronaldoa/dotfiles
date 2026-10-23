@@ -287,15 +287,26 @@ Firefox 的视频和音频默认跟随系统输出：`wireplumber` 配置只关�
 
 ```sh
 git pull
-git log --stat ORIG_HEAD..HEAD   # 看这次改了哪些包
-bin/dotfiles-bootstrap -n        # 只在增删、改名了文件时需要：先模拟
-bin/dotfiles-bootstrap -R        # 再重新整理链接
 ```
 
-配置是链接进家目录的，只改了已有文件的内容时，`git pull` 完文件就已经是新的了，不用跑 bootstrap。
-新加了包或 `hosts/<主机名>/` 下的文件也要 `-R`；新配置用到了没装的程序，bootstrap 最后会列出来。
+`bin/dotfiles-bootstrap` 会把 git 的 hook 目录设成仓库里的 `.githooks/`，之后每次 `git pull`（merge 或 rebase 都算）结束，
+都会自动跑 `bin/dotfiles-apply`，按这次拉下来的改动做下面两件事，做了什么会在 pull 的输出里列出来：
 
-剩下的是让正在运行的程序重新读配置：
+- 有新增、删除、改名的文件就 `bin/dotfiles-bootstrap -R` 重新整理链接（只改了已有文件的内容时链接本来就指向新文件，不用跑）；
+- 按下表重载改到的、而且正在运行的程序。ssh 进来 pull 也行，X 显示从正在跑的 i3 那里取。
+  zsh、nvim 没法从外面重载，会提示你自己动手。
+
+想先看看会做什么，或者 hook 没跑上（比如这台机器还没跑过 bootstrap）：
+
+```sh
+bin/dotfiles-apply -n           # 只列出要做的事（对比 ORIG_HEAD，也就是上次 pull 之前）
+bin/dotfiles-apply              # 真的做
+git log --stat ORIG_HEAD..HEAD  # 看这次改了哪些包
+```
+
+新配置用到了没装的程序，bootstrap 最后会列出来。
+
+`dotfiles-apply` 照着做的表（手动处理时也照这个）：
 
 | 改了 | 怎么生效 |
 |---|---|
