@@ -47,6 +47,11 @@ if [ "$(uname)" = Linux ] && running i3 && [ -z "${DISPLAY:-}" ]; then
     DISPLAY=$(tr '\0' '\n' <"/proc/$(pgrep -u "$UID" -xo i3)/environ" | sed -n 's/^DISPLAY=//p')
     export DISPLAY
 fi
+# The running i3's socket: a shell started under an earlier i3 (an old tmux session) still carries that
+# one's I3SOCK, and i3-msg -- and the polybar started below -- would talk to a socket that is gone
+if [ "$(uname)" = Linux ] && running i3; then
+    sock=$(i3 --get-socketpath 2>/dev/null) && [ -S "$sock" ] && export I3SOCK=$sock
+fi
 
 if running i3 && changed "^i3/\.config/i3/config$|^$HOSTCFG/i3\.conf$"; then
     if i3 -C -c "$HOME/.config/i3/config" >/dev/null 2>&1; then
