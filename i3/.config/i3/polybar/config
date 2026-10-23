@@ -298,7 +298,7 @@ click-middle = ~/.config/i3/bin/audio-device input &
 format-volume = <ramp-volume> <label-volume>
 
 format-muted = <label-muted>
-format-muted-prefix = 婢
+format-muted-prefix = 
 format-muted-prefix-font = 2
 format-muted-prefix-foreground = ${color.RED}
 
