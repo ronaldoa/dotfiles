@@ -290,7 +290,7 @@ bin/dotfiles-bootstrap -R    # 以后增删了文件，重新整理链接
   ln -s ~/.virtualenvs/neovim/bin/jupytext ~/.local/bin/jupytext   # jupytext.nvim 从 PATH 里找它
   nvim --headless "+Lazy! load molten-nvim" +UpdateRemotePlugins +qa
   ```
-  - 图片靠 ueberzugpp（上面已装）在 alacritty 里叠窗口显示，只在 Linux / X11 下有效；Mac 上 molten 能跑，但图不会内嵌显示。
+  - 图片靠 ueberzugpp（上面已装）在终端（wezterm、alacritty 都行）上叠窗口显示，只在 Linux / X11 下有效；Mac 上 molten 能跑，但图不会内嵌显示。
   - 这个 kernel 只有 matplotlib，没有 pandas 等。要用某个项目自己的环境：在那个环境里
     `pip install ipykernel && python -m ipykernel install --user --name <名字>`，再在 nvim 里 `<leader>ji` 选它。
   - 以后手动跑 `:UpdateRemotePlugins` 前要先 `:Lazy load molten-nvim`：molten 是按需加载的，没加载时重新生成的注册文件会漏掉它，所有 `Molten*` 命令随之失效。

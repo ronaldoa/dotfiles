@@ -65,8 +65,9 @@ config.default_cursor_style = 'SteadyBlock'
 config.initial_cols = 120
 config.initial_rows = 30
 config.window_padding = { left = 20, right = 20, top = 10, bottom = 10 }
--- tmux does the tabs and splits
-config.enable_tab_bar = false
+-- tmux does the tabs and splits; the bar still shows up if a wezterm tab gets opened (Ctrl+Shift+T)
+config.hide_tab_bar_if_only_one_tab = true
+config.use_fancy_tab_bar = false
 config.window_close_confirmation = 'NeverPrompt'
 config.check_for_updates = false
 
@@ -86,5 +87,17 @@ config.mouse_bindings = {
   },
 }
 config.selection_word_boundary = ',│`|:"\' ()[]{}<>\t@='
+
+-- On i3, Super is for desktop functions (see CLAUDE.md). Drop wezterm's macOS-style Super
+-- defaults (Super+K clears the scrollback, Super+1..9 switch tabs, ...) so a key i3 leaves
+-- free does nothing here instead. wezterm.gui is nil outside the GUI (e.g. wezterm cli).
+if wezterm.target_triple:find('linux') and wezterm.gui then
+  config.keys = {}
+  for _, k in ipairs(wezterm.gui.default_keys()) do
+    if k.mods:find('SUPER') then
+      table.insert(config.keys, { key = k.key, mods = k.mods, action = wezterm.action.DisableDefaultAssignment })
+    end
+  end
+end
 
 return config

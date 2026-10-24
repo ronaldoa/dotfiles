@@ -390,7 +390,7 @@ tmux_conf_urlscan_options="--compact --dedupe"
 # this is the place to override or undo settings
 
 # increase history size
-#set -g history-limit 10000
+set -g history-limit 100000
 
 # start with mouse mode enabled
 set -g mouse on
@@ -408,6 +408,7 @@ set -g mode-keys vi
 # (实测 tmux info: Sync/Smulx 皆 [missing])。alacritty 不答 XTVERSION,所以只能手动申报。
 # 同样的原因,真彩色 / 扩展按键 / 超链接 / 删除线 / 上划线 / osc7(当前目录)也一起申报。
 # 改完用 tmux display -p '#{client_termfeatures}' 验证。
+# wezterm 不需要这些:它答 XTVERSION,tmux 自己就能认出上面全部功能。
 set -as terminal-features ",xterm-256color:RGB:sync:usstyle:extkeys:hyperlinks:strikethrough:overline:osc7"
 
 # Ctrl+Shift 系组合键能传进 tmux(oh-my-tmux 的 %if 只认 mintty/iTerm,不认 Alacritty)

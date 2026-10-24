@@ -2,7 +2,7 @@
 -- 在 nvim 里编辑和运行 .ipynb:
 --   jupytext.nvim 把 .ipynb 打开成 # %% 分块的 Python,保存时写回 .ipynb;
 --   molten-nvim 连 Jupyter kernel 执行,输出显示在 cell 下方;
---   image.nvim 用 ueberzugpp 在 alacritty 里显示图片。
+--   image.nvim 用 ueberzugpp 在终端上叠窗口显示图片(X11 下和终端无关)。
 -- 所有键在 <leader>j 下,不和 iron.nvim 的 <leader>r 冲突。
 
 -- 当前 # %% 块的起止行(1-based,含首尾);没有分隔线时就是整个文件
