@@ -6,6 +6,7 @@
 --   ~/.cache/theme/alacritty.toml            written by ~/.config/i3/bin/theme (Super+T); empty = default
 --   ~/.config/dotfiles-host/alacritty.toml   per-machine font size, stowed from hosts/<hostname>/
 --   ~/.config/alacritty/alacritty.toml       terminal.shell: attach to an idle tmux session or start one
+-- ~/.config/dotfiles-host/wezterm.lua, if present, returns wezterm-only keys (e.g. dpi_by_screen) applied last.
 -- Later files win. All are on the reload watch list, so a theme switch recolours open windows.
 local wezterm = require 'wezterm'
 
@@ -106,6 +107,14 @@ if wezterm.target_triple:find('linux') and wezterm.gui then
       table.insert(config.keys, { key = k.key, mods = k.mods, action = wezterm.action.DisableDefaultAssignment })
     end
   end
+end
+
+-- Per-machine wezterm keys, stowed from hosts/<hostname>/ (alacritty would reject unknown keys in its TOML)
+local host_file = home .. '/.config/dotfiles-host/wezterm.lua'
+wezterm.add_to_config_reload_watch_list(host_file)
+local ok, host = pcall(dofile, host_file)
+if ok and type(host) == 'table' then
+  for k, v in pairs(host) do config[k] = v end
 end
 
 return config

@@ -11,6 +11,7 @@ hosts/
     .config/dotfiles-host/
       i3.conf                  # optional i3 preferences
       alacritty.toml           # font size 10
+      wezterm.lua              # eDP-1 at 160 dpi, so wezterm matches alacritty's size 10
       appimage.env             # AppImages in ~/Tools (no /mnt/data disk)
       mpd.conf                 # pulse audio output
   ronaldo-ms7c94/              # desktop, HDMI-0 2560x1440
@@ -40,6 +41,7 @@ Everything a host can override is funnelled through one directory,
 | `i3/.config/i3/config` | `include ~/.config/dotfiles-host/i3.conf` | silently skipped (verified on i3 4.25) |
 | `alacritty/…/alacritty.toml` | last entry of `general.import` | silently skipped |
 | `mpd/.mpdconf` | `include_optional ".config/dotfiles-host/mpd.conf"` (relative to `~`: mpd does not expand `~` in includes) | silently skipped (needs mpd ≥ 0.22); mpd runs but plays only into the fifo |
+| `wezterm/…/wezterm.lua` | `dofile` of `wezterm.lua`, a table of wezterm keys (e.g. `dpi_by_screen`) applied last (font size still comes from the host `alacritty.toml`) | silently skipped; wezterm renders at 96 dpi |
 | `zsh/.zshrc` | `[[ -r … ]] && source` | silently skipped |
 | `i3/.config/i3/bin/polybar-launch` | sources `~/.config/dotfiles-host/bar.env` | silently skipped; built-in `BAR_LEFT` default applies |
 | `i3/.config/i3/bin/appimage`, `appimage-menu` | source `~/.config/dotfiles-host/appimage.env` | silently skipped; `APPIMAGE_DIR` defaults to `/mnt/data/Tools` |
