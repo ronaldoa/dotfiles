@@ -675,6 +675,7 @@ class BrightnessTests(unittest.TestCase):
                 'hardware': '#!/bin/sh\nprintf "%s\\n" "$TEST_PANEL"\n',
                 'brightnessctl': '#!/bin/sh\nprintf "%s\\n" "$@" > "$TEST_LOG"\n',
                 'ddcutil': '#!/bin/sh\nprintf "%s\\n" "$@" > "$TEST_LOG"\n',
+                'osd': '#!/bin/sh\n',
             }.items():
                 path = root / name
                 path.write_text(content)
