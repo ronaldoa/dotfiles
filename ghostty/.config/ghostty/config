@@ -1,0 +1,47 @@
+# Ghostty (the Mac's terminal), set up to match alacritty/.config/alacritty/alacritty.toml.
+# Colours are the default Nord palette from alacritty/.config/alacritty/colors.toml; bin/theme
+# is i3-only, so nothing switches them here.
+# Per-machine settings (font size, the Mac's Cmd -> tmux keys) are in
+# ~/.config/dotfiles-host/ghostty, stowed from hosts/<hostname>/ and read last (see the end).
+
+font-family = Hack Nerd Font
+
+background = #2e3440
+foreground = #d8dee9
+palette = 0=#3b4252
+palette = 1=#bf616a
+palette = 2=#a3be8c
+palette = 3=#ebcb8b
+palette = 4=#81a1c1
+palette = 5=#b48ead
+palette = 6=#88c0d0
+palette = 7=#e5e9f0
+palette = 8=#4c566a
+palette = 9=#bf616a
+palette = 10=#a3be8c
+palette = 11=#ebcb8b
+palette = 12=#81a1c1
+palette = 13=#b48ead
+palette = 14=#8fbcbb
+palette = 15=#eceff4
+bold-is-bright = false
+
+cursor-style = block
+cursor-style-blink = false
+
+window-width = 120
+window-height = 30
+window-padding-x = 20
+window-padding-y = 10
+
+copy-on-select = clipboard
+# Left Option is Alt (for zsh/tmux/nvim), right Option still types special characters
+macos-option-as-alt = left
+# tmux holds the sessions, so closing a window loses nothing
+confirm-close-surface = false
+
+# Attach to an idle tmux session or start one (zsh -c expands the ~; stowed from tmux/.local/bin)
+command = /bin/zsh -lc ~/.local/bin/tmux-attach-idle
+
+# Relative to this file; the ? makes a missing file fine
+config-file = ?../dotfiles-host/ghostty

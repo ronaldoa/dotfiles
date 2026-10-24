@@ -341,12 +341,12 @@ git log --stat ORIG_HEAD..HEAD  # 看这次改了哪些包
 
 ## Mac
 
-Mac 上只用得到一部分：aerospace、alacritty、conda、mpd、ncmpcpp、nvim、ranger、tmux、wallpapers、wezterm、zsh。
+Mac 上只用得到一部分：aerospace、alacritty、conda、ghostty、mpd、ncmpcpp、nvim、ranger、tmux、wallpapers、wezterm、zsh。
 `bin/dotfiles-bootstrap` 在 macOS 上会自动跳过 i3、picom、rofi 这些 Linux 专用的包（列表在脚本的 `LINUX_ONLY`），用法和 Linux 一样：
 
 ```sh
 brew install stow mpd mpc ncmpcpp fzf chafa neovim tmux ranger
-brew install --cask alacritty
+brew install --cask ghostty
 bin/dotfiles-bootstrap -n     # 先看看会链接什么；已有的同名文件要先挪走，stow 不会覆盖
 bin/dotfiles-bootstrap
 brew services start mpd       # Homebrew 的 mpd 读 ~/.mpdconf
@@ -359,7 +359,8 @@ iPhone 用 App Store 里的 KDE Connect，但 iOS 不让它读通知、自动同
 **Syncthing**：`brew install --cask syncthing-app`（带菜单栏图标，开机自动启动；点图标选 Open 打开设置网页）。
 不要菜单栏图标就用命令行版：`brew install syncthing`，再 `brew services start syncthing`。和 Linux 机器配对见下一节。
 
-本机设置在 `hosts/QingyuZhoudeMacBook-Pro/`（mpd 用 osx 输出、alacritty 字号和 Cmd 快捷键、zshrc）。
+本机设置在 `hosts/QingyuZhoudeMacBook-Pro/`（mpd 用 osx 输出、ghostty 和 alacritty 的字号与 Cmd 快捷键、zshrc）。
+终端用 Ghostty，alacritty 的配置留着备用。Ghostty 读 `~/.config/ghostty/config`；`~/Library/Application Support/com.mitchellh.ghostty/config` 如果存在也会读，而且在后面、会覆盖前者，没用就删掉它。
 窗口管理换成 AeroSpace，需要的软件和 macOS 设置见 `aerospace/.config/aerospace/README.md`。
 
 ## Syncthing 在两台机器之间同步

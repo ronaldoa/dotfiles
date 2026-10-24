@@ -113,8 +113,8 @@ if [ "$(uname)" = Linux ]; then
     command -v ddcutil >/dev/null || missing+=(ddcutil)
   fi
 fi
-# Alacritty.app has no command on PATH
-[ "$(uname)" = Darwin ] && { [ -d /Applications/Alacritty.app ] || missing+=(alacritty); }
+# Ghostty.app puts no command on PATH
+[ "$(uname)" = Darwin ] && { [ -d /Applications/Ghostty.app ] || missing+=(ghostty); }
 if [ "$(uname)" = Linux ]; then
   [ -x /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 ] || missing+=(polkit-gnome)
   # Python modules for the i3 scripts (they run /usr/bin/python3, not a conda python)

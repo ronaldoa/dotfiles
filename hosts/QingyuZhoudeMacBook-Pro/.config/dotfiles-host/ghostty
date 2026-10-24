@@ -1,0 +1,37 @@
+# MacBook Pro (hostname: QingyuZhoudeMacBook-Pro) -- 14" Liquid Retina XDR.
+# Included at the end of ~/.config/ghostty/config, so these win.
+
+font-size = 18
+
+# Cmd+key sends the tmux prefix (Ctrl+B) followed by a tmux key, so tmux can be driven
+# like a tabbed terminal: Cmd+T new window, Cmd+1..9 select it, Cmd+H/J/K/L move between
+# panes, Cmd+Shift+H/J/K/L resize, Cmd+S / Cmd+D split, ... Same keys as alacritty.toml here.
+# They replace Ghostty's own Cmd+T/W/D/K/N/1..9 tab, split and window keys; Cmd+C/V stay copy/paste.
+keybind = cmd+bracket_left=text:\x02[
+keybind = cmd+s=text:\x02%
+keybind = cmd+d=text:\x02&
+keybind = cmd+h=text:\x02h
+keybind = cmd+j=text:\x02j
+keybind = cmd+k=text:\x02k
+keybind = cmd+l=text:\x02l
+keybind = cmd+shift+h=text:\x02H
+keybind = cmd+shift+j=text:\x02J
+keybind = cmd+shift+k=text:\x02K
+keybind = cmd+shift+l=text:\x02L
+keybind = cmd+w=text:\x02w
+keybind = cmd+t=text:\x02c
+keybind = cmd+x=text:\x02x
+keybind = cmd+z=text:\x02z
+keybind = cmd+n=text:\x02q
+keybind = cmd+shift+semicolon=text:\x02:
+keybind = cmd+digit_1=text:\x021
+keybind = cmd+digit_2=text:\x022
+keybind = cmd+digit_3=text:\x023
+keybind = cmd+digit_4=text:\x024
+keybind = cmd+digit_5=text:\x025
+keybind = cmd+digit_6=text:\x026
+keybind = cmd+digit_7=text:\x027
+keybind = cmd+digit_8=text:\x028
+keybind = cmd+digit_9=text:\x029
+# Cmd+Q would quit Ghostty and every tmux client in it
+keybind = cmd+q=unbind

@@ -135,7 +135,7 @@ alt-shift-tab = 'move-workspace-to-monitor --wrap-around next'
 
 # ---------------------------------------------------------------- apps
 
-alt-enter = 'exec-and-forget open -na Alacritty'
+alt-enter = 'exec-and-forget open -na Ghostty'
 alt-c = 'exec-and-forget open -a Firefox'
 alt-t = 'exec-and-forget open -a Thunderbird'
 alt-shift-n = 'exec-and-forget open ~'

@@ -21,7 +21,7 @@ brew install stow
 ## 建议的 macOS 设置
 
 - **系统设置 → 桌面与程序坞 → 「显示器具有单独的空间」关掉**：AeroSpace 官方建议，多显示器时更稳定（改完要注销一次）。
-- **终端里把 Option 当 Alt 用**：否则 `Alt+字母` 在终端里会打出特殊字符。alacritty 加 `[window] option_as_alt = "Both"`，WezTerm 设 `send_composed_key_when_left_alt_is_pressed = false`。不过 AeroSpace 的快捷键是全局抓取的，在终端里也照样生效，这一条只影响终端里的程序自己用 Alt。
+- **终端里把 Option 当 Alt 用**：否则 `Alt+字母` 在终端里会打出特殊字符。Ghostty 的配置里已经设了 `macos-option-as-alt = left`（左 Option 当 Alt，右 Option 照常打特殊字符）；alacritty 要加 `[window] option_as_alt = "Both"`。不过 AeroSpace 的快捷键是全局抓取的，在终端里也照样生效，这一条只影响终端里的程序自己用 Alt。
 - **Raycast 代替 rofi**：AeroSpace 只管窗口，启动器这类功能交给 Raycast。在 Raycast 里把这些命令的快捷键设成和 Linux 一样：
 
   | Linux 快捷键 | Raycast 命令 |
@@ -50,7 +50,7 @@ brew install stow
 | `` Alt+` `` | 回到上一个工作区 |
 | `Alt+[` / `Alt+]` | 上一个 / 下一个工作区 |
 | `Alt+Shift+C` | 重新加载配置 |
-| `Alt+Enter` | Alacritty |
+| `Alt+Enter` | Ghostty |
 | `Alt+C` / `Alt+T` | Firefox / Thunderbird |
 | `Alt+Shift+N` | 在 Finder 里打开主目录 |
 | `Alt+Ctrl+O/B/T/L/C/G` | Obsidian / 哔哩哔哩 / Teams / LM Studio / VS Code / ChatGPT |

@@ -410,6 +410,8 @@ set -g mode-keys vi
 # 改完用 tmux display -p '#{client_termfeatures}' 验证。
 # wezterm 不需要这些:它答 XTVERSION,tmux 自己就能认出上面全部功能。
 set -as terminal-features ",xterm-256color:RGB:sync:usstyle:extkeys:hyperlinks:strikethrough:overline:osc7"
+# Ghostty(Mac 的终端)的 TERM 是 xterm-ghostty,tmux 只从它的 terminfo 认出一部分,其余同样手动申报。
+set -as terminal-features ",xterm-ghostty:RGB:sync:usstyle:extkeys:hyperlinks:strikethrough:overline:osc7:mouse"
 
 # Ctrl+Shift 系组合键能传进 tmux(oh-my-tmux 的 %if 只认 mintty/iTerm,不认 Alacritty)
 set -s extended-keys on
