@@ -54,18 +54,65 @@ echo "host     : $HOST"
 echo "packages : ${PACKAGES[*]}"
 echo
 
-stow "${STOW_FLAGS[@]}" --dir="$DOTFILES" "$ACTION" "${PACKAGES[@]}"
+# A plain file in $HOME with the same content as the package's copy (copied by hand, or
+# left by a program that rewrote its config) only blocks the link; replace it with one.
+# -ef: the target already is the package file, through a link or a folded directory.
+replace_identical() {
+  local dir=$1 pkg=$2 src rel target
+  REPLACED=0
+  [ "$ACTION" = "--delete" ] && return 0
+  while IFS= read -r src; do
+    rel=${src#"$dir/$pkg/"}
+    target="$HOME/$rel"
+    if [ -f "$target" ] && [ ! -L "$target" ] && ! [ "$target" -ef "$src" ] && cmp -s "$target" "$src"; then
+      if [ -n "$DRY" ]; then
+        echo "would replace ~/$rel (same as $pkg/$rel) with a link"
+        REPLACED=1
+      else
+        rm -- "$target"
+        echo "replaced ~/$rel (same as $pkg/$rel) with a link"
+      fi
+    fi
+  done < <(find "$dir/$pkg" \( -name .history -o -name .vscode -o -name .idea \) -prune -o -type f -print)
+}
+
+# One stow per package, so a conflict (a file in $HOME that differs from the package's)
+# only skips that package instead of every one after it; bin/dotfiles-apply runs this
+# after each pull, and must still link the rest.
+# A dry run deletes nothing, so stow still sees the files it would replace: those packages
+# go in PENDING rather than FAILED.
+FAILED=() PENDING=()
+stow_pkg() {
+  replace_identical "$1" "$2"
+  if ! stow "${STOW_FLAGS[@]}" --dir="$1" "$ACTION" "$2"; then
+    if [ "$REPLACED" = 1 ]; then PENDING+=("$2"); else FAILED+=("$2"); fi
+  fi
+}
+
+for pkg in "${PACKAGES[@]}"; do stow_pkg "$DOTFILES" "$pkg"; done
 
 # Per-machine overrides. Absent is fine: every include hook in the generic
 # configs tolerates a missing file (i3 `include`, alacritty `import`,
 # mpd `include_optional`, the `[[ -r ]]` guard in .zshrc).
 if [ -d "$DOTFILES/hosts/$HOST" ]; then
-  stow "${STOW_FLAGS[@]}" --dir="$DOTFILES/hosts" "$ACTION" "$HOST"
+  stow_pkg "$DOTFILES/hosts" "$HOST"
   echo "host overrides: applied hosts/$HOST"
 else
   echo "host overrides: none for '$HOST' (generic config only)"
   echo "  to add some:  mkdir -p hosts/$HOST/.config/dotfiles-host"
   echo "  available  : $(cd "$DOTFILES/hosts" && ls -d -- */ | tr -d / | tr '\n' ' ')"
+fi
+
+if [ ${#FAILED[@]} -gt 0 ]; then
+  echo
+  echo "NOT linked (stow's message above says which file is in the way): ${FAILED[*]}"
+  echo "  that file in \$HOME differs from the package's copy: merge what you want to keep into"
+  echo "  the package, delete the file, and run this again"
+fi
+if [ ${#PENDING[@]} -gt 0 ]; then
+  echo
+  echo "dry run: stow's conflicts in ${PENDING[*]} are the files it would replace;"
+  echo "  if another file is listed there too, it really is in the way"
 fi
 
 # Git hooks in .githooks/ run bin/dotfiles-apply after every pull: relink, reload what changed
@@ -78,7 +125,7 @@ if [ -z "$DRY" ]; then
   fi
 fi
 
-[ "$ACTION" = "--delete" ] && exit 0
+[ "$ACTION" = "--delete" ] && exit ${#FAILED[@]}
 
 # Report anything the configs and scripts use that is not installed here, as package names
 # (command:package, or just the command when the package has the same name). Keep in sync
@@ -134,3 +181,6 @@ if [ ${#missing[@]} -gt 0 ]; then
   echo "not installed on this machine: ${missing[*]}"
   echo "  (the configs degrade gracefully, but those features stay dead; see INSTALL.md)"
 fi
+
+# Non-zero when a package was not linked, so bin/dotfiles-apply reports it
+[ ${#FAILED[@]} -eq 0 ]
