@@ -233,7 +233,7 @@ bindsym $mod1+Right focus output right
 bindsym $mod1+Shift+Left move workspace to output left
 bindsym $mod1+Shift+Right move workspace to output right
 # Meeting/focus mode: pause notifications and hide visual extras; restore on exit
-bindsym $mod1+f exec --no-startup-id $HOME/.config/i3/bin/focus-mode
+bindsym $mod1+Shift+f exec --no-startup-id $HOME/.config/i3/bin/focus-mode
 
 # Media keys: any MPRIS player via playerctl, falling back to mpd
 bindsym XF86AudioPlay exec --no-startup-id playerctl play-pause || mpc toggle

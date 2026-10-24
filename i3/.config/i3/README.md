@@ -385,7 +385,7 @@ appimage-update Noi- ...   只更新这几个
 | `Alt+Shift+r` | 原地重启 i3（保留布局） |
 | `Alt+Shift+Esc` | 退出 i3（会先确认） |
 | `Alt+/` | 快捷键速查 |
-| `Super+f` | 进入 / 退出会议／专注模式 |
+| `Super+Shift+f` | 进入 / 退出会议／专注模式（带 Shift，免得和 `Alt+f` 全屏按混） |
 
 ### 会议／专注模式
 
