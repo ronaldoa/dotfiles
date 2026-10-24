@@ -438,6 +438,9 @@ bind m run "cut -c3- '#{TMUX_CONF}' | sh -s _toggle_mouse" \; display 'mouse #{?
 # 只留当前 pane,关掉这个窗口里的其他 pane(only,同 Vim 的 C-w o)
 bind O confirm-before -p "kill other panes? (y/n)" "kill-pane -a"
 
+# 把另一个窗口并进来,放在当前 pane 右边(和 ! break-pane 相反;@ 就在 ! 旁边)
+bind @ command-prompt -p "join pane from window:" "join-pane -h -s ':%%'"
+
 # move status line to top
 #set -g status-position top
 
