@@ -180,6 +180,14 @@ for_window [class="Noi" window_role="browser-window"] floating enable, resize se
 # window i3 sees as new; put it straight back in the scratchpad and show it. No resize here: the login
 # window has the same title, the script sizes the main window
 for_window [class="(?i)wechat" title="^(微信|WeChat|Weixin)$"] mark --add wechat, floating enable, move position center, move scratchpad, scratchpad show
+# GoldenDict main window: same as WeChat, closing hides it to the tray and the tray icon (or running
+# goldendict again) maps a new window. Its lookup popup has the same class but is a "utility" window
+for_window [class="GoldenDict-ng" window_type="normal" title="GoldenDict-ng$"] mark --add goldendict, floating enable, resize set 60 ppt 80 ppt, move position center, move scratchpad, scratchpad show
+# Double Commander main window (its copy/settings dialogs have other roles, so they stay out).
+# No size here: it moves itself back to its saved place right after, bin/doublecmd-toggle places it
+for_window [class="Doublecmd" window_role="TfrmMain"] floating enable, move scratchpad, scratchpad show
+# Strata (local LLM server GUI): one window, closing it quits
+for_window [class="Strata-desktop"] floating enable, resize set 60 ppt 80 ppt, move position center, move scratchpad, scratchpad show
 
 # Clipboard history (copyq)
 bindsym $mod+Shift+v exec --no-startup-id copyq toggle
@@ -254,18 +262,20 @@ bindsym $mod+control+b exec --no-startup-id i3-msg -q '[class="(?i)bilibili"] fo
 bindsym $mod+control+t exec --no-startup-id i3-msg -q '[class="(?i)teams-for-linux"] focus' || $HOME/.config/i3/bin/appimage teams-for-linux-
 # LM Studio
 bindsym $mod+control+l exec --no-startup-id i3-msg -q '[class="(?i)lm.?studio"] focus' || $HOME/.config/i3/bin/appimage LM-Studio-
-# Strata (local LLM server GUI)
-bindsym $mod+control+s exec --no-startup-id i3-msg -q '[class="(?i)strata"] focus' || $HOME/.config/i3/bin/appimage Strata-
+# Toggle Strata scratchpad (local LLM server GUI; starts it if needed)
+bindsym $mod+control+s exec --no-startup-id i3-msg -q '[class="Strata-desktop"] scratchpad show' || $HOME/.config/i3/bin/appimage Strata-
 # Toggle Noi scratchpad (starts Noi if needed)
 bindsym $mod+control+n exec --no-startup-id $HOME/.config/i3/bin/noi-toggle
 # ChatGPT in its own window
 bindsym $mod+control+g exec --no-startup-id i3-msg -q '[instance="^chatgpt.com$"] focus' || chromium --app=https://chatgpt.com
+# Toggle GoldenDict scratchpad (starts it, or brings it back from the tray)
+bindsym $mod+control+y exec --no-startup-id i3-msg -q '[con_mark="goldendict"] scratchpad show' || goldendict
 # Toggle WeChat scratchpad (starts WeChat if needed)
 bindsym $mod+control+w exec --no-startup-id $HOME/.config/i3/bin/wechat-toggle
 # Restart WeChat (kills the old instance first), back into the scratchpad
 bindsym $mod+control+Shift+w exec --no-startup-id "pkill -9 -i wechat; sleep 1; $HOME/.config/i3/bin/wechat-toggle"
-# Double Commander: the installed package if there is one, otherwise the AppImage
-bindsym $mod+control+d exec --no-startup-id "command -v doublecmd >/dev/null && exec doublecmd || exec $HOME/.config/i3/bin/appimage doublecmd-gtk"
+# Toggle Double Commander scratchpad (starts it if needed)
+bindsym $mod+control+d exec --no-startup-id $HOME/.config/i3/bin/doublecmd-toggle
 
 # Control mpd: play/pause, previous / next song (like Alt+[ ] for workspaces)
 bindsym $mod1+m exec mpc toggle

@@ -25,6 +25,7 @@ bin/
   music-pick        rofi 搜索 mpd 曲库并播放
   noi-toggle        Noi 放在 scratchpad 里，一键呼出/隐藏
   wechat-toggle     微信主窗口放在 scratchpad 里，一键呼出/隐藏
+  doublecmd-toggle  Double Commander 主窗口放在 scratchpad 里，一键呼出/隐藏
   edid-check        登录时检查 xorg 里固定的显示器 EDID 是否还对得上
   xstack            按 WM_CLASS 把窗口提到最上层或压到最下层（给 conky 用）
   ws-icons          工作区名字后面显示程序图标
@@ -119,7 +120,7 @@ Thunar、pavucontrol、文件选择框这类 GTK 程序统一用 Nordic 主题�
 |---|---|
 | 窗口动画 | 打开窗口时从 90% 放大并淡入，关闭时缩小并淡出。i3 切换工作区时会把旧窗口藏起来、新窗口显示出来，所以切工作区时也有这个动画 |
 | 平滑移动 | 平铺布局变化（开关窗口、换分割方向、调大小）时，其他窗口滑到新位置，而不是一下跳过去（picom 的 `geometry` 动画，还是实验功能）。fcitx5 输入法候选框没有任何动画 |
-| scratchpad 滑入 | Noi、微信主窗口和下拉终端一样，呼出时从上面滑下来，隐藏时滑回去 |
+| scratchpad 滑入 | Noi、Strata、微信主窗口、GoldenDict 和 Double Commander 的主窗口和下拉终端一样，呼出时从上面滑下来，隐藏时滑回去 |
 | 当前窗口发光 | 聚焦的窗口外面是一圈 Nord 青色（`#88C0D0`）光晕，其他窗口是黑色阴影；换焦点时光晕颜色渐变过去 |
 | 通知飞入 | dunst 通知从屏幕右边飞进来，消失时往右飞出去 |
 | rofi 弹出 | 启动器从中间放大弹出（带一点回弹），关掉时缩小、往下沉并淡出 |
@@ -291,10 +292,11 @@ i3 会把其他工作区的窗口藏起来，skippy-xd 只能在打开总览时�
 | `Alt+Ctrl+b` | 哔哩哔哩 |
 | `Alt+Ctrl+t` | Teams |
 | `Alt+Ctrl+l` | LM Studio |
-| `Alt+Ctrl+s` | Strata（本地 LLM 服务的界面） |
-| `Alt+Ctrl+d` | Double Commander（装了 `doublecmd` 包就用包，否则用 AppImage） |
+| `Alt+Ctrl+s` | Strata（本地 LLM 服务的界面）：呼出 / 隐藏（放在 scratchpad 里，没运行就先启动） |
+| `Alt+Ctrl+d` | Double Commander：呼出 / 隐藏（放在 scratchpad 里，没运行就先启动；装了 `doublecmd` 包就用包，否则用 AppImage） |
 | `Alt+Ctrl+w` | 微信：呼出 / 隐藏（放在 scratchpad 里，没运行就先启动） |
 | `Alt+Ctrl+Shift+w` | 重启微信（先杀掉旧进程，再打开到 scratchpad） |
+| `Alt+Ctrl+y` | GoldenDict：呼出 / 隐藏（放在 scratchpad 里，没运行或缩在托盘里就先叫出来） |
 
 Noi、哔哩哔哩、Teams、LM Studio、Double Commander、微信都是 AppImage，由 `bin/appimage` 按文件名前缀（不区分大小写，`Noi-` 也能匹配 `noi-…`）找版本号最大的那个来启动。下载新版本后直接放进去就行，不用改配置；旧版本可以删掉，也可以留着。
 
@@ -422,6 +424,9 @@ appimage-update Noi- ...   只更新这几个
 - 歌词窗口：浮动、无边框、在所有工作区显示
 - Noi：启动后直接放进 scratchpad，浮动居中，60%×80%
 - 微信：只有主窗口（标题是「微信」）放进 scratchpad，浮动居中；登录、看图、单独的聊天窗口照常在当前工作区打开。点关闭会缩到托盘，再按 `Alt+Ctrl+W` 或点托盘图标会把它叫回来，仍然浮动在 scratchpad 里
+- GoldenDict：只有主窗口放进 scratchpad，浮动居中，60%×80%；取词弹窗照常弹出。点关闭会缩到托盘，再按 `Alt+Ctrl+Y` 或点托盘图标会把它叫回来
+- Strata：启动后直接放进 scratchpad，浮动居中，60%×80%；点关闭就是退出
+- Double Commander：只有主窗口放进 scratchpad，浮动居中，60%×80%；复制进度、设置这些对话框照常在当前工作区打开
 
 ## 状态栏（polybar）
 

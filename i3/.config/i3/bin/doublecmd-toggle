@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Toggle the Double Commander main window in the scratchpad; launch it if it isn't running
+# (the installed package if there is one, otherwise the AppImage).
+# Double Commander moves its window back to where it was last time (doublecmd.xml) after it
+# maps, overriding the for_window placement, so every time it is shown it is placed again.
+main='[class="Doublecmd" window_role="TfrmMain"]'
+running() { i3-msg -t get_tree | grep -q '"window_role":"TfrmMain"'; }
+
+if ! running; then
+    started=1
+    if command -v doublecmd >/dev/null; then
+        doublecmd >/dev/null 2>&1 &
+    else
+        "$HOME/.config/i3/bin/appimage" doublecmd-gtk >/dev/null 2>&1 &
+    fi
+    # for_window sends it to the scratchpad and shows it; wait for it and for its own move
+    for _ in $(seq 150); do running && break; sleep 0.1; done
+    sleep 0.5
+else
+    i3-msg -q "$main scratchpad show"
+fi
+
+# Shown (not hidden again)? Then give it the same size and place as the other scratchpad windows
+visible=$(i3-msg -t get_tree | jq '[.. | objects | select(.type? == "workspace" and .name != "__i3_scratch")
+    | .. | objects | select(.window_properties?.window_role? == "TfrmMain")] | length')
+if [ "$visible" -gt 0 ]; then
+    i3-msg -q "$main resize set 60 ppt 80 ppt, move position center, focus"
+    # Just started: moving it out from under the pointer lets focus-follows-mouse hand focus to
+    # the window that is now under the pointer; take it back once i3 has handled that
+    [ -n "$started" ] && { sleep 0.2; i3-msg -q "$main focus"; }
+fi
