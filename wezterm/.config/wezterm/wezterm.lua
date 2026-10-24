@@ -88,6 +88,14 @@ config.mouse_bindings = {
 }
 config.selection_word_boundary = ',│`|:"\' ()[]{}<>\t@='
 
+-- Quick Select (Ctrl+Shift+Space) also labels file:line[:col], as Claude and compilers print them:
+-- either a path with a slash (i3/.config/i3/config:302) or a name with an extension (wezterm.lua:97:5).
+-- The lookbehind keeps it off times (23:18:45) and the host:port / path parts of URLs.
+config.quick_select_patterns = {
+  [[(?<![\w:/.])(?:[\w.~-]*/)+[\w.-]+:\d+(?::\d+)?]],
+  [[(?<![\w:/.])[\w-][\w.-]*\.[A-Za-z]\w*:\d+(?::\d+)?]],
+}
+
 -- On i3, Super is for desktop functions (see CLAUDE.md). Drop wezterm's macOS-style Super
 -- defaults (Super+K clears the scrollback, Super+1..9 switch tabs, ...) so a key i3 leaves
 -- free does nothing here instead. wezterm.gui is nil outside the GUI (e.g. wezterm cli).
