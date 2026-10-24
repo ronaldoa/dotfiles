@@ -5,7 +5,8 @@
 running() { i3-msg -t get_tree | grep -q '"instance":"dropdown"'; }
 
 if ! running; then
-    alacritty --class dropdown --title dropdown &
+    # its own process: --class only applies to windows of the process that starts with it
+    wezterm start --always-new-process --class dropdown &
     # for_window sends it to the scratchpad; wait for it, then show it
     for _ in $(seq 50); do running && break; sleep 0.1; done
     sleep 0.2

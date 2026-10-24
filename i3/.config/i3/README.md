@@ -277,7 +277,7 @@ i3 会把其他工作区的窗口藏起来，skippy-xd 只能在打开总览时�
 
 | 按键 | 程序 |
 |---|---|
-| `Alt+Enter` | alacritty |
+| `Alt+Enter` | wezterm |
 | `Alt+d` | rofi 启动器（应用 + 命令） |
 | `Alt+Tab` | rofi 运行命令 |
 | `Alt+c` | Firefox（已开着就跳过去；新窗口在 Firefox 里按 `Ctrl+N`） |
@@ -291,6 +291,7 @@ i3 会把其他工作区的窗口藏起来，skippy-xd 只能在打开总览时�
 | `Alt+Ctrl+b` | 哔哩哔哩 |
 | `Alt+Ctrl+t` | Teams |
 | `Alt+Ctrl+l` | LM Studio |
+| `Alt+Ctrl+s` | Strata（本地 LLM 服务的界面） |
 | `Alt+Ctrl+d` | Double Commander（装了 `doublecmd` 包就用包，否则用 AppImage） |
 | `Alt+Ctrl+w` | 微信：呼出 / 隐藏（放在 scratchpad 里，没运行就先启动） |
 | `Alt+Ctrl+Shift+w` | 重启微信（先杀掉旧进程，再打开到 scratchpad） |

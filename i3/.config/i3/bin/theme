@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Colour theme for i3 borders, polybar, rofi, alacritty, tmux, btop and the p10k prompt (Super+T cycles).
+# Colour theme for i3 borders, polybar, rofi, alacritty, wezterm, tmux, btop and the p10k prompt (Super+T cycles).
 #   theme nord     the default Nord palette
 #   theme classic  the old look: near-black terminal with Tango colours, bright tmux bar
 #                  (i3, polybar and rofi stay Nord, as they always were)
@@ -191,6 +191,7 @@ fi
 [ "$mode" = nord ] && apply_nord
 echo "$mode" > "$state/mode"
 # Running alacritty windows only watch their main config file, not the imported colours
+# (wezterm watches ~/.cache/theme/alacritty.toml itself, see wezterm.lua)
 touch ~/.config/alacritty/alacritty.toml
 # Re-source tmux so its bar picks up ~/.cache/theme/tmux.conf (fails quietly with no server)
 tmux source-file ~/.tmux.conf 2>/dev/null

@@ -235,7 +235,7 @@ bindsym XF86AudioPrev exec --no-startup-id playerctl previous || mpc prev
 bindsym XF86AudioStop exec --no-startup-id playerctl stop || mpc stop
 
 # start a terminal
-bindsym $mod+Return exec --no-startup-id alacritty 
+bindsym $mod+Return exec --no-startup-id wezterm
 #bindsym $mod+shift+Return exec --no-startup-id kitty -e fish
 
 
@@ -254,6 +254,8 @@ bindsym $mod+control+b exec --no-startup-id i3-msg -q '[class="(?i)bilibili"] fo
 bindsym $mod+control+t exec --no-startup-id i3-msg -q '[class="(?i)teams-for-linux"] focus' || $HOME/.config/i3/bin/appimage teams-for-linux-
 # LM Studio
 bindsym $mod+control+l exec --no-startup-id i3-msg -q '[class="(?i)lm.?studio"] focus' || $HOME/.config/i3/bin/appimage LM-Studio-
+# Strata (local LLM server GUI)
+bindsym $mod+control+s exec --no-startup-id i3-msg -q '[class="(?i)strata"] focus' || $HOME/.config/i3/bin/appimage Strata-
 # Toggle Noi scratchpad (starts Noi if needed)
 bindsym $mod+control+n exec --no-startup-id $HOME/.config/i3/bin/noi-toggle
 # ChatGPT in its own window
